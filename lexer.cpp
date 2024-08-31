@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "bird_exception.h"
 
 void Token::print_token()
 {
@@ -27,6 +28,10 @@ std::string get_token_string(TokenType token_type)
         return "SLASH";
     case TokenType::STAR:
         return "STAR";
+    case TokenType::SEMICOLON:
+        return "SEMICOLON";
+    case TokenType::EQUAL:
+        return "EQUAL";
     }
 }
 
@@ -53,7 +58,6 @@ const std::map<std::string, TokenType> Lexer::keywords = {
 
 void Lexer::print_tokens()
 {
-    std::cout << "printing tokens" << std::endl;
     for (auto token : this->tokens)
     {
         token.print_token();
@@ -84,6 +88,12 @@ std::vector<Token> Lexer::lex()
         case '*':
             this->tokens.push_back(Token(TokenType::STAR, "*"));
             break;
+        case ';':
+            this->tokens.push_back(Token(TokenType::SEMICOLON, ";"));
+            break;
+        case '=':
+            this->tokens.push_back(Token(TokenType::EQUAL, "="));
+            break;
         default:
             if (this->is_alpha(c))
             {
@@ -96,7 +106,7 @@ std::vector<Token> Lexer::lex()
                 continue;
             }
 
-            std::cout << "undefined character " << c << std::endl;
+            throw BirdException(std::string("undefined character ") + c);
         }
         this->advance();
     }

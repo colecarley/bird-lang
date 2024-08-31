@@ -13,7 +13,9 @@ enum TokenType
     PLUS,
     MINUS,
     IDENTIFIER,
-    I32_LITERAL
+    I32_LITERAL,
+    SEMICOLON,
+    EQUAL
 };
 
 std::string get_token_string(TokenType);

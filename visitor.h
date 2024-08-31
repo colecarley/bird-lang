@@ -7,6 +7,8 @@
 class Binary;
 class Unary;
 class Primary;
+class DeclStmt;
+class ExprStmt;
 
 class Visitor
 {
@@ -15,4 +17,6 @@ public:
     virtual void visitBinary(Binary *) = 0;
     virtual void visitUnary(Unary *) = 0;
     virtual void visitPrimary(Primary *) = 0;
+    virtual void visitDeclStmt(DeclStmt *) = 0;
+    virtual void visitExprStmt(ExprStmt *) = 0;
 };

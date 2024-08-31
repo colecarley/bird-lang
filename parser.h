@@ -6,6 +6,7 @@
 #include "lexer.h"
 
 class Expr;
+class Stmt;
 
 class Parser
 {
@@ -15,13 +16,13 @@ public:
 
     Parser(std::vector<Token> tokens);
 
-    // std::vector<Stmt> parse();
+    std::vector<std::unique_ptr<Stmt>> parse();
 
-    std::unique_ptr<Expr> parse();
+    std::unique_ptr<Stmt> stmt();
 
-    // Stmt stmt();
+    std::unique_ptr<Stmt> exprStmt();
 
-    // Stmt varDecl();
+    std::unique_ptr<Stmt> varDecl();
 
     std::unique_ptr<Expr> expr();
 

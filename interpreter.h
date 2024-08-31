@@ -2,11 +2,16 @@
 
 #include <memory>
 #include <vector>
+#include "stmt.h"
 #include "expr.h"
 
 #include "binary.h"
 #include "unary.h"
 #include "primary.h"
+
+#include "decl_stmt.h"
+#include "expr_stmt.h"
+
 #include "sym_table.h"
 
 class Interpreter : public Visitor
@@ -14,22 +19,37 @@ class Interpreter : public Visitor
     SymbolTable environment;
 
 public:
-    void evaluate(Expr *expr)
+    void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
-        if (auto *binary = dynamic_cast<Binary *>(expr))
+        for (auto &stmt : *stmts)
         {
-            binary->accept(this);
-        }
-        if (auto *unary = dynamic_cast<Unary *>(expr))
-        {
-            unary->accept(this);
-        }
-        if (auto *primary = dynamic_cast<Primary *>(expr))
-        {
-            primary->accept(this);
-        }
+            if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
+            {
+                decl_stmt->accept(this);
+            }
 
+            if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
+            {
+                expr_stmt->accept(this);
+            }
+        }
         std::cout << this->stack[this->stack.size() - 1] << std::endl;
+        this->stack.clear();
+    }
+
+    void visitDeclStmt(DeclStmt *decl_stmt)
+    {
+        decl_stmt->value->accept(this);
+
+        auto result = this->stack[this->stack.size() - 1];
+        this->stack.pop_back();
+
+        this->environment.insert(decl_stmt->identifier.lexeme, result);
+    }
+
+    void visitExprStmt(ExprStmt *expr_stmt)
+    {
+        expr_stmt->expr->accept(this);
     }
 
     std::vector<int> stack;

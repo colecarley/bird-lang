@@ -2,15 +2,74 @@
 #include "binary.h"
 #include "unary.h"
 #include "primary.h"
+#include "decl_stmt.h"
+#include "expr_stmt.h"
+#include "bird_exception.h"
 
 Parser::Parser(std::vector<Token> tokens) : tokens(tokens)
 {
     this->position = 0;
 }
 
-std::unique_ptr<Expr> Parser::parse()
+std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
-    return this->expr();
+    std::vector<std::unique_ptr<Stmt>> stmts;
+    while (!this->is_at_end())
+    {
+        stmts.push_back(this->stmt());
+    }
+
+    return stmts;
+}
+
+std::unique_ptr<Stmt> Parser::stmt()
+{
+    if (this->peek().token_type == TokenType::LET)
+    {
+        return this->varDecl();
+    }
+
+    return this->exprStmt();
+}
+
+std::unique_ptr<Stmt> Parser::exprStmt()
+{
+    auto result = std::make_unique<ExprStmt>(
+        ExprStmt(this->expr()));
+
+    if (this->advance().token_type != TokenType::SEMICOLON)
+    {
+        throw BirdException("Expected ';' at the end of expression");
+    }
+
+    return result;
+}
+
+std::unique_ptr<Stmt> Parser::varDecl()
+{
+    if (this->advance().token_type != TokenType::LET)
+    {
+        throw BirdException("Expected 'let' keyword");
+    }
+
+    auto identifier = this->advance();
+
+    if (this->advance().token_type != TokenType::EQUAL)
+    {
+        throw BirdException("Expected '=' in assignment");
+    }
+
+    auto result = std::make_unique<DeclStmt>(
+        DeclStmt(
+            identifier,
+            this->expr()));
+
+    if (this->advance().token_type != TokenType::SEMICOLON)
+    {
+        throw BirdException("Expected ';' at the end of expression");
+    }
+
+    return result;
 }
 
 std::unique_ptr<Expr> Parser::expr()
@@ -70,6 +129,8 @@ std::unique_ptr<Expr> Parser::primary()
     {
         return std::make_unique<Primary>(Primary(this->advance()));
     }
+
+    throw BirdException("Invalid primary value, expected identifier or i32");
 }
 
 Token Parser::advance()
