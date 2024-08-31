@@ -15,24 +15,24 @@ std::unique_ptr<Expr> Parser::parse()
 
 std::unique_ptr<Expr> Parser::expr()
 {
-    return this->factor();
+    return this->term();
 }
 
-std::unique_ptr<Expr> Parser::factor()
+std::unique_ptr<Expr> Parser::term()
 {
-    std::unique_ptr<Expr> left = this->term();
+    std::unique_ptr<Expr> left = this->factor();
 
     while (this->peek().token_type == TokenType::PLUS || this->peek().token_type == TokenType::MINUS)
     {
         Token op = this->advance();
-        std::unique_ptr<Expr> right = this->term();
+        std::unique_ptr<Expr> right = this->factor();
         left = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
     }
 
     return left;
 }
 
-std::unique_ptr<Expr> Parser::term()
+std::unique_ptr<Expr> Parser::factor()
 {
     auto left = this->unary();
 
