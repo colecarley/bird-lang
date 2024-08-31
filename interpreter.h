@@ -13,6 +13,7 @@
 #include "expr_stmt.h"
 
 #include "sym_table.h"
+#include "bird_exception.h"
 
 class Interpreter : public Visitor
 {
@@ -67,17 +68,29 @@ public:
         switch (binary->op.token_type)
         {
         case TokenType::PLUS:
+        {
             this->stack.push_back(left + right);
             break;
+        }
         case TokenType::MINUS:
+        {
             this->stack.push_back(left - right);
             break;
+        }
         case TokenType::SLASH:
+        {
             this->stack.push_back(left / right);
             break;
+        }
         case TokenType::STAR:
+        {
             this->stack.push_back(left * right);
             break;
+        }
+        default:
+        {
+            throw BirdException("undefined binary operator");
+        }
         }
     }
 
@@ -95,12 +108,20 @@ public:
         switch (primary->value.token_type)
         {
         case TokenType::I32_LITERAL:
+        {
             this->stack.push_back(std::stoi(primary->value.lexeme));
             break;
+        }
         case TokenType::IDENTIFIER:
+        {
             auto value = this->environment.get(primary->value.lexeme);
             this->stack.push_back(value);
             break;
+        }
+        default:
+        {
+            throw BirdException("undefined primary value");
+        }
         }
     }
 };

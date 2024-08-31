@@ -95,6 +95,8 @@ std::vector<Token> Lexer::lex()
             this->tokens.push_back(Token(TokenType::EQUAL, "="));
             break;
         default:
+        {
+
             if (this->is_alpha(c))
             {
                 this->handle_alpha();
@@ -107,6 +109,7 @@ std::vector<Token> Lexer::lex()
             }
 
             throw BirdException(std::string("undefined character ") + c);
+        }
         }
         this->advance();
     }
