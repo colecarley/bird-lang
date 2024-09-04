@@ -32,6 +32,10 @@ std::string get_token_string(TokenType token_type)
         return "SEMICOLON";
     case TokenType::EQUAL:
         return "EQUAL";
+    case TokenType::PUTS:
+        return "PUTS";
+    case TokenType::COMMA:
+        return "COMMA";
     }
 }
 
@@ -54,7 +58,7 @@ Lexer::Lexer(std::string input)
 }
 
 const std::map<std::string, TokenType> Lexer::keywords = {
-    {"let", TokenType::LET}};
+    {"let", TokenType::LET}, {"puts", TokenType::PUTS}};
 
 void Lexer::print_tokens()
 {
@@ -93,6 +97,9 @@ std::vector<Token> Lexer::lex()
             break;
         case '=':
             this->tokens.push_back(Token(TokenType::EQUAL, "="));
+            break;
+        case ',':
+            this->tokens.push_back(Token(TokenType::COMMA, ","));
             break;
         default:
         {

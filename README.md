@@ -1,6 +1,12 @@
 
 # GRAMMAR
 
+### Keywords
+
+`let`: variable declaration
+
+`puts`: print to screen
+
 ### Statements
 
 Stmt -> DeclStmt | ExprStmt;

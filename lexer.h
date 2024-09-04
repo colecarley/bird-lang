@@ -7,15 +7,22 @@
 
 enum TokenType
 {
+    // keywords
     LET,
+    PUTS,
+
+    // single character
     STAR,
     SLASH,
     PLUS,
     MINUS,
+    SEMICOLON,
+    EQUAL,
+    COMMA,
+
+    // values
     IDENTIFIER,
     I32_LITERAL,
-    SEMICOLON,
-    EQUAL
 };
 
 std::string get_token_string(TokenType);

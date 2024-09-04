@@ -29,19 +29,33 @@ class CodeGen : public Visitor
 {
     std::vector<llvm::Value *> stack;
     SymbolTable<llvm::Value *> environment;
+    std::map<std::string, llvm::FunctionCallee> std_lib;
 
 public:
-    llvm::Module *generate(std::vector<std::unique_ptr<Stmt>> *stmts)
+    void init_std_lib(llvm::Module *TheModule)
     {
-        llvm::Module *TheModule = new llvm::Module("my_module", TheContext);
         // Declare the printf function (external function)
         llvm::FunctionType *printfType = llvm::FunctionType::get(Builder.getInt32Ty(), Builder.getPtrTy(), true);
         llvm::FunctionCallee printfFunc = TheModule->getOrInsertFunction("printf", printfType);
+        this->std_lib["puts"] = printfFunc;
+    }
 
+    llvm::BasicBlock *create_entry_point(llvm::Module *TheModule)
+    {
         // main function
         llvm::FunctionType *funcType = llvm::FunctionType::get(Builder.getVoidTy(), false);
         llvm::Function *mainFunction = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", TheModule);
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(TheContext, "entry", mainFunction);
+        return entry;
+    }
+
+    llvm::Module *generate(std::vector<std::unique_ptr<Stmt>> *stmts)
+    {
+
+        llvm::Module *TheModule = new llvm::Module("my_module", TheContext);
+
+        this->init_std_lib(TheModule);
+        auto entry = this->create_entry_point(TheModule);
 
         Builder.SetInsertPoint(entry);
 
@@ -52,16 +66,16 @@ public:
                 decl_stmt->accept(this);
             }
 
+            if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
+            {
+                print_stmt->accept(this);
+            }
+
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
             }
         }
-
-        auto result = this->stack[this->stack.size() - 1];
-
-        llvm::Value *formatStr = Builder.CreateGlobalStringPtr("%d\n");
-        Builder.CreateCall(printfFunc, {formatStr, result});
 
         Builder.CreateRetVoid();
 
@@ -92,6 +106,26 @@ public:
         this->stack.pop_back();
 
         this->environment.insert(decl_stmt->identifier.lexeme, result);
+    }
+
+    void visitPrintStmt(PrintStmt *print_stmt)
+    {
+        for (auto &arg : print_stmt->args)
+        {
+            arg->accept(this);
+        }
+
+        auto printfFunc = this->std_lib["puts"];
+        llvm::Value *formatStr = Builder.CreateGlobalStringPtr("%d");
+        for (int i = 0; i < print_stmt->args.size(); i++)
+        {
+            auto result = this->stack[this->stack.size() - 1];
+            this->stack.pop_back();
+            Builder.CreateCall(printfFunc, {formatStr, result});
+        }
+
+        llvm::Value *newline = Builder.CreateGlobalStringPtr("\n");
+        Builder.CreateCall(printfFunc, newline);
     }
 
     void visitExprStmt(ExprStmt *expr_stmt)

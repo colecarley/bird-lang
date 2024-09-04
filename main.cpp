@@ -67,8 +67,6 @@ void compile(std::string filename)
         }
     }
 
-    std::cout << code << std::endl;
-
     Lexer lexer(code);
     auto tokens = lexer.lex();
     lexer.print_tokens();

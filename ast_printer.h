@@ -10,6 +10,7 @@
 #include "primary.h"
 
 #include "decl_stmt.h"
+#include "print_stmt.h"
 #include "expr_stmt.h"
 
 class AstPrinter : public Visitor
@@ -38,6 +39,15 @@ public:
         std::cout << "let ";
         std::cout << decl_stmt->identifier.lexeme << " = ";
         decl_stmt->value->accept(this);
+    }
+
+    void visitPrintStmt(PrintStmt *print_stmt)
+    {
+        std::cout << "puts ";
+        for (auto &arg : print_stmt->args)
+        {
+            arg->accept(this);
+        }
     }
 
     void visitExprStmt(ExprStmt *expr_stmt)

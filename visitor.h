@@ -9,6 +9,7 @@ class Unary;
 class Primary;
 class DeclStmt;
 class ExprStmt;
+class PrintStmt;
 
 class Visitor
 {
@@ -19,4 +20,5 @@ public:
     virtual void visitPrimary(Primary *) = 0;
     virtual void visitDeclStmt(DeclStmt *) = 0;
     virtual void visitExprStmt(ExprStmt *) = 0;
+    virtual void visitPrintStmt(PrintStmt *) = 0;
 };

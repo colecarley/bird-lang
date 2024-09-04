@@ -10,6 +10,7 @@
 #include "primary.h"
 
 #include "decl_stmt.h"
+#include "print_stmt.h"
 #include "expr_stmt.h"
 
 #include "sym_table.h"
@@ -30,12 +31,16 @@ public:
                 decl_stmt->accept(this);
             }
 
+            if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
+            {
+                print_stmt->accept(this);
+            }
+
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
             }
         }
-        std::cout << this->stack[this->stack.size() - 1] << std::endl;
         this->stack.clear();
     }
 
@@ -52,6 +57,19 @@ public:
     void visitExprStmt(ExprStmt *expr_stmt)
     {
         expr_stmt->expr->accept(this);
+    }
+
+    void visitPrintStmt(PrintStmt *print_stmt)
+    {
+        for (auto &arg : print_stmt->args)
+        {
+            arg->accept(this);
+            auto result = this->stack[this->stack.size() - 1];
+            this->stack.pop_back();
+
+            std::cout << result;
+        }
+        std::cout << std::endl;
     }
 
     void visitBinary(Binary *binary)

@@ -3,6 +3,7 @@
 #include "unary.h"
 #include "primary.h"
 #include "decl_stmt.h"
+#include "print_stmt.h"
 #include "expr_stmt.h"
 #include "bird_exception.h"
 
@@ -28,6 +29,10 @@ std::unique_ptr<Stmt> Parser::stmt()
     {
         return this->varDecl();
     }
+    if (this->peek().token_type == TokenType::PUTS)
+    {
+        return this->printStmt();
+    }
 
     return this->exprStmt();
 }
@@ -42,6 +47,36 @@ std::unique_ptr<Stmt> Parser::exprStmt()
         throw BirdException("Expected ';' at the end of expression");
     }
 
+    return result;
+}
+
+std::unique_ptr<Stmt> Parser::printStmt()
+{
+    if (this->advance().token_type != TokenType::PUTS)
+    {
+        throw BirdException("Expected 'puts' keyword");
+    }
+
+    auto values = std::vector<std::unique_ptr<Expr>>();
+    while (this->peek().token_type != TokenType::SEMICOLON)
+    {
+        auto expr = this->expr();
+        values.push_back(std::move(expr));
+
+        if (this->peek().token_type != TokenType::COMMA)
+        {
+            break;
+        }
+
+        this->advance();
+    }
+
+    if (this->advance().token_type != TokenType::SEMICOLON)
+    {
+        throw BirdException("Expected ';' after 'puts'");
+    }
+
+    auto result = std::make_unique<PrintStmt>(PrintStmt(std::move(values)));
     return result;
 }
 

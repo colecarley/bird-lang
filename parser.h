@@ -24,6 +24,8 @@ public:
 
     std::unique_ptr<Stmt> varDecl();
 
+    std::unique_ptr<Stmt> printStmt();
+
     std::unique_ptr<Expr> expr();
 
     std::unique_ptr<Expr> term();
