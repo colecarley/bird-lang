@@ -1,19 +1,21 @@
+#pragma once
 
 #include <map>
 #include <string>
 #include <memory>
 
+template <typename T>
 class SymbolTable
 {
-    std::map<std::string, int> vars;
+    std::map<std::string, T> vars;
 
 public:
-    void insert(std::string identifier, int value)
+    void insert(std::string identifier, T value)
     {
         this->vars[identifier] = value;
     }
 
-    int get(std::string identifier)
+    T get(std::string identifier)
     {
         return this->vars[identifier];
     }

@@ -51,7 +51,10 @@
         "unordered_map": "cpp",
         "memory": "cpp",
         "any": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "deque": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/clang++"
 }

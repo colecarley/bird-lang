@@ -17,7 +17,8 @@
 
 class Interpreter : public Visitor
 {
-    SymbolTable environment;
+    SymbolTable<int> environment;
+    std::vector<int> stack;
 
 public:
     void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
@@ -53,7 +54,6 @@ public:
         expr_stmt->expr->accept(this);
     }
 
-    std::vector<int> stack;
     void visitBinary(Binary *binary)
     {
         binary->left->accept(this);
