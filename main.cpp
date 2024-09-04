@@ -2,6 +2,8 @@
 #include <fstream>
 #include <memory>
 
+#include <llvm/IR/Module.h>
+
 #include "lexer.h"
 #include "parser.h"
 #include "ast_printer.h"
@@ -78,5 +80,7 @@ void compile(std::string filename)
     printer.print_ast(&ast);
 
     CodeGen code_gen;
-    code_gen.generate(&ast);
+    llvm::Module *module = code_gen.generate(&ast);
+
+    delete module;
 }

@@ -24,7 +24,6 @@
 
 static llvm::LLVMContext TheContext;
 static llvm::IRBuilder<> Builder(TheContext);
-static llvm::Module *TheModule = new llvm::Module("my_module", TheContext);
 
 class CodeGen : public Visitor
 {
@@ -32,8 +31,9 @@ class CodeGen : public Visitor
     SymbolTable<llvm::Value *> environment;
 
 public:
-    void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
+    llvm::Module *generate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
+        llvm::Module *TheModule = new llvm::Module("my_module", TheContext);
         // Declare the printf function (external function)
         llvm::FunctionType *printfType = llvm::FunctionType::get(Builder.getInt32Ty(), Builder.getPtrTy(), true);
         llvm::FunctionCallee printfFunc = TheModule->getOrInsertFunction("printf", printfType);
@@ -81,6 +81,7 @@ public:
         TheModule->print(dest, nullptr);
 
         dest.close(); // Close the output file
+        return TheModule;
     }
 
     void visitDeclStmt(DeclStmt *decl_stmt)
@@ -103,10 +104,10 @@ public:
         binary->left->accept(this);
         binary->right->accept(this);
 
-        auto left = this->stack[this->stack.size() - 1];
+        auto right = this->stack[this->stack.size() - 1];
         this->stack.pop_back();
 
-        auto right = this->stack[this->stack.size() - 1];
+        auto left = this->stack[this->stack.size() - 1];
         this->stack.pop_back();
 
         switch (binary->op.token_type)
@@ -120,6 +121,18 @@ public:
         case TokenType::MINUS:
         {
             auto value = Builder.CreateSub(left, right, "subtmp");
+            this->stack.push_back(value);
+            break;
+        }
+        case TokenType::SLASH:
+        {
+            auto value = Builder.CreateSDiv(left, right, "sdivtmp");
+            this->stack.push_back(value);
+            break;
+        }
+        case TokenType::STAR:
+        {
+            auto value = Builder.CreateMul(left, right, "multmp");
             this->stack.push_back(value);
             break;
         }
