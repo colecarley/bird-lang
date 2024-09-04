@@ -19,4 +19,4 @@ Term -> (Unary ("*" | "/" ) Term) | Unary
 
 Unary -> ("-" Unary) | Primary 
 
-Primary -> <number> | <identifier>
+Primary -> \<number\> | \<identifier\>
