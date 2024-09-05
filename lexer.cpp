@@ -1,15 +1,6 @@
 #include "lexer.h"
 #include "bird_exception.h"
 
-void Token::print_token()
-{
-    std::cout << "{ "
-              << "token_type: " << this->token_type
-              << ",  lexeme: " << this->lexeme
-              << "}"
-              << std::endl;
-}
-
 std::string get_token_string(TokenType token_type)
 {
     switch (token_type)
@@ -37,6 +28,15 @@ std::string get_token_string(TokenType token_type)
     case TokenType::COMMA:
         return "COMMA";
     }
+}
+
+void Token::print_token()
+{
+    std::cout << "{ "
+              << "token_type: " << get_token_string(this->token_type)
+              << ",  lexeme: " << this->lexeme
+              << "}"
+              << std::endl;
 }
 
 Token::Token()
