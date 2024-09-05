@@ -19,6 +19,6 @@ public:
 
     void accept(Visitor *visitor)
     {
-        return visitor->visitUnary(this);
+        return visitor->visit_unary(this);
     }
 };

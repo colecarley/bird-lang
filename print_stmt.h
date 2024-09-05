@@ -22,6 +22,6 @@ public:
 
     void accept(Visitor *visitor)
     {
-        visitor->visitPrintStmt(this);
+        visitor->visit_print_stmt(this);
     }
 };

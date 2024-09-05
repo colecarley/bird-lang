@@ -44,7 +44,7 @@ public:
         this->stack.clear();
     }
 
-    void visitDeclStmt(DeclStmt *decl_stmt)
+    void visit_decl_stmt(DeclStmt *decl_stmt)
     {
         decl_stmt->value->accept(this);
 
@@ -54,12 +54,12 @@ public:
         this->environment.insert(decl_stmt->identifier.lexeme, result);
     }
 
-    void visitExprStmt(ExprStmt *expr_stmt)
+    void visit_expr_stmt(ExprStmt *expr_stmt)
     {
         expr_stmt->expr->accept(this);
     }
 
-    void visitPrintStmt(PrintStmt *print_stmt)
+    void visit_print_stmt(PrintStmt *print_stmt)
     {
         for (auto &arg : print_stmt->args)
         {
@@ -72,7 +72,7 @@ public:
         std::cout << std::endl;
     }
 
-    void visitBinary(Binary *binary)
+    void visit_binary(Binary *binary)
     {
         binary->left->accept(this);
         binary->right->accept(this);
@@ -112,7 +112,7 @@ public:
         }
     }
 
-    void visitUnary(Unary *unary)
+    void visit_unary(Unary *unary)
     {
         unary->expr->accept(this);
         auto expr = this->stack[this->stack.size() - 1];
@@ -121,7 +121,7 @@ public:
         this->stack.push_back(-expr);
     }
 
-    void visitPrimary(Primary *primary)
+    void visit_primary(Primary *primary)
     {
         switch (primary->value.token_type)
         {

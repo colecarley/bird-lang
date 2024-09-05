@@ -15,10 +15,10 @@ class Visitor
 {
 public:
     ~Visitor() = default;
-    virtual void visitBinary(Binary *) = 0;
-    virtual void visitUnary(Unary *) = 0;
-    virtual void visitPrimary(Primary *) = 0;
-    virtual void visitDeclStmt(DeclStmt *) = 0;
-    virtual void visitExprStmt(ExprStmt *) = 0;
-    virtual void visitPrintStmt(PrintStmt *) = 0;
+    virtual void visit_binary(Binary *) = 0;
+    virtual void visit_unary(Unary *) = 0;
+    virtual void visit_primary(Primary *) = 0;
+    virtual void visit_decl_stmt(DeclStmt *) = 0;
+    virtual void visit_expr_stmt(ExprStmt *) = 0;
+    virtual void visit_print_stmt(PrintStmt *) = 0;
 };

@@ -34,14 +34,14 @@ public:
         }
     }
 
-    void visitDeclStmt(DeclStmt *decl_stmt)
+    void visit_decl_stmt(DeclStmt *decl_stmt)
     {
         std::cout << "let ";
         std::cout << decl_stmt->identifier.lexeme << " = ";
         decl_stmt->value->accept(this);
     }
 
-    void visitPrintStmt(PrintStmt *print_stmt)
+    void visit_print_stmt(PrintStmt *print_stmt)
     {
         std::cout << "puts ";
         for (auto &arg : print_stmt->args)
@@ -50,13 +50,13 @@ public:
         }
     }
 
-    void visitExprStmt(ExprStmt *expr_stmt)
+    void visit_expr_stmt(ExprStmt *expr_stmt)
     {
         expr_stmt->expr->accept(this);
         std::cout << ";";
     }
 
-    void visitBinary(Binary *binary)
+    void visit_binary(Binary *binary)
     {
         std::cout << "(";
         std::cout << binary->op.lexeme << " ";
@@ -66,13 +66,13 @@ public:
         std::cout << ")";
     }
 
-    void visitUnary(Unary *unary)
+    void visit_unary(Unary *unary)
     {
         std::cout << unary->op.lexeme;
         unary->expr->accept(this);
     }
 
-    void visitPrimary(Primary *primary)
+    void visit_primary(Primary *primary)
     {
         std::cout << primary->value.lexeme;
     }

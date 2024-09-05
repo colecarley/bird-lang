@@ -15,6 +15,6 @@ public:
 
     void accept(Visitor *visitor)
     {
-        return visitor->visitPrimary(this);
+        return visitor->visit_primary(this);
     }
 };

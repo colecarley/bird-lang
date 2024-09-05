@@ -27,17 +27,17 @@ std::unique_ptr<Stmt> Parser::stmt()
 {
     if (this->peek().token_type == TokenType::LET)
     {
-        return this->varDecl();
+        return this->var_decl();
     }
     if (this->peek().token_type == TokenType::PUTS)
     {
-        return this->printStmt();
+        return this->print_stmt();
     }
 
-    return this->exprStmt();
+    return this->expr_stmt();
 }
 
-std::unique_ptr<Stmt> Parser::exprStmt()
+std::unique_ptr<Stmt> Parser::expr_stmt()
 {
     auto result = std::make_unique<ExprStmt>(
         ExprStmt(this->expr()));
@@ -50,7 +50,7 @@ std::unique_ptr<Stmt> Parser::exprStmt()
     return result;
 }
 
-std::unique_ptr<Stmt> Parser::printStmt()
+std::unique_ptr<Stmt> Parser::print_stmt()
 {
     if (this->advance().token_type != TokenType::PUTS)
     {
@@ -80,7 +80,7 @@ std::unique_ptr<Stmt> Parser::printStmt()
     return result;
 }
 
-std::unique_ptr<Stmt> Parser::varDecl()
+std::unique_ptr<Stmt> Parser::var_decl()
 {
     if (this->advance().token_type != TokenType::LET)
     {

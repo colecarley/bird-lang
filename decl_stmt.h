@@ -22,6 +22,6 @@ public:
 
     void accept(Visitor *visitor)
     {
-        visitor->visitDeclStmt(this);
+        visitor->visit_decl_stmt(this);
     }
 };

@@ -21,6 +21,6 @@ public:
 
     void accept(Visitor *visitor)
     {
-        return visitor->visitBinary(this);
+        return visitor->visit_binary(this);
     }
 };

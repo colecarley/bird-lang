@@ -18,6 +18,6 @@ public:
 
     void accept(Visitor *visitor)
     {
-        visitor->visitExprStmt(this);
+        visitor->visit_expr_stmt(this);
     }
 };
