@@ -54,7 +54,7 @@
         "charconv": "cpp",
         "deque": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
     },
     "C_Cpp.default.compilerPath": "/usr/bin/clang++"
 }

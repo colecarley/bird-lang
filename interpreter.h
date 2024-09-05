@@ -77,10 +77,10 @@ public:
         binary->left->accept(this);
         binary->right->accept(this);
 
-        auto left = this->stack[this->stack.size() - 1];
+        auto right = this->stack.back();
         this->stack.pop_back();
 
-        auto right = this->stack[this->stack.size() - 1];
+        auto left = this->stack.back();
         this->stack.pop_back();
 
         switch (binary->op.token_type)
