@@ -1,6 +1,6 @@
 #pragma once
 
-#include "node.h"
+#include "../node.h"
 
 class Visitor;
 

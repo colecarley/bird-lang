@@ -4,12 +4,12 @@
 
 #include <llvm/IR/Module.h>
 
-#include "lexer.h"
-#include "parser.h"
-#include "ast_printer.h"
-#include "interpreter.h"
-#include "expr.h"
-#include "code_gen.h"
+#include "include/lexer.h"
+#include "include/parser.h"
+#include "include/visitors/ast_printer.h"
+#include "include/visitors/interpreter.h"
+#include "include/ast_node/expr/expr.h"
+#include "include/visitors/code_gen.h"
 
 void repl();
 void compile(std::string filename);
