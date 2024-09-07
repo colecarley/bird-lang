@@ -91,10 +91,9 @@ public:
             exit(1);
         }
 
-        // Print the IR to the file
         TheModule->print(dest, nullptr);
+        dest.close();
 
-        dest.close(); // Close the output file
         return TheModule;
     }
 
