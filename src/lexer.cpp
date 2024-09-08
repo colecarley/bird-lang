@@ -9,8 +9,8 @@ std::string get_token_string(TokenType token_type)
         return "I32_LITERAL";
     case TokenType::IDENTIFIER:
         return "IDENTIFIER";
-    case TokenType::LET:
-        return "LET";
+    case TokenType::VAR:
+        return "VAR";
     case TokenType::MINUS:
         return "MINUS";
     case TokenType::PLUS:
@@ -41,7 +41,7 @@ void Token::print_token()
 
 Token::Token()
 {
-    this->token_type = TokenType::LET;
+    this->token_type = TokenType::VAR;
     this->lexeme = "";
 }
 
@@ -58,7 +58,7 @@ Lexer::Lexer(std::string input)
 }
 
 const std::map<std::string, TokenType> Lexer::keywords = {
-    {"let", TokenType::LET}, {"puts", TokenType::PUTS}};
+    {"var", TokenType::VAR}, {"puts", TokenType::PUTS}};
 
 void Lexer::print_tokens()
 {

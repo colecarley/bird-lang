@@ -10,7 +10,7 @@ Nicholas Langley
 
 ### Keywords
 
-`let`: variable declaration
+`var`: variable declaration
 
 `print`: print to screen
 
