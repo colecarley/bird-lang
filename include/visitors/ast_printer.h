@@ -13,6 +13,10 @@
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 
+/*
+ * Visitor that prints the Abstract Syntax Tree
+ * using prefix notation and expressions wrapped in parentheses
+ */
 class AstPrinter : public Visitor
 {
 public:
@@ -53,7 +57,6 @@ public:
     void visit_expr_stmt(ExprStmt *expr_stmt)
     {
         expr_stmt->expr->accept(this);
-        std::cout << ";";
     }
 
     void visit_binary(Binary *binary)

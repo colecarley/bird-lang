@@ -1,9 +1,9 @@
-
 #pragma once
 
 #include <string>
 #include <memory>
 
+// forward declarations
 class Binary;
 class Unary;
 class Primary;
@@ -11,6 +11,10 @@ class DeclStmt;
 class ExprStmt;
 class PrintStmt;
 
+/*
+ * the interface for all visitors,
+ * used through the AST nodes' `accept` function
+ */
 class Visitor
 {
 public:

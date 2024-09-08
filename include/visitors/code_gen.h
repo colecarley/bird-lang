@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <memory>
@@ -23,9 +22,13 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 
+// TODO: figure out a way to put this in the class
 static llvm::LLVMContext TheContext;
 static llvm::IRBuilder<> Builder(TheContext);
 
+/*
+ * Visitor that generates the LLVM IR representation of the code
+ */
 class CodeGen : public Visitor
 {
     std::vector<llvm::Value *> stack;
@@ -39,6 +42,7 @@ public:
         llvm::FunctionType *printfType = llvm::FunctionType::get(Builder.getInt32Ty(), Builder.getPtrTy(), true);
         llvm::FunctionCallee printfFunc = TheModule->getOrInsertFunction("printf", printfType);
         this->std_lib["puts"] = printfFunc;
+        // TODO: when to free printf?
     }
 
     llvm::BasicBlock *create_entry_point(llvm::Module *TheModule)
@@ -47,6 +51,8 @@ public:
         llvm::FunctionType *funcType = llvm::FunctionType::get(Builder.getVoidTy(), false);
         llvm::Function *mainFunction = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", TheModule);
         llvm::BasicBlock *entry = llvm::BasicBlock::Create(TheContext, "entry", mainFunction);
+
+        // TODO: when to free entry block?
         return entry;
     }
 

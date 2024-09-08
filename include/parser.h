@@ -5,9 +5,16 @@
 
 #include "lexer.h"
 
+// foward declarations
 class Expr;
 class Stmt;
 
+/*
+ * Parser will take the tokens as input
+ * and, using the grammar, create an AST
+ * (Abstract Syntax Tree) and report as many
+ * errors as it can find
+ */
 class Parser
 {
 public:
