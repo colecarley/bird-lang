@@ -1,11 +1,13 @@
-#include "parser.h"
-#include "binary.h"
-#include "unary.h"
-#include "primary.h"
-#include "decl_stmt.h"
-#include "print_stmt.h"
-#include "expr_stmt.h"
-#include "bird_exception.h"
+#include "../include/parser.h"
+#include "../include/ast_node/expr/binary.h"
+#include "../include/ast_node/expr/unary.h"
+#include "../include/ast_node/expr/primary.h"
+
+#include "../include/ast_node/stmt/decl_stmt.h"
+#include "../include/ast_node/stmt/print_stmt.h"
+#include "../include/ast_node/stmt/expr_stmt.h"
+
+#include "../include/exceptions/bird_exception.h"
 
 Parser::Parser(std::vector<Token> tokens) : tokens(tokens)
 {

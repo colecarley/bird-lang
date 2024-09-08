@@ -3,8 +3,8 @@
 #include <string>
 #include <memory>
 #include "stmt.h"
-#include "lexer.h"
-#include "visitor.h"
+#include "../../lexer.h"
+#include "../../visitors/visitor.h"
 
 class Expr;
 

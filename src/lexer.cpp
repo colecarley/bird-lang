@@ -1,5 +1,5 @@
-#include "lexer.h"
-#include "bird_exception.h"
+#include "../include/lexer.h"
+#include "../include/exceptions/bird_exception.h"
 
 std::string get_token_string(TokenType token_type)
 {

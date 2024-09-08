@@ -2,16 +2,16 @@
 
 #include <memory>
 #include <vector>
-#include "stmt.h"
-#include "expr.h"
+#include "../ast_node/stmt/stmt.h"
+#include "../ast_node/expr/expr.h"
 
-#include "binary.h"
-#include "unary.h"
-#include "primary.h"
+#include "../ast_node/expr/binary.h"
+#include "../ast_node/expr/unary.h"
+#include "../ast_node/expr/primary.h"
 
-#include "decl_stmt.h"
-#include "print_stmt.h"
-#include "expr_stmt.h"
+#include "../ast_node/stmt/decl_stmt.h"
+#include "../ast_node/stmt/print_stmt.h"
+#include "../ast_node/stmt/expr_stmt.h"
 
 class AstPrinter : public Visitor
 {
