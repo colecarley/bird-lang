@@ -4,8 +4,15 @@
 #include "stmt.h"
 #include "../../visitors/visitor.h"
 
+// forward declaration
 class Expr;
 
+/*
+ * Expression statement class AST node that
+ * represents expressions that end in ';'
+ * ex:
+ * (1 + 2);
+ */
 class ExprStmt : public Stmt
 {
 public:

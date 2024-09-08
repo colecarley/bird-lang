@@ -6,8 +6,14 @@
 #include "../../lexer.h"
 #include "../../visitors/visitor.h"
 
+// forward declaration
 class Expr;
 
+/*
+ * Declaration statement AST Node that represents variable declarations
+ * ex:
+ * var x = 4;
+ */
 class DeclStmt : public Stmt
 {
 public:

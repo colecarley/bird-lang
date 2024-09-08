@@ -5,6 +5,12 @@
 #include "../../visitors/visitor.h"
 #include "expr.h"
 
+/*
+ * Unary class AST node representing unary operations
+ * ex:
+ * -1
+ * !true
+ */
 class Unary : public Expr
 {
 public:

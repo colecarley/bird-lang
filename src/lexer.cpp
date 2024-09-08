@@ -1,3 +1,4 @@
+// including in the .cpp due to circular dependency
 #include "../include/lexer.h"
 #include "../include/exceptions/bird_exception.h"
 

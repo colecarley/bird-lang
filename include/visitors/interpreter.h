@@ -16,6 +16,9 @@
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
 
+/*
+ * Visitor that interprets and evaluates the AST
+ */
 class Interpreter : public Visitor
 {
     SymbolTable<int> environment;
