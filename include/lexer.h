@@ -9,7 +9,7 @@ enum TokenType
 {
     // keywords
     VAR,
-    PUTS,
+    PRINT,
 
     // single character
     STAR,

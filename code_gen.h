@@ -13,6 +13,7 @@
 
 #include "decl_stmt.h"
 #include "expr_stmt.h"
+#include "print_stmt.h"
 
 #include "bird_exception.h"
 #include "sym_table.h"
@@ -37,7 +38,7 @@ public:
         // Declare the printf function (external function)
         llvm::FunctionType *printfType = llvm::FunctionType::get(Builder.getInt32Ty(), Builder.getPtrTy(), true);
         llvm::FunctionCallee printfFunc = TheModule->getOrInsertFunction("printf", printfType);
-        this->std_lib["puts"] = printfFunc;
+        this->std_lib["print"] = printfFunc;
     }
 
     llvm::BasicBlock *create_entry_point(llvm::Module *TheModule)
@@ -114,7 +115,7 @@ public:
             arg->accept(this);
         }
 
-        auto printfFunc = this->std_lib["puts"];
+        auto printfFunc = this->std_lib["print"];
         llvm::Value *formatStr = Builder.CreateGlobalStringPtr("%d");
         for (int i = 0; i < print_stmt->args.size(); i++)
         {

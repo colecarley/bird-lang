@@ -43,7 +43,7 @@ public:
 
     void visit_print_stmt(PrintStmt *print_stmt)
     {
-        std::cout << "puts ";
+        std::cout << "print ";
         for (auto &arg : print_stmt->args)
         {
             arg->accept(this);
