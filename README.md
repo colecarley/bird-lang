@@ -1,3 +1,10 @@
+# Authors
+Cole Carley
+
+Aiden Kirk
+
+Nicholas Langley
+
 
 # GRAMMAR
 
@@ -5,7 +12,7 @@
 
 `let`: variable declaration
 
-`puts`: print to screen
+`print`: print to screen
 
 ### Statements
 
@@ -25,4 +32,4 @@ Term -> (Unary ("*" | "/" ) Term) | Unary
 
 Unary -> ("-" Unary) | Primary 
 
-Primary -> \<number\> | \<identifier\>
+Primary -> \<int\> | \<identifier\>
