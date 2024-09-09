@@ -40,7 +40,7 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        std::cout << "let ";
+        std::cout << "var ";
         std::cout << decl_stmt->identifier.lexeme << " = ";
         decl_stmt->value->accept(this);
     }

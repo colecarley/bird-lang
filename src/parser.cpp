@@ -28,7 +28,7 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 
 std::unique_ptr<Stmt> Parser::stmt()
 {
-    if (this->peek().token_type == TokenType::LET)
+    if (this->peek().token_type == TokenType::VAR)
     {
         return this->var_decl();
     }
@@ -85,9 +85,9 @@ std::unique_ptr<Stmt> Parser::print_stmt()
 
 std::unique_ptr<Stmt> Parser::var_decl()
 {
-    if (this->advance().token_type != TokenType::LET)
+    if (this->advance().token_type != TokenType::VAR)
     {
-        throw BirdException("Expected 'let' keyword");
+        throw BirdException("Expected 'var' keyword");
     }
 
     auto identifier = this->advance();

@@ -1,6 +1,6 @@
 
-let x = 10;
-let y = 3;
+var x = 10;
+var y = 3;
 
 puts x / y;
 puts x;

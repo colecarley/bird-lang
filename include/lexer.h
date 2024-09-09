@@ -8,7 +8,7 @@
 enum TokenType
 {
     // keywords
-    LET,
+    VAR,
     PUTS,
 
     // single character
