@@ -2,8 +2,8 @@
 var x = 10;
 var y = 3;
 
-puts x / y;
-puts x;
-puts y;
+print x / y;
+print x;
+print y;
 
 

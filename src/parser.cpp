@@ -32,7 +32,7 @@ std::unique_ptr<Stmt> Parser::stmt()
     {
         return this->var_decl();
     }
-    if (this->peek().token_type == TokenType::PUTS)
+    if (this->peek().token_type == TokenType::PRINT)
     {
         return this->print_stmt();
     }
@@ -55,9 +55,9 @@ std::unique_ptr<Stmt> Parser::expr_stmt()
 
 std::unique_ptr<Stmt> Parser::print_stmt()
 {
-    if (this->advance().token_type != TokenType::PUTS)
+    if (this->advance().token_type != TokenType::PRINT)
     {
-        throw BirdException("Expected 'puts' keyword");
+        throw BirdException("Expected 'print' keyword");
     }
 
     auto values = std::vector<std::unique_ptr<Expr>>();
@@ -76,7 +76,7 @@ std::unique_ptr<Stmt> Parser::print_stmt()
 
     if (this->advance().token_type != TokenType::SEMICOLON)
     {
-        throw BirdException("Expected ';' after 'puts'");
+        throw BirdException("Expected ';' after 'print'");
     }
 
     auto result = std::make_unique<PrintStmt>(PrintStmt(std::move(values)));

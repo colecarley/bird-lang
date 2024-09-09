@@ -24,8 +24,8 @@ std::string get_token_string(TokenType token_type)
         return "SEMICOLON";
     case TokenType::EQUAL:
         return "EQUAL";
-    case TokenType::PUTS:
-        return "PUTS";
+    case TokenType::PRINT:
+        return "PRINT";
     case TokenType::COMMA:
         return "COMMA";
     }
@@ -59,7 +59,7 @@ Lexer::Lexer(std::string input)
 }
 
 const std::map<std::string, TokenType> Lexer::keywords = {
-    {"var", TokenType::VAR}, {"puts", TokenType::PUTS}};
+    {"var", TokenType::VAR}, {"print", TokenType::PRINT}};
 
 void Lexer::print_tokens()
 {
