@@ -4,6 +4,9 @@
 #include <string>
 #include <memory>
 
+/*
+ * A table with key value pairs of identifiers and their respective values
+ */
 template <typename T>
 class SymbolTable
 {

@@ -40,6 +40,10 @@ public:
     Token(TokenType token_type, std::string lexeme);
 };
 
+/*
+ * The lexer takes the source code as input,
+ * look at each character and group them into tokens
+ */
 class Lexer
 {
 public:

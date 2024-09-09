@@ -2,8 +2,13 @@
 
 #include "../node.h"
 
+// forward declaration
 class Visitor;
 
+/*
+ * Interface:
+ * parent AST Node from which all statements are derived
+ */
 class Stmt : public Node
 {
 public:

@@ -4,8 +4,13 @@
 #include <string>
 #include "../node.h"
 
+// forward declaration
 class Visitor;
 
+/*
+ * Interface:
+ * parent AST Node from which all expressions are derived
+ */
 class Expr : public Node
 {
 public:

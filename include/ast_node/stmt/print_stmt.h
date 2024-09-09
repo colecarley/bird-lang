@@ -8,8 +8,14 @@
 #include "../../lexer.h"
 #include "../../visitors/visitor.h"
 
+// forward declaration
 class Expr;
 
+/*
+ * Print statement AST Node
+ * ex:
+ * print 1
+ */
 class PrintStmt : public Stmt
 {
 public:
