@@ -191,7 +191,7 @@ std::unique_ptr<Expr> Parser::primary()
     {
         return std::make_unique<Primary>(Primary(this->advance()));
     }
-    if (token_type == TokenType::I32_LITERAL)
+    if (token_type == TokenType::INT_LITERAL)
     {
         return std::make_unique<Primary>(Primary(this->advance()));
     }

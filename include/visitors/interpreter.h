@@ -154,7 +154,7 @@ public:
     {
         switch (primary->value.token_type)
         {
-        case TokenType::I32_LITERAL:
+        case TokenType::INT_LITERAL:
         {
             this->stack.push_back(std::stoi(primary->value.lexeme));
             break;
