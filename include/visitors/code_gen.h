@@ -13,6 +13,7 @@
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
+#include "../ast_node/stmt/block.h"
 
 #include "../exceptions/bird_exception.h"
 #include "../sym_table.h"
@@ -32,10 +33,15 @@ static llvm::IRBuilder<> Builder(TheContext);
 class CodeGen : public Visitor
 {
     std::vector<llvm::Value *> stack;
-    SymbolTable<llvm::Value *> environment;
+    std::unique_ptr<SymbolTable<llvm::Value *>> environment;
     std::map<std::string, llvm::FunctionCallee> std_lib;
 
 public:
+    CodeGen()
+    {
+        this->environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
+    }
+
     void init_std_lib(llvm::Module *TheModule)
     {
         // Declare the printf function (external function)
@@ -58,7 +64,6 @@ public:
 
     llvm::Module *generate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
-
         llvm::Module *TheModule = new llvm::Module("my_module", TheContext);
 
         this->init_std_lib(TheModule);
@@ -76,6 +81,11 @@ public:
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
                 print_stmt->accept(this);
+            }
+
+            if (auto block = dynamic_cast<Block *>(stmt.get()))
+            {
+                block->accept(this);
             }
 
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
@@ -104,6 +114,20 @@ public:
         return TheModule;
     }
 
+    void visit_block(Block *block)
+    {
+        auto new_environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
+        new_environment->set_enclosing(std::move(this->environment));
+        this->environment = std::move(new_environment);
+
+        for (auto &stmt : block->stmts)
+        {
+            stmt->accept(this);
+        }
+
+        this->environment = this->environment->get_enclosing();
+    }
+
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
         decl_stmt->value->accept(this);
@@ -111,7 +135,7 @@ public:
         llvm::Value *result = this->stack[this->stack.size() - 1];
         this->stack.pop_back();
 
-        this->environment.insert(decl_stmt->identifier.lexeme, result);
+        this->environment->insert(decl_stmt->identifier.lexeme, result);
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)
@@ -208,7 +232,7 @@ public:
         }
         case TokenType::IDENTIFIER:
         {
-            auto value = this->environment.get(primary->value.lexeme);
+            auto value = this->environment->get(primary->value.lexeme);
             if (value == nullptr)
             {
                 throw BirdException("undefined identifier");

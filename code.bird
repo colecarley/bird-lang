@@ -1,9 +1,10 @@
 
-var x = 10;
-var y = 3;
 
-print x / y;
+var x = 2;
+
+{
+    var x = 3;
+    print x;
+}
+
 print x;
-print y;
-
-

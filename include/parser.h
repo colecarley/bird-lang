@@ -31,6 +31,8 @@ public:
 
     std::unique_ptr<Stmt> var_decl();
 
+    std::unique_ptr<Stmt> block();
+
     std::unique_ptr<Stmt> print_stmt();
 
     std::unique_ptr<Expr> expr();
@@ -42,6 +44,8 @@ public:
     std::unique_ptr<Expr> unary();
 
     std::unique_ptr<Expr> primary();
+
+    std::unique_ptr<Expr> grouping();
 
     Token advance();
 

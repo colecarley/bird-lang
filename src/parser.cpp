@@ -7,6 +7,7 @@
 #include "../include/ast_node/stmt/decl_stmt.h"
 #include "../include/ast_node/stmt/print_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
+#include "../include/ast_node/stmt/block.h"
 
 #include "../include/exceptions/bird_exception.h"
 
@@ -36,8 +37,35 @@ std::unique_ptr<Stmt> Parser::stmt()
     {
         return this->print_stmt();
     }
+    if (this->peek().token_type == TokenType::LBRACE)
+    {
+        return this->block();
+    }
 
     return this->expr_stmt();
+}
+
+std::unique_ptr<Stmt> Parser::block()
+{
+    if (this->advance().token_type != TokenType::LBRACE)
+    {
+        throw BirdException("Expected '{' at the beginning of block");
+    }
+
+    auto stmts = std::vector<std::unique_ptr<Stmt>>();
+
+    while (this->peek().token_type != TokenType::RBRACE && !this->is_at_end())
+    {
+        auto stmt = this->stmt();
+        stmts.push_back(std::move(stmt));
+    }
+
+    if (this->advance().token_type != TokenType::RBRACE)
+    {
+        throw BirdException("Expected '}' at the end of the block");
+    }
+
+    return std::make_unique<Block>(Block(std::move(stmts)));
 }
 
 std::unique_ptr<Stmt> Parser::expr_stmt()
@@ -167,8 +195,29 @@ std::unique_ptr<Expr> Parser::primary()
     {
         return std::make_unique<Primary>(Primary(this->advance()));
     }
+    if (token_type == TokenType::LPAREN)
+    {
+        return this->grouping();
+    }
 
     throw BirdException("Invalid primary value, expected identifier or i32");
+}
+
+std::unique_ptr<Expr> Parser::grouping()
+{
+    if (this->advance().token_type != TokenType::LPAREN)
+    {
+        throw BirdException("Expected '(' before grouping");
+    }
+
+    auto expr = this->expr();
+
+    if (this->advance().token_type != TokenType::RPAREN)
+    {
+        throw BirdException("Expected ')' after expression");
+    }
+
+    return expr;
 }
 
 Token Parser::advance()

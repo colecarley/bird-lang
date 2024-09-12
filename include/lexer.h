@@ -19,6 +19,10 @@ enum TokenType
     SEMICOLON,
     EQUAL,
     COMMA,
+    RBRACE,
+    LBRACE,
+    RPAREN,
+    LPAREN,
 
     // values
     IDENTIFIER,

@@ -55,6 +55,11 @@
         "deque": "cpp",
         "queue": "cpp",
         "stack": "cpp",
+        "forward_list": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "list": "cpp",
+        "print": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/clang++"
 }
