@@ -45,6 +45,8 @@ public:
 
     std::unique_ptr<Expr> primary();
 
+    std::unique_ptr<Expr> grouping();
+
     Token advance();
 
     Token peek();

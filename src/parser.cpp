@@ -195,10 +195,29 @@ std::unique_ptr<Expr> Parser::primary()
     {
         return std::make_unique<Primary>(Primary(this->advance()));
     }
-
-    // TODO create grouping
+    if (token_type == TokenType::LPAREN)
+    {
+        return this->grouping();
+    }
 
     throw BirdException("Invalid primary value, expected identifier or i32");
+}
+
+std::unique_ptr<Expr> Parser::grouping()
+{
+    if (this->advance().token_type != TokenType::LPAREN)
+    {
+        throw BirdException("Expected '(' before grouping");
+    }
+
+    auto expr = this->expr();
+
+    if (this->advance().token_type != TokenType::RPAREN)
+    {
+        throw BirdException("Expected ')' after expression");
+    }
+
+    return expr;
 }
 
 Token Parser::advance()

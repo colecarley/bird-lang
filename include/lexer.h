@@ -21,6 +21,8 @@ enum TokenType
     COMMA,
     RBRACE,
     LBRACE,
+    RPAREN,
+    LPAREN,
 
     // values
     IDENTIFIER,

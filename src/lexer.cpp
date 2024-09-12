@@ -32,6 +32,10 @@ std::string get_token_string(TokenType token_type)
         return "RBRACE";
     case TokenType::LBRACE:
         return "LBRACE";
+    case TokenType::RPAREN:
+        return "RPAREN";
+    case TokenType::LPAREN:
+        return "LPAREN";
     }
 }
 
@@ -111,6 +115,12 @@ std::vector<Token> Lexer::lex()
             break;
         case '}':
             this->tokens.push_back(Token(TokenType::RBRACE, "}"));
+            break;
+        case '(':
+            this->tokens.push_back(Token(TokenType::LPAREN, "}"));
+            break;
+        case ')':
+            this->tokens.push_back(Token(TokenType::RPAREN, "}"));
             break;
         default:
         {
