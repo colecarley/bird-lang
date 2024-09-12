@@ -63,7 +63,7 @@ void compile(std::string filename)
         while (file.good())
         {
             getline(file, line);
-            code += line;
+            code += line += '\n';
         }
     }
 

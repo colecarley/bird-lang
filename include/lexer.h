@@ -10,6 +10,14 @@ enum TokenType
     // keywords
     VAR,
     PRINT,
+    IF,
+    ELSE,
+    WHILE,
+    // types
+    INT,
+    FLOAT,
+    STR,
+    BOOL,
 
     // single character
     STAR,
@@ -23,13 +31,28 @@ enum TokenType
     LBRACE,
     RPAREN,
     LPAREN,
+    COLON,
+    GREATER,
+    LESS,
+    BANG,
+
+    // two character
+    GREATER_EQUAL,
+    LESS_EQUAL,
+    EQUAL_EQUAL,
+    BANG_EQUAL,
 
     // values
     IDENTIFIER,
-    I32_LITERAL,
-};
+    NUMBER,
+    INT_LITERAL,
+    FLOAT_LITERAL,
+    BOOL_LITERAL,
+    STR_LITERAL,
 
-std::string get_token_string(TokenType);
+    // end
+    END
+};
 
 class Token
 {
@@ -64,6 +87,12 @@ public:
 
     void handle_alpha();
 
+    void handle_string();
+
+    void handle_comment();
+
+    void handle_multiline_comment();
+
     bool is_digit(const char c);
 
     bool is_alpha(const char c);
@@ -71,6 +100,8 @@ public:
     char advance();
 
     char peek();
+
+    char peek_next();
 
     bool is_at_end();
 

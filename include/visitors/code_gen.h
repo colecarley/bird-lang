@@ -222,7 +222,7 @@ public:
     {
         switch (primary->value.token_type)
         {
-        case TokenType::I32_LITERAL:
+        case TokenType::INT_LITERAL:
         {
             float value = std::stoi(primary->value.lexeme);
 
