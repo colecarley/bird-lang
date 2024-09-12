@@ -16,19 +16,24 @@ Nicholas Langley
 
 ### Statements
 
-Stmt -> DeclStmt | ExprStmt;
+Stmt -> DeclStmt | ExprStmt | While | Block;
 
 DeclStmt -> "let" Expr ";"
 
 ExprStmt -> Expr ";"
 
+While -> "while" Expr Stmt
+
+Block -> '{' Stmt* '}'
+
+
 ### Expressions
 
-Expr -> Factor
+Expr -> Term
 
-Factor -> (Term ("+" | "/" ) Factor) | Term
+Term -> (Factor ("+" | "-" ) Factor) | Term
 
-Term -> (Unary ("*" | "/" ) Term) | Unary
+Factor -> (Unary ("*" | "/" ) Uary) | Unary
 
 Unary -> ("-" Unary) | Primary 
 

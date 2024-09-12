@@ -31,6 +31,8 @@ public:
 
     std::unique_ptr<Stmt> var_decl();
 
+    std::unique_ptr<Stmt> block();
+
     std::unique_ptr<Stmt> print_stmt();
 
     std::unique_ptr<Expr> expr();

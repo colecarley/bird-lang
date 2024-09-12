@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+
 #include "../ast_node/stmt/stmt.h"
 #include "../ast_node/expr/expr.h"
 
@@ -12,6 +13,7 @@
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
+#include "../ast_node/stmt/block.h"
 
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
@@ -21,10 +23,15 @@
  */
 class Interpreter : public Visitor
 {
-    SymbolTable<int> environment;
+    std::unique_ptr<SymbolTable<int>> environment;
     std::vector<int> stack;
 
 public:
+    Interpreter()
+    {
+        this->environment = std::make_unique<SymbolTable<int>>(SymbolTable<int>());
+    }
+
     void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
         for (auto &stmt : *stmts)
@@ -39,12 +46,31 @@ public:
                 print_stmt->accept(this);
             }
 
+            if (auto block = dynamic_cast<Block *>(stmt.get()))
+            {
+                block->accept(this);
+            }
+
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
             }
         }
         this->stack.clear();
+    }
+
+    void visit_block(Block *block)
+    {
+        auto new_environment = std::make_unique<SymbolTable<int>>(SymbolTable<int>());
+        new_environment->set_enclosing(std::move(this->environment));
+        this->environment = std::move(new_environment);
+
+        for (auto &stmt : block->stmts)
+        {
+            stmt->accept(this);
+        }
+
+        this->environment = this->environment->get_enclosing();
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
@@ -54,7 +80,7 @@ public:
         auto result = this->stack[this->stack.size() - 1];
         this->stack.pop_back();
 
-        this->environment.insert(decl_stmt->identifier.lexeme, result);
+        this->environment->insert(decl_stmt->identifier.lexeme, result);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -135,7 +161,7 @@ public:
         }
         case TokenType::IDENTIFIER:
         {
-            auto value = this->environment.get(primary->value.lexeme);
+            auto value = this->environment->get(primary->value.lexeme);
             this->stack.push_back(value);
             break;
         }

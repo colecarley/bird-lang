@@ -80,5 +80,5 @@ void compile(std::string filename)
     CodeGen code_gen;
     llvm::Module *module = code_gen.generate(&ast);
 
-    delete module;
+    // delete module;
 }

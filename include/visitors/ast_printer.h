@@ -12,6 +12,7 @@
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
+#include "../ast_node/stmt/block.h"
 
 /*
  * Visitor that prints the Abstract Syntax Tree
@@ -30,12 +31,32 @@ public:
                 decl_stmt->accept(this);
             }
 
+            if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
+            {
+                print_stmt->accept(this);
+            }
+
+            if (auto block = dynamic_cast<Block *>(stmt.get()))
+            {
+                block->accept(this);
+            }
+
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
             }
             std::cout << std::endl;
         }
+    }
+
+    void visit_block(Block *block)
+    {
+        std::cout << "{";
+        for (auto &stmt : block->stmts)
+        {
+            stmt->accept(this);
+        }
+        std::cout << "}";
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
