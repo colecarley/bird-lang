@@ -10,10 +10,12 @@
 #include "../include/ast_node/stmt/block.h"
 
 #include "../include/exceptions/bird_exception.h"
+#include "../include/exceptions/user_error_tracker.h"
 
-Parser::Parser(std::vector<Token> tokens) : tokens(tokens)
+Parser::Parser(std::vector<Token> tokens, UserErrorTracker *user_error_tracker) : tokens(tokens)
 {
     this->position = 0;
+    this->user_error_tracker = user_error_tracker;
 }
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse()
@@ -29,15 +31,15 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 
 std::unique_ptr<Stmt> Parser::stmt()
 {
-    if (this->peek().token_type == TokenType::VAR)
+    if (this->peek().token_type == Token::Type::VAR)
     {
         return this->var_decl();
     }
-    if (this->peek().token_type == TokenType::PRINT)
+    if (this->peek().token_type == Token::Type::PRINT)
     {
         return this->print_stmt();
     }
-    if (this->peek().token_type == TokenType::LBRACE)
+    if (this->peek().token_type == Token::Type::LBRACE)
     {
         return this->block();
     }
@@ -47,22 +49,22 @@ std::unique_ptr<Stmt> Parser::stmt()
 
 std::unique_ptr<Stmt> Parser::block()
 {
-    if (this->advance().token_type != TokenType::LBRACE)
+    if (this->advance().token_type != Token::Type::LBRACE)
     {
         throw BirdException("Expected '{' at the beginning of block");
     }
 
     auto stmts = std::vector<std::unique_ptr<Stmt>>();
 
-    while (this->peek().token_type != TokenType::RBRACE && !this->is_at_end())
+    while (this->peek().token_type != Token::Type::RBRACE && !this->is_at_end())
     {
         auto stmt = this->stmt();
         stmts.push_back(std::move(stmt));
     }
 
-    if (this->advance().token_type != TokenType::RBRACE)
+    if (this->advance().token_type != Token::Type::RBRACE)
     {
-        throw BirdException("Expected '}' at the end of the block");
+        this->user_error_tracker->expected("{", "end of block", this->peek_previous());
     }
 
     return std::make_unique<Block>(Block(std::move(stmts)));
@@ -73,7 +75,7 @@ std::unique_ptr<Stmt> Parser::expr_stmt()
     auto result = std::make_unique<ExprStmt>(
         ExprStmt(this->expr()));
 
-    if (this->advance().token_type != TokenType::SEMICOLON)
+    if (this->advance().token_type != Token::Type::SEMICOLON)
     {
         throw BirdException("Expected ';' at the end of expression");
     }
@@ -83,18 +85,18 @@ std::unique_ptr<Stmt> Parser::expr_stmt()
 
 std::unique_ptr<Stmt> Parser::print_stmt()
 {
-    if (this->advance().token_type != TokenType::PRINT)
+    if (this->advance().token_type != Token::Type::PRINT)
     {
         throw BirdException("Expected 'print' keyword");
     }
 
     auto values = std::vector<std::unique_ptr<Expr>>();
-    while (this->peek().token_type != TokenType::SEMICOLON)
+    while (this->peek().token_type != Token::Type::SEMICOLON)
     {
         auto expr = this->expr();
         values.push_back(std::move(expr));
 
-        if (this->peek().token_type != TokenType::COMMA)
+        if (this->peek().token_type != Token::Type::COMMA)
         {
             break;
         }
@@ -102,7 +104,7 @@ std::unique_ptr<Stmt> Parser::print_stmt()
         this->advance();
     }
 
-    if (this->advance().token_type != TokenType::SEMICOLON)
+    if (this->advance().token_type != Token::Type::SEMICOLON)
     {
         throw BirdException("Expected ';' after 'print'");
     }
@@ -113,14 +115,14 @@ std::unique_ptr<Stmt> Parser::print_stmt()
 
 std::unique_ptr<Stmt> Parser::var_decl()
 {
-    if (this->advance().token_type != TokenType::VAR)
+    if (this->advance().token_type != Token::Type::VAR)
     {
         throw BirdException("Expected 'var' keyword");
     }
 
     auto identifier = this->advance();
 
-    if (this->advance().token_type != TokenType::EQUAL)
+    if (this->advance().token_type != Token::Type::EQUAL)
     {
         throw BirdException("Expected '=' in assignment");
     }
@@ -130,7 +132,7 @@ std::unique_ptr<Stmt> Parser::var_decl()
             identifier,
             this->expr()));
 
-    if (this->advance().token_type != TokenType::SEMICOLON)
+    if (this->advance().token_type != Token::Type::SEMICOLON)
     {
         throw BirdException("Expected ';' at the end of expression");
     }
@@ -147,7 +149,7 @@ std::unique_ptr<Expr> Parser::term()
 {
     std::unique_ptr<Expr> left = this->factor();
 
-    while (this->peek().token_type == TokenType::PLUS || this->peek().token_type == TokenType::MINUS)
+    while (this->peek().token_type == Token::Type::PLUS || this->peek().token_type == Token::Type::MINUS)
     {
         Token op = this->advance();
         std::unique_ptr<Expr> right = this->factor();
@@ -161,7 +163,7 @@ std::unique_ptr<Expr> Parser::factor()
 {
     auto left = this->unary();
 
-    while (this->peek().token_type == TokenType::STAR || this->peek().token_type == TokenType::SLASH)
+    while (this->peek().token_type == Token::Type::STAR || this->peek().token_type == Token::Type::SLASH)
     {
         Token op = this->advance();
         auto right = this->unary();
@@ -173,7 +175,7 @@ std::unique_ptr<Expr> Parser::factor()
 
 std::unique_ptr<Expr> Parser::unary()
 {
-    if (this->peek().token_type == TokenType::MINUS)
+    if (this->peek().token_type == Token::Type::MINUS)
     {
         Token op = this->advance();
         std::unique_ptr<Expr> expr = this->unary();
@@ -185,17 +187,17 @@ std::unique_ptr<Expr> Parser::unary()
 
 std::unique_ptr<Expr> Parser::primary()
 {
-    TokenType token_type = this->peek().token_type;
+    Token::Type token_type = this->peek().token_type;
 
-    if (token_type == TokenType::IDENTIFIER)
+    if (token_type == Token::Type::IDENTIFIER)
     {
         return std::make_unique<Primary>(Primary(this->advance()));
     }
-    if (token_type == TokenType::INT_LITERAL)
+    if (token_type == Token::Type::INT_LITERAL)
     {
         return std::make_unique<Primary>(Primary(this->advance()));
     }
-    if (token_type == TokenType::LPAREN)
+    if (token_type == Token::Type::LPAREN)
     {
         return this->grouping();
     }
@@ -205,14 +207,14 @@ std::unique_ptr<Expr> Parser::primary()
 
 std::unique_ptr<Expr> Parser::grouping()
 {
-    if (this->advance().token_type != TokenType::LPAREN)
+    if (this->advance().token_type != Token::Type::LPAREN)
     {
         throw BirdException("Expected '(' before grouping");
     }
 
     auto expr = this->expr();
 
-    if (this->advance().token_type != TokenType::RPAREN)
+    if (this->advance().token_type != Token::Type::RPAREN)
     {
         throw BirdException("Expected ')' after expression");
     }
@@ -232,7 +234,12 @@ Token Parser::peek()
     return this->tokens[this->position];
 }
 
+Token Parser::peek_previous()
+{
+    return this->tokens[this->position - 1];
+}
+
 bool Parser::is_at_end()
 {
-    return this->position >= this->tokens.size();
+    return this->peek().token_type == Token::Type::END;
 }

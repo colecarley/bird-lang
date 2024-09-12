@@ -176,25 +176,25 @@ public:
 
         switch (binary->op.token_type)
         {
-        case TokenType::PLUS:
+        case Token::Type::PLUS:
         {
             auto value = Builder.CreateAdd(left, right, "addtmp");
             this->stack.push_back(value);
             break;
         }
-        case TokenType::MINUS:
+        case Token::Type::MINUS:
         {
             auto value = Builder.CreateSub(left, right, "subtmp");
             this->stack.push_back(value);
             break;
         }
-        case TokenType::SLASH:
+        case Token::Type::SLASH:
         {
             auto value = Builder.CreateSDiv(left, right, "sdivtmp");
             this->stack.push_back(value);
             break;
         }
-        case TokenType::STAR:
+        case Token::Type::STAR:
         {
             auto value = Builder.CreateMul(left, right, "multmp");
             this->stack.push_back(value);
@@ -222,7 +222,7 @@ public:
     {
         switch (primary->value.token_type)
         {
-        case TokenType::INT_LITERAL:
+        case Token::Type::INT_LITERAL:
         {
             float value = std::stoi(primary->value.lexeme);
 
@@ -230,7 +230,7 @@ public:
             this->stack.push_back(llvm_value);
             break;
         }
-        case TokenType::IDENTIFIER:
+        case Token::Type::IDENTIFIER:
         {
             auto value = this->environment->get(primary->value.lexeme);
             if (value == nullptr)

@@ -114,22 +114,22 @@ public:
 
         switch (binary->op.token_type)
         {
-        case TokenType::PLUS:
+        case Token::Type::PLUS:
         {
             this->stack.push_back(left + right);
             break;
         }
-        case TokenType::MINUS:
+        case Token::Type::MINUS:
         {
             this->stack.push_back(left - right);
             break;
         }
-        case TokenType::SLASH:
+        case Token::Type::SLASH:
         {
             this->stack.push_back(left / right);
             break;
         }
-        case TokenType::STAR:
+        case Token::Type::STAR:
         {
             this->stack.push_back(left * right);
             break;
@@ -154,12 +154,12 @@ public:
     {
         switch (primary->value.token_type)
         {
-        case TokenType::INT_LITERAL:
+        case Token::Type::INT_LITERAL:
         {
             this->stack.push_back(std::stoi(primary->value.lexeme));
             break;
         }
-        case TokenType::IDENTIFIER:
+        case Token::Type::IDENTIFIER:
         {
             auto value = this->environment->get(primary->value.lexeme);
             this->stack.push_back(value);

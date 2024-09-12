@@ -1,41 +1,45 @@
 // including in the .cpp due to circular dependency
 #include "../include/lexer.h"
 #include "../include/exceptions/bird_exception.h"
+#include "../include/exceptions/user_error_tracker.h"
 
-static const std::map<TokenType, std::string> token_strings = {
-    {TokenType::INT_LITERAL, "INT_LITERAL"},
-    {TokenType::IDENTIFIER, "IDENTIFIER"},
-    {TokenType::VAR, "VAR"},
-    {TokenType::MINUS, "MINUS"},
-    {TokenType::PLUS, "PLUS"},
-    {TokenType::SLASH, "SLASH"},
-    {TokenType::STAR, "STAR"},
-    {TokenType::SEMICOLON, "SEMICOLON"},
-    {TokenType::EQUAL, "EQUAL"},
-    {TokenType::PRINT, "PRINT"},
-    {TokenType::COMMA, "COMMA"},
-    {TokenType::RBRACE, "RBRACE"},
-    {TokenType::LBRACE, "LBRACE"},
-    {TokenType::RPAREN, "RPAREN"},
-    {TokenType::LPAREN, "LPAREN"},
-    {TokenType::INT, "INT"},
-    {TokenType::FLOAT, "FLOAT"},
-    {TokenType::STR, "STR"},
-    {TokenType::BOOL, "BOOL"},
-    {TokenType::FLOAT_LITERAL, "FLOAT_LITERAL"},
-    {TokenType::BOOL_LITERAL, "BOOL_LITERAL"},
-    {TokenType::STR_LITERAL, "STR_LITERAL"},
-    {TokenType::COLON, "COLON"},
-    {TokenType::IF, "IF"},
-    {TokenType::ELSE, "ELSE"},
-    {TokenType::WHILE, "WHILE"},
-    {TokenType::GREATER, "GREATER"},
-    {TokenType::LESS, "LESS"},
-    {TokenType::BANG, "BANG"},
-    {TokenType::GREATER_EQUAL, "GREATER_EQUAL"},
-    {TokenType::LESS_EQUAL, "LESS_EQUAL"},
-    {TokenType::EQUAL_EQUAL, "EQUAL_EQUAL"},
-    {TokenType::BANG_EQUAL, "BANG_EQUAL"},
+static const std::map<Token::Type, std::string> token_strings = {
+    {Token::Type::INT_LITERAL, "INT_LITERAL"},
+    {Token::Type::IDENTIFIER, "IDENTIFIER"},
+    {Token::Type::VAR, "VAR"},
+    {Token::Type::MINUS, "MINUS"},
+    {Token::Type::PLUS, "PLUS"},
+    {Token::Type::SLASH, "SLASH"},
+    {Token::Type::STAR, "STAR"},
+    {Token::Type::SEMICOLON, "SEMICOLON"},
+    {Token::Type::EQUAL, "EQUAL"},
+    {Token::Type::PRINT, "PRINT"},
+    {Token::Type::COMMA, "COMMA"},
+    {Token::Type::RBRACE, "RBRACE"},
+    {Token::Type::LBRACE, "LBRACE"},
+    {Token::Type::RPAREN, "RPAREN"},
+    {Token::Type::LPAREN, "LPAREN"},
+    {Token::Type::INT, "INT"},
+    {Token::Type::FLOAT, "FLOAT"},
+    {Token::Type::STR, "STR"},
+    {Token::Type::BOOL, "BOOL"},
+    {Token::Type::FLOAT_LITERAL, "FLOAT_LITERAL"},
+    {Token::Type::BOOL_LITERAL, "BOOL_LITERAL"},
+    {Token::Type::STR_LITERAL, "STR_LITERAL"},
+    {Token::Type::COLON, "COLON"},
+    {Token::Type::IF, "IF"},
+    {Token::Type::ELSE, "ELSE"},
+    {Token::Type::WHILE, "WHILE"},
+    {Token::Type::GREATER, "GREATER"},
+    {Token::Type::LESS, "LESS"},
+    {Token::Type::BANG, "BANG"},
+    {Token::Type::GREATER_EQUAL, "GREATER_EQUAL"},
+    {Token::Type::LESS_EQUAL, "LESS_EQUAL"},
+    {Token::Type::EQUAL_EQUAL, "EQUAL_EQUAL"},
+    {Token::Type::BANG_EQUAL, "BANG_EQUAL"},
+    {Token::Type::RETURN, "RETURN"},
+    {Token::Type::FN, "FN"},
+    {Token::Type::END, "END"},
 };
 
 void Token::print_token()
@@ -49,34 +53,41 @@ void Token::print_token()
 
 Token::Token()
 {
-    this->token_type = TokenType::VAR;
+    this->token_type = Token::Type::VAR;
     this->lexeme = "";
 }
 
-Token::Token(TokenType token_type, std::string lexeme)
+Token::Token(Token::Type token_type, std::string lexeme, unsigned int line_num, unsigned int char_num)
 {
     this->token_type = token_type;
     this->lexeme = lexeme;
+    this->line_num = line_num;
+    this->char_num = char_num;
 }
 
-Lexer::Lexer(std::string input)
+Lexer::Lexer(std::string input, UserErrorTracker *user_error_tracker)
 {
     this->input = input;
     this->position = 0;
+    this->line_num = 0;
+    this->char_num = 0;
+    this->user_error_tracker = user_error_tracker;
 }
 
-const std::map<std::string, TokenType> Lexer::keywords = {
-    {"var", TokenType::VAR},
-    {"print", TokenType::PRINT},
-    {"if", TokenType::IF},
-    {"else", TokenType::ELSE},
-    {"while", TokenType::WHILE},
-    {"int", TokenType::INT},
-    {"float", TokenType::FLOAT},
-    {"str", TokenType::STR},
-    {"bool", TokenType::BOOL},
-    {"true", TokenType::BOOL_LITERAL},
-    {"false", TokenType::BOOL_LITERAL},
+const std::map<std::string, Token::Type> Lexer::keywords = {
+    {"var", Token::Type::VAR},
+    {"print", Token::Type::PRINT},
+    {"if", Token::Type::IF},
+    {"else", Token::Type::ELSE},
+    {"while", Token::Type::WHILE},
+    {"int", Token::Type::INT},
+    {"float", Token::Type::FLOAT},
+    {"str", Token::Type::STR},
+    {"bool", Token::Type::BOOL},
+    {"true", Token::Type::BOOL_LITERAL},
+    {"false", Token::Type::BOOL_LITERAL},
+    {"fn", Token::Type::FN},
+    {"return", Token::Type::RETURN},
 };
 
 void Lexer::print_tokens()
@@ -107,58 +118,57 @@ std::vector<Token> Lexer::lex()
                 continue;
             }
 
-            this->tokens.push_back(Token(TokenType::SLASH, "/"));
+            this->push_token(Token::Type::SLASH, "/");
             break;
         }
+        case '\n':
         case ' ':
-        case '\n': // TODO: add line counter for errors
         case '\t':
         case '\r':
             break;
         case '+':
-            this->tokens.push_back(Token(TokenType::PLUS, "+"));
+            this->push_token(Token::Type::PLUS, "+");
             break;
         case '-':
-            this->tokens.push_back(Token(TokenType::MINUS, "-"));
+            this->push_token(Token::Type::MINUS, "-");
             break;
         case '*':
-            this->tokens.push_back(Token(TokenType::STAR, "*"));
+            this->push_token(Token::Type::STAR, "*");
             break;
         case ';':
-            this->tokens.push_back(Token(TokenType::SEMICOLON, ";"));
+            this->push_token(Token::Type::SEMICOLON, ";");
             break;
         case '=':
         {
             if (this->peek_next() == '=')
             {
                 this->advance();
-                this->tokens.push_back(Token(TokenType::EQUAL_EQUAL, "=="));
+                this->push_token(Token::Type::EQUAL_EQUAL, "==");
                 break;
             }
-            this->tokens.push_back(Token(TokenType::EQUAL, "="));
+            this->push_token(Token::Type::EQUAL, "=");
             break;
         }
         case ',':
-            this->tokens.push_back(Token(TokenType::COMMA, ","));
+            this->push_token(Token::Type::COMMA, ",");
             break;
         case '{':
-            this->tokens.push_back(Token(TokenType::LBRACE, "{"));
+            this->push_token(Token::Type::LBRACE, "{");
             break;
         case '}':
-            this->tokens.push_back(Token(TokenType::RBRACE, "}"));
+            this->push_token(Token::Type::RBRACE, "}");
             break;
         case '(':
-            this->tokens.push_back(Token(TokenType::LPAREN, "("));
+            this->push_token(Token::Type::LPAREN, "(");
             break;
         case ')':
-            this->tokens.push_back(Token(TokenType::RPAREN, ")"));
+            this->push_token(Token::Type::RPAREN, ")");
             break;
         case ':':
-            this->tokens.push_back(Token(TokenType::COLON, ":"));
+            this->push_token(Token::Type::COLON, ":");
             break;
         case '"':
         {
-
             this->handle_string();
             continue;
         }
@@ -167,10 +177,10 @@ std::vector<Token> Lexer::lex()
             if (this->peek_next() == '=')
             {
                 this->advance();
-                this->tokens.push_back(Token(TokenType::GREATER_EQUAL, ">="));
+                this->push_token(Token::Type::GREATER_EQUAL, ">=");
                 break;
             }
-            this->tokens.push_back(Token(TokenType::GREATER, ">"));
+            this->push_token(Token::Type::GREATER, ">");
             break;
         }
         case '<':
@@ -178,10 +188,10 @@ std::vector<Token> Lexer::lex()
             if (this->peek_next() == '=')
             {
                 this->advance();
-                this->tokens.push_back(Token(TokenType::LESS_EQUAL, "<="));
+                this->push_token(Token::Type::LESS_EQUAL, "<=");
                 break;
             }
-            this->tokens.push_back(Token(TokenType::LESS, "<"));
+            this->push_token(Token::Type::LESS, "<");
             break;
         }
         case '!':
@@ -189,10 +199,10 @@ std::vector<Token> Lexer::lex()
             if (this->peek_next() == '=')
             {
                 this->advance();
-                this->tokens.push_back(Token(TokenType::BANG_EQUAL, "!="));
+                this->push_token(Token::Type::BANG_EQUAL, "!=");
                 break;
             }
-            this->tokens.push_back(Token(TokenType::BANG, "!"));
+            this->push_token(Token::Type::BANG, "!");
             break;
         }
         default:
@@ -208,18 +218,21 @@ std::vector<Token> Lexer::lex()
                 continue;
             }
 
-            throw BirdException(std::string("undefined character ") + c);
+            this->user_error_tracker->undefined_character(c, this->line_num, this->char_num);
         }
         }
         this->advance();
     }
 
-    this->tokens.push_back(Token(TokenType::END, ""));
+    this->push_token(Token::Type::END, "");
     return this->tokens;
 }
 
 void Lexer::handle_string()
 {
+    unsigned int start_line_num = this->line_num;
+    unsigned int start_char_num = this->char_num;
+
     this->advance();
     char c = this->peek();
 
@@ -233,12 +246,12 @@ void Lexer::handle_string()
 
     if (this->is_at_end())
     {
-        throw BirdException(std::string("unterminated string"));
+        this->user_error_tracker->unterminated("string", start_line_num, start_char_num);
     }
 
     this->advance();
 
-    this->tokens.push_back(Token(TokenType::STR_LITERAL, str));
+    this->push_token(Token::Type::STR_LITERAL, str);
 }
 
 void Lexer::handle_alpha()
@@ -254,10 +267,10 @@ void Lexer::handle_alpha()
         c = this->peek();
     }
 
-    this->tokens.push_back(Token(this->keywords.find(identifier) != this->keywords.end()
-                                     ? this->keywords.at(identifier)
-                                     : TokenType::IDENTIFIER,
-                                 identifier));
+    this->push_token(this->keywords.find(identifier) != this->keywords.end()
+                         ? this->keywords.at(identifier)
+                         : Token::Type::IDENTIFIER,
+                     identifier);
 }
 
 void Lexer::handle_number()
@@ -271,7 +284,15 @@ void Lexer::handle_number()
         c = this->peek();
     }
 
-    if (!this->is_at_end() && c == '.')
+    if (this->is_at_end())
+    {
+        this->push_token(Token::Type::INT_LITERAL, number);
+        return;
+    }
+
+    // TODO: what happens with 42foo ?
+
+    if (c == '.')
     {
         number.push_back(c);
         this->advance();
@@ -282,18 +303,14 @@ void Lexer::handle_number()
             c = this->peek();
         }
 
-        this->tokens.push_back(Token(TokenType::FLOAT_LITERAL, number));
+        this->push_token(Token::Type::FLOAT_LITERAL, number);
     }
 
-    this->tokens.push_back(Token(TokenType::INT_LITERAL, number));
+    this->push_token(Token::Type::INT_LITERAL, number);
 }
 
 void Lexer::handle_comment()
 {
-    // skip the first two slashes '//'
-    this->advance();
-    this->advance();
-
     while (!this->is_at_end())
     {
         char c = this->advance();
@@ -306,7 +323,9 @@ void Lexer::handle_comment()
 
 void Lexer::handle_multiline_comment()
 {
-    // skip the first slash star '/*'
+    unsigned int start_line_num = this->line_num;
+    unsigned int start_char_num = this->char_num;
+
     while (!this->is_at_end())
     {
         if (this->advance() == '*')
@@ -319,7 +338,7 @@ void Lexer::handle_multiline_comment()
         }
     }
 
-    throw BirdException("Unterminated multiline comment");
+    this->user_error_tracker->unterminated("multiline comment", start_line_num, start_char_num);
 }
 
 bool Lexer::is_alpha(const char c)
@@ -336,6 +355,17 @@ char Lexer::advance()
 {
     auto result = this->input[this->position];
     this->position++;
+
+    if (result == '\n')
+    {
+        this->line_num += 1;
+        this->char_num = 0;
+    }
+    else
+    {
+        this->char_num += 1;
+    }
+
     return result;
 }
 
@@ -348,7 +378,7 @@ char Lexer::peek_next()
 {
     if (this->position + 1 >= this->input.length())
     {
-        throw BirdException(std::string("Unexpected end of input"));
+        this->user_error_tracker->unexpected_end_of_input();
     }
 
     return this->input[this->position + 1];
@@ -357,4 +387,9 @@ char Lexer::peek_next()
 bool Lexer::is_at_end()
 {
     return this->position >= this->input.length();
+}
+
+void Lexer::push_token(Token::Type token_type, std::string lexeme)
+{
+    this->tokens.push_back(Token(token_type, lexeme, this->line_num, this->char_num));
 }

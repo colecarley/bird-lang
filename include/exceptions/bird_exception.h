@@ -3,6 +3,10 @@
 #include <exception>
 #include <string>
 
+/*
+ * Exceptions that should be thrown for errors in THIS code,
+ * if there is a user error, that should be handled with the UserErrorTracker
+ */
 class BirdException : public std::exception
 {
 private:

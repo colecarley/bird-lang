@@ -5,66 +5,73 @@
 #include <iostream>
 #include <map>
 
-enum TokenType
-{
-    // keywords
-    VAR,
-    PRINT,
-    IF,
-    ELSE,
-    WHILE,
-    // types
-    INT,
-    FLOAT,
-    STR,
-    BOOL,
-
-    // single character
-    STAR,
-    SLASH,
-    PLUS,
-    MINUS,
-    SEMICOLON,
-    EQUAL,
-    COMMA,
-    RBRACE,
-    LBRACE,
-    RPAREN,
-    LPAREN,
-    COLON,
-    GREATER,
-    LESS,
-    BANG,
-
-    // two character
-    GREATER_EQUAL,
-    LESS_EQUAL,
-    EQUAL_EQUAL,
-    BANG_EQUAL,
-
-    // values
-    IDENTIFIER,
-    NUMBER,
-    INT_LITERAL,
-    FLOAT_LITERAL,
-    BOOL_LITERAL,
-    STR_LITERAL,
-
-    // end
-    END
-};
+// forward declaration
+class UserErrorTracker;
 
 class Token
 {
 public:
-    TokenType token_type;
+    enum Type
+    {
+        // keywords
+        VAR,
+        PRINT,
+        IF,
+        ELSE,
+        WHILE,
+        FN,
+        RETURN,
+        // types
+        INT,
+        FLOAT,
+        STR,
+        BOOL,
+
+        // single character
+        STAR,
+        SLASH,
+        PLUS,
+        MINUS,
+        SEMICOLON,
+        EQUAL,
+        COMMA,
+        RBRACE,
+        LBRACE,
+        RPAREN,
+        LPAREN,
+        COLON,
+        GREATER,
+        LESS,
+        BANG,
+
+        // two character
+        GREATER_EQUAL,
+        LESS_EQUAL,
+        EQUAL_EQUAL,
+        BANG_EQUAL,
+
+        // values
+        IDENTIFIER,
+        NUMBER,
+        INT_LITERAL,
+        FLOAT_LITERAL,
+        BOOL_LITERAL,
+        STR_LITERAL,
+
+        // end
+        END
+    };
+
+    Type token_type;
     std::string lexeme;
+    unsigned int line_num;
+    unsigned int char_num;
 
     void print_token();
 
     Token();
 
-    Token(TokenType token_type, std::string lexeme);
+    Token(Type token_type, std::string lexeme, unsigned int line_num, unsigned int char_num);
 };
 
 /*
@@ -76,10 +83,13 @@ class Lexer
 public:
     std::string input;
     unsigned int position;
+    unsigned int line_num;
+    unsigned int char_num;
     std::vector<Token> tokens;
-    static const std::map<std::string, TokenType> keywords;
+    static const std::map<std::string, Token::Type> keywords;
+    UserErrorTracker *user_error_tracker;
 
-    Lexer(std::string input);
+    Lexer(std::string input, UserErrorTracker *error_tracker);
 
     std::vector<Token> lex();
 
@@ -106,4 +116,6 @@ public:
     bool is_at_end();
 
     void print_tokens();
+
+    void push_token(Token::Type, std::string lexeme);
 };

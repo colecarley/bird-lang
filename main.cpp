@@ -10,6 +10,7 @@
 #include "include/visitors/interpreter.h"
 #include "include/ast_node/expr/expr.h"
 #include "include/visitors/code_gen.h"
+#include "include/exceptions/user_error_tracker.h"
 
 void repl();
 void compile(std::string filename);
@@ -38,12 +39,19 @@ void repl()
         std::cout << ">";
         std::getline(std::cin, code);
 
-        Lexer lexer(code);
+        UserErrorTracker error_tracker(code);
+
+        Lexer lexer(code, &error_tracker);
         auto tokens = lexer.lex();
         lexer.print_tokens();
 
-        Parser parser(tokens);
+        Parser parser(tokens, &error_tracker);
         auto ast = parser.parse();
+
+        if (error_tracker.has_errors())
+        {
+            error_tracker.print_errors_and_exit();
+        }
 
         AstPrinter printer;
         printer.print_ast(&ast);
@@ -67,12 +75,19 @@ void compile(std::string filename)
         }
     }
 
-    Lexer lexer(code);
+    UserErrorTracker error_tracker(code);
+
+    Lexer lexer(code, &error_tracker);
     auto tokens = lexer.lex();
     lexer.print_tokens();
 
-    Parser parser(tokens);
+    Parser parser(tokens, &error_tracker);
     auto ast = parser.parse();
+
+    if (error_tracker.has_errors())
+    {
+        error_tracker.print_errors_and_exit();
+    }
 
     AstPrinter printer;
     printer.print_ast(&ast);
