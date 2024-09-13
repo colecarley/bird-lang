@@ -1,19 +1,16 @@
 {
     "configurations": [
         {
-            "name": "Mac",
+            "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/homebrew/opt/llvm/include" // Default for Apple Silicon Macs
+                "/usr/lib/llvm-18/include"
             ],
             "defines": [],
-            "macFrameworkPath": [
-                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
-            ],
-            "compilerPath": "/usr/bin/clang++", // or your desired compiler
+            "compilerPath": "/usr/bin/clang++-11",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "macos-clang-arm64"
+            "intelliSenseMode": "linux-clang-arm64"
         }
     ],
     "version": 4
