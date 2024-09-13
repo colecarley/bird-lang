@@ -293,6 +293,7 @@ void Lexer::handle_number()
     {
         number.push_back(c);
         this->advance();
+        c = this->peek();
         while (this->is_digit(c) && !this->is_at_end())
         {
             number.push_back(c);
@@ -301,6 +302,7 @@ void Lexer::handle_number()
         }
 
         this->push_token(Token::Type::FLOAT_LITERAL, number);
+        return;
     }
 
     this->push_token(Token::Type::INT_LITERAL, number);
