@@ -44,7 +44,7 @@ var float_division: float = 2.34 / 3.4;
 */
 
 // this is before
-var unterminated = "hello there"
+var unterminated = "hello there";
 // this is after
 
 

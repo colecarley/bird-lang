@@ -58,4 +58,6 @@ public:
     Token peek_previous();
 
     bool is_at_end();
+
+    void synchronize();
 };

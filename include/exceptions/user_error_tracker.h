@@ -2,12 +2,13 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <tuple>
 
 #include "../lexer.h"
 
 class UserErrorTracker
 {
-    std::vector<std::string> errors;
+    std::vector<std::tuple<std::string, Token>> errors;
     std::vector<std::string> code_lines;
 
     /*
@@ -17,19 +18,21 @@ class UserErrorTracker
     {
         std::string line = this->code_lines[line_num];
 
-        for (int i = 0; i < line.length(); i++)
+        const unsigned int line_width = 100;
+
+        for (int i = 0; i < line_width; i++)
         {
             std::cout << '~';
         }
-        std::cout << std::endl
-                  << std::endl;
+        std::cout << std::endl;
 
-        if (line_num > 1)
+        if (line_num > 0)
         {
             std::cout << this->code_lines[line_num - 1] << std::endl;
         }
+
         std::cout << line << std::endl;
-        for (int i = 0; i < char_num - 1; i++)
+        for (int i = 0; i < char_num; i++)
         {
             std::cout << '-';
         }
@@ -40,23 +43,23 @@ class UserErrorTracker
             std::cout << this->code_lines[line_num + 1] << std::endl;
         }
 
-        std::cout << std::endl
-                  << std::endl;
-        for (int i = 0; i < line.length(); i++)
+        std::cout << std::endl;
+        for (int i = 0; i < line_width; i++)
         {
             std::cout << '~';
         }
+        std::cout << std::endl;
         std::cout << std::endl;
     }
 
     std::string format_message(std::string message, unsigned int line_num, unsigned int char_num)
     {
-        return "[ERROR] " + message + " (line " + std::to_string(line_num) + ", character " + std::to_string(char_num) + ")";
+        return this->format_message(message) + " (line " + std::to_string(line_num) + ", character " + std::to_string(char_num) + ")";
     }
 
     std::string format_message(std::string message)
     {
-        return "[ERROR] " + message;
+        return ">>[ERROR] " + message;
     }
 
 public:
@@ -119,23 +122,24 @@ public:
      */
     void expected(std::string symbol, std::string where, Token token)
     {
-        this->errors.push_back("[ERROR]: expected " + symbol + " " + where);
+        this->errors.push_back(std::make_tuple(this->format_message("expected " + symbol + " " + where, token.line_num, token.char_num), token));
     }
 
     void print_errors()
     {
         for (auto error : this->errors)
         {
-            std::cout << error << std::endl;
+            std::cout << std::get<0>(error) << std::endl;
+            auto token = std::get<1>(error);
+            this->print_where(token.line_num, token.char_num);
         }
+
+        std::cout << "[" << this->errors.size() << " ERRORS FOUND]" << std::endl;
     }
 
     void print_errors_and_exit()
     {
-        for (auto error : this->errors)
-        {
-            std::cout << error << std::endl;
-        }
+        this->print_errors();
         this->exit_program();
     }
 

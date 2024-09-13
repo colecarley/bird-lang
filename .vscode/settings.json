@@ -63,6 +63,15 @@
         "print": "cpp",
         "queue": "cpp",
         "semaphore": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "any": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "vector": "cpp",
+        "fstream": "cpp",
+        "numeric": "cpp",
+        "ranges": "cpp",
+        "span": "cpp"
     }
 }

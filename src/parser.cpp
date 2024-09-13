@@ -10,6 +10,7 @@
 #include "../include/ast_node/stmt/block.h"
 
 #include "../include/exceptions/bird_exception.h"
+#include "../include/exceptions/user_exception.h"
 #include "../include/exceptions/user_error_tracker.h"
 
 Parser::Parser(std::vector<Token> tokens, UserErrorTracker *user_error_tracker) : tokens(tokens)
@@ -23,7 +24,15 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
     std::vector<std::unique_ptr<Stmt>> stmts;
     while (!this->is_at_end())
     {
-        stmts.push_back(this->stmt());
+        try
+        {
+            auto stmt = this->stmt();
+            stmts.push_back(std::move(stmt));
+        }
+        catch (UserException error)
+        {
+            // do nothing
+        }
     }
 
     return stmts;
@@ -64,7 +73,9 @@ std::unique_ptr<Stmt> Parser::block()
 
     if (this->advance().token_type != Token::Type::RBRACE)
     {
-        this->user_error_tracker->expected("{", "end of block", this->peek_previous());
+        this->user_error_tracker->expected("{", "at the end of block", this->peek_previous());
+        this->synchronize();
+        throw UserException();
     }
 
     return std::make_unique<Block>(Block(std::move(stmts)));
@@ -77,7 +88,9 @@ std::unique_ptr<Stmt> Parser::expr_stmt()
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
-        throw BirdException("Expected ';' at the end of expression");
+        this->user_error_tracker->expected("{", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
     }
 
     return result;
@@ -106,7 +119,9 @@ std::unique_ptr<Stmt> Parser::print_stmt()
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
-        throw BirdException("Expected ';' after 'print'");
+        this->user_error_tracker->expected(";", "after 'print'", this->peek_previous());
+        this->synchronize();
+        throw UserException();
     }
 
     auto result = std::make_unique<PrintStmt>(PrintStmt(std::move(values)));
@@ -124,7 +139,9 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
     if (this->advance().token_type != Token::Type::EQUAL)
     {
-        throw BirdException("Expected '=' in assignment");
+        this->user_error_tracker->expected("=", "in assignment", this->peek_previous());
+        this->synchronize();
+        throw UserException();
     }
 
     auto result = std::make_unique<DeclStmt>(
@@ -134,7 +151,9 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
-        throw BirdException("Expected ';' at the end of expression");
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
     }
 
     return result;
@@ -189,20 +208,23 @@ std::unique_ptr<Expr> Parser::primary()
 {
     Token::Type token_type = this->peek().token_type;
 
-    if (token_type == Token::Type::IDENTIFIER)
+    switch (token_type)
     {
+    case Token::Type::IDENTIFIER:
+    case Token::Type::INT_LITERAL:
+    case Token::Type::FLOAT_LITERAL:
+    case Token::Type::STR_LITERAL:
+    case Token::Type::BOOL_LITERAL:
         return std::make_unique<Primary>(Primary(this->advance()));
-    }
-    if (token_type == Token::Type::INT_LITERAL)
-    {
-        return std::make_unique<Primary>(Primary(this->advance()));
-    }
-    if (token_type == Token::Type::LPAREN)
-    {
+    case Token::Type::LPAREN:
         return this->grouping();
+    default:
+    {
+        this->user_error_tracker->expected("identifier or i32", "", this->peek());
+        this->synchronize();
+        throw UserException();
     }
-
-    throw BirdException("Invalid primary value, expected identifier or i32");
+    }
 }
 
 std::unique_ptr<Expr> Parser::grouping()
@@ -216,7 +238,9 @@ std::unique_ptr<Expr> Parser::grouping()
 
     if (this->advance().token_type != Token::Type::RPAREN)
     {
-        throw BirdException("Expected ')' after expression");
+        this->user_error_tracker->expected("(", "after grouping", this->peek_previous());
+        this->synchronize();
+        throw UserException();
     }
 
     return expr;
@@ -242,4 +266,12 @@ Token Parser::peek_previous()
 bool Parser::is_at_end()
 {
     return this->peek().token_type == Token::Type::END;
+}
+
+void Parser::synchronize()
+{
+    while (this->advance().token_type != Token::Type::SEMICOLON && !this->is_at_end())
+    {
+        // do nothing
+    }
 }
