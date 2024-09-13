@@ -135,7 +135,16 @@ std::unique_ptr<Stmt> Parser::var_decl()
         throw BirdException("Expected 'var' keyword");
     }
 
-    auto identifier = this->advance();
+    auto identifier = this->advance(); // TODO: check that this is an identifier
+
+    if (this->advance().token_type != Token::Type::COLON)
+    {
+        this->user_error_tracker->expected(":", "after identifier in assignment", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto type_identifier = this->advance(); // TODO: check that this is a type identifier
 
     if (this->advance().token_type != Token::Type::EQUAL)
     {
@@ -147,6 +156,7 @@ std::unique_ptr<Stmt> Parser::var_decl()
     auto result = std::make_unique<DeclStmt>(
         DeclStmt(
             identifier,
+            type_identifier,
             this->expr()));
 
     if (this->advance().token_type != Token::Type::SEMICOLON)

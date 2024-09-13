@@ -21,11 +21,9 @@ public:
         WHILE,
         FN,
         RETURN,
+
         // types
-        INT,
-        FLOAT,
-        STR,
-        BOOL,
+        TYPE_IDENTIIFER,
 
         // single character
         STAR,
