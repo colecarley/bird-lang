@@ -14,6 +14,8 @@
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/block.h"
 
+#include "../exceptions/bird_exception.h"
+
 /*
  * Visitor that prints the Abstract Syntax Tree
  * using prefix notation and expressions wrapped in parentheses
@@ -99,5 +101,10 @@ public:
     void visit_primary(Primary *primary)
     {
         std::cout << primary->value.lexeme;
+    }
+
+    void visit_const_stmt(ConstStmt *const_stmt)
+    {
+        throw BirdException("implement const statment visit");
     }
 };

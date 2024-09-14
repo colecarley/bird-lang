@@ -171,4 +171,9 @@ public:
         }
         }
     }
+
+    void visit_const_stmt(ConstStmt *const_stmt)
+    {
+        throw BirdException("implement const statment visit");
+    }
 };

@@ -4,6 +4,9 @@ var x: int = 3;
 
 var y: int = 4;
 
+const z: str = "foobar";
+
+
 if (x > y) {
     print "x is greater";
 } else if (x == y) {
