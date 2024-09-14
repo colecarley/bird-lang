@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20.0)
 
-project(test VERSION 1.0)
+project(compiler VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -18,11 +18,11 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-add_executable(test main.cpp ${SOURCES})
+add_executable(compiler main.cpp ${SOURCES})
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 
-target_link_libraries(test ${llvm_libs})
+target_link_libraries(compiler ${llvm_libs})

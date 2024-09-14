@@ -7,6 +7,7 @@
 #include "../include/ast_node/stmt/decl_stmt.h"
 #include "../include/ast_node/stmt/print_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
+#include "../include/ast_node/stmt/const_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 
 #include "../include/exceptions/bird_exception.h"
@@ -44,6 +45,10 @@ std::unique_ptr<Stmt> Parser::stmt()
     {
         return this->var_decl();
     }
+    if (this->peek().token_type == Token::Type::CONST)
+    {
+        return this->const_decl();
+    }
     if (this->peek().token_type == Token::Type::PRINT)
     {
         return this->print_stmt();
@@ -54,6 +59,59 @@ std::unique_ptr<Stmt> Parser::stmt()
     }
 
     return this->expr_stmt();
+}
+
+std::unique_ptr<Stmt> Parser::const_decl()
+{
+    if (this->advance().token_type != Token::Type::CONST)
+    {
+        throw BirdException("Expected 'const' at the beginning of const decl");
+    }
+
+    auto identifier = this->advance();
+
+    if (identifier.token_type != Token::Type::IDENTIFIER)
+    {
+        this->user_error_tracker->expected("identifier", "after const", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    if (this->advance().token_type != Token::Type::COLON)
+    {
+        this->user_error_tracker->expected(":", "after identifier", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto type_identifier = this->advance();
+
+    if (type_identifier.token_type != Token::Type::TYPE_IDENTIIFER)
+    {
+        this->user_error_tracker->expected("type identifier", "after identifier", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    if (this->advance().token_type != Token::Type::EQUAL)
+    {
+        this->user_error_tracker->expected("=", "after type identifier", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto expr = this->expr();
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "after const statement", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return std::make_unique<ConstStmt>(
+        ConstStmt(
+            identifier, type_identifier, std::move(expr)));
 }
 
 std::unique_ptr<Stmt> Parser::block()

@@ -21,6 +21,7 @@ public:
         WHILE,
         FN,
         RETURN,
+        CONST,
 
         // types
         TYPE_IDENTIIFER,

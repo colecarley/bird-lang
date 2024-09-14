@@ -7,6 +7,7 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::INT_LITERAL, "INT_LITERAL"},
     {Token::Type::IDENTIFIER, "IDENTIFIER"},
     {Token::Type::VAR, "VAR"},
+    {Token::Type::CONST, "CONST"},
     {Token::Type::MINUS, "MINUS"},
     {Token::Type::PLUS, "PLUS"},
     {Token::Type::SLASH, "SLASH"},
@@ -85,6 +86,7 @@ const std::map<std::string, Token::Type> Lexer::keywords = {
     {"false", Token::Type::BOOL_LITERAL},
     {"fn", Token::Type::FN},
     {"return", Token::Type::RETURN},
+    {"const", Token::Type::CONST},
 };
 
 void Lexer::print_tokens()
