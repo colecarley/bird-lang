@@ -229,7 +229,39 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
 std::unique_ptr<Expr> Parser::expr()
 {
-    return this->term();
+    return this->equality();
+}
+
+std::unique_ptr<Expr> Parser::equality()
+{
+    auto left = this->comparison();
+
+    while (this->peek().token_type == Token::Type::EQUAL_EQUAL ||
+           this->peek().token_type == Token::Type::BANG_EQUAL)
+    {
+        Token op = this->advance();
+        std::unique_ptr<Expr> right = this->comparison();
+        left = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
+    }
+
+    return left;
+}
+
+std::unique_ptr<Expr> Parser::comparison()
+{
+    auto left = this->term();
+
+    while (this->peek().token_type == Token::Type::GREATER ||
+           this->peek().token_type == Token::Type::GREATER_EQUAL ||
+           this->peek().token_type == Token::Type::LESS ||
+           this->peek().token_type == Token::Type::LESS_EQUAL)
+    {
+        Token op = this->advance();
+        std::unique_ptr<Expr> right = this->term();
+        left = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
+    }
+
+    return left;
 }
 
 std::unique_ptr<Expr> Parser::term()
