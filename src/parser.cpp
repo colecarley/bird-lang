@@ -314,6 +314,50 @@ std::unique_ptr<Expr> Parser::grouping()
     return expr;
 }
 
+std::unique_ptr<Func> Parser::func()
+{
+    if (this->advance().token_type != Token::Type::FN)
+    {
+        throw BirdException("expected fn keyword");
+    }
+
+    if (this->advance().token_type != Token::Type::IDENTIFIER)
+    {
+        this->user_error_tracker->expected("identifier", "after keyword", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+    if (this->advance().token_type != Token::Type::LPAREN)
+    {
+        this->user_error_tracker->expected("(", "after identifier", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto fn_params = this->fn_params();
+
+    if (this->advance().token_type != Token::Type::RPAREN)
+    {
+        this->user_error_tracker->expected(")", "after function parameters", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto fn_return_type = this->fn_return_type();
+
+    auto block = this->block();
+
+    return 
+}
+
+Parser::fn_params()
+{
+        while(true)
+        {
+            auto ident_decl = this->ident_decl();
+        }    
+}
+
 Token Parser::advance()
 {
     const auto token = this->peek();

@@ -176,4 +176,9 @@ public:
     {
         throw BirdException("implement const statment visit");
     }
+
+    void visit_func(Func *func)
+    {
+        throw BirdException("implement func visit");
+    }
 };

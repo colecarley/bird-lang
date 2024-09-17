@@ -250,6 +250,10 @@ public:
     void visit_const_stmt(ConstStmt *const_stmt)
     {
         throw BirdException("implement const statment visit");
-        ;
+    }
+
+    void visit_func(Func *func)
+    {
+        throw BirdException("implement func visit");
     }
 };

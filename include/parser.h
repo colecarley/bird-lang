@@ -8,6 +8,7 @@
 // foward declarations
 class Expr;
 class Stmt;
+class Func;
 class UserErrorTracker;
 
 /*
@@ -52,6 +53,10 @@ public:
     std::unique_ptr<Expr> primary();
 
     std::unique_ptr<Expr> grouping();
+
+    // funcs
+
+    std::unique_ptr<Func> func();
 
     Token advance();
 

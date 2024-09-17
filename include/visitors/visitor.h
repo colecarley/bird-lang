@@ -29,4 +29,5 @@ public:
     virtual void visit_print_stmt(PrintStmt *) = 0;
     virtual void visit_block(Block *) = 0;
     virtual void visit_const_stmt(ConstStmt *) = 0;
+    virtual void visit_func(Func *) = 0;
 };
