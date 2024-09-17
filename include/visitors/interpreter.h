@@ -154,6 +154,16 @@ public:
             this->stack.push_back(left <= right);
             break;
         }
+        case Token::Type::BANG_EQUAL:
+        {
+            this->stack.push_back(left != right);
+            break;
+        }
+        case Token::Type::EQUAL_EQUAL:
+        {
+            this->stack.push_back(left == right);
+            break;
+        }
         default:
         {
             throw BirdException("undefined binary operator");
