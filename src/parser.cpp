@@ -282,7 +282,9 @@ std::unique_ptr<Expr> Parser::factor()
 {
     auto left = this->unary();
 
-    while (this->peek().token_type == Token::Type::STAR || this->peek().token_type == Token::Type::SLASH)
+    while (this->peek().token_type == Token::Type::STAR ||
+           this->peek().token_type == Token::Type::SLASH ||
+           this->peek().token_type == Token::Type::PERCENT)
     {
         Token op = this->advance();
         auto right = this->unary();
