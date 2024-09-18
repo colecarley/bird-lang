@@ -14,6 +14,7 @@
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
 
 #include "../exceptions/bird_exception.h"
@@ -261,5 +262,10 @@ public:
     void visit_func(Func *func)
     {
         throw BirdException("implement func visit");
+    }
+
+    void visit_if_stmt(IfStmt *if_stmt)
+    {
+        throw BirdException("implement if statement visit");
     }
 };

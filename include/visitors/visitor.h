@@ -13,6 +13,7 @@ class PrintStmt;
 class ConstStmt;
 class WhileStmt;
 class Block;
+class IfStmt;
 
 /*
  * the interface for all visitors,
@@ -30,6 +31,7 @@ public:
     virtual void visit_print_stmt(PrintStmt *) = 0;
     virtual void visit_const_stmt(ConstStmt *) = 0;
     virtual void visit_func(Func *) = 0;
+    virtual void visit_if_stmt(IfStmt *) = 0;
     virtual void visit_while_stmt(WhileStmt *) = 0;
     virtual void visit_block(Block *) = 0;
 };
