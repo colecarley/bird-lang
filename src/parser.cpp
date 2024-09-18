@@ -63,25 +63,6 @@ std::unique_ptr<Stmt> Parser::stmt()
         default:
             return this->expr_stmt();
     }
-
-    // if (this->peek().token_type == Token::Type::VAR)
-    // {
-    //     return this->var_decl();
-    // }
-    // if (this->peek().token_type == Token::Type::CONST)
-    // {
-    //     return this->const_decl();
-    // }
-    // if (this->peek().token_type == Token::Type::PRINT)
-    // {
-    //     return this->print_stmt();
-    // }
-    // if (this->peek().token_type == Token::Type::LBRACE)
-    // {
-    //     return this->block();
-    // }
-
-    // return this->expr_stmt();
 }
 
 std::unique_ptr<Stmt> Parser::const_decl()
