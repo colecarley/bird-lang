@@ -38,6 +38,8 @@ public:
 
     std::unique_ptr<Stmt> block();
 
+    std::unique_ptr<Stmt> if_stmt();
+
     std::unique_ptr<Stmt> print_stmt();
 
     // exprs

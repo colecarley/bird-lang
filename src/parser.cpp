@@ -6,6 +6,7 @@
 
 #include "../include/ast_node/stmt/decl_stmt.h"
 #include "../include/ast_node/stmt/print_stmt.h"
+#include "../include/ast_node/stmt/if_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
 #include "../include/ast_node/stmt/block.h"
@@ -56,6 +57,10 @@ std::unique_ptr<Stmt> Parser::stmt()
     if (this->peek().token_type == Token::Type::LBRACE)
     {
         return this->block();
+    }
+    if (this->peek().token_type == Token::Type::IF)
+    {
+        return this->if_stmt();
     }
 
     return this->expr_stmt();
@@ -137,6 +142,57 @@ std::unique_ptr<Stmt> Parser::block()
     }
 
     return std::make_unique<Block>(Block(std::move(stmts)));
+}
+
+std::unique_ptr<Stmt> Parser::if_stmt()
+{
+    if (this->advance().token_type != Token::Type::IF)
+    {
+        throw BirdException("Expected 'if' at the beginning of if statement");
+    }
+
+    if (this->advance().token_type != Token::Type::LPAREN)
+    {
+        this->user_error_tracker->expected("(", "at the beginning of conditional", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto condition = this->expr();
+
+    if (this->advance().token_type != Token::Type::RPAREN)
+    {
+        this->user_error_tracker->expected(")", "at the end of conditional", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    if (this->peek().token_type != Token::Type::LBRACE)
+    {
+        this->user_error_tracker->expected("{", "at the beginning of block", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto block = this->block();
+
+    std::unique_ptr<Stmt> else_branch = nullptr;
+
+    if (this->advance().token_type == Token::Type::ELSE)
+    {
+        this->advance();
+        if (this->peek().token_type == Token::Type::IF) {
+            else_branch = this->if_stmt();
+        } else {
+            else_branch = this->block();
+        }
+    }
+
+    auto result = std::make_unique<IfStmt>(
+        IfStmt(std::move(condition), std::move(block), std::move(else_branch))
+    );
+    
+    return result;
 }
 
 std::unique_ptr<Stmt> Parser::expr_stmt()
