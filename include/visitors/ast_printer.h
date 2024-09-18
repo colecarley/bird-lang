@@ -130,7 +130,7 @@ public:
 
         if (if_stmt->else_branch.has_value())
         {
-            std::cout << "else ";
+            std::cout << " else ";
             if_stmt->else_branch.value()->accept(this);
         }
     }
