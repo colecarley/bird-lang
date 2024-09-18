@@ -119,11 +119,6 @@ public:
         throw BirdException("Implement while statement interpreter");
     }
 
-    void visit_if_stmt(IfStmt *if_stmt)
-    {
-        throw BirdException("implement if statement visit");
-    }
-
     void visit_binary(Binary *binary)
     {
         binary->left->accept(this);

@@ -259,11 +259,6 @@ public:
         throw BirdException("implement const statment visit");
     }
 
-    void visit_if_stmt(IfStmt *if_stmt) 
-    {
-        throw BirdException("implement if statement visit");
-    }
-
     void visit_if_stmt(IfStmt *if_stmt)
     {
         throw BirdException("implement if statement visit");
