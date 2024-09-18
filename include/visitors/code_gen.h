@@ -14,6 +14,7 @@
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
 
 #include "../exceptions/bird_exception.h"
@@ -256,6 +257,10 @@ public:
     void visit_const_stmt(ConstStmt *const_stmt)
     {
         throw BirdException("implement const statment visit");
-        ;
+    }
+
+    void visit_if_stmt(IfStmt *if_stmt)
+    {
+        throw BirdException("implement if statement visit");
     }
 };

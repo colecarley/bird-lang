@@ -6,6 +6,7 @@
 
 #include "../include/ast_node/stmt/decl_stmt.h"
 #include "../include/ast_node/stmt/print_stmt.h"
+#include "../include/ast_node/stmt/if_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
 #include "../include/ast_node/stmt/while_stmt.h"
@@ -61,6 +62,10 @@ std::unique_ptr<Stmt> Parser::stmt()
     if (this->peek().token_type == Token::Type::LBRACE)
     {
         return this->block();
+    }
+    if (this->peek().token_type == Token::Type::IF)
+    {
+        return this->if_stmt();
     }
 
     return this->expr_stmt();
@@ -136,12 +141,40 @@ std::unique_ptr<Stmt> Parser::block()
 
     if (this->advance().token_type != Token::Type::RBRACE)
     {
-        this->user_error_tracker->expected("{", "at the end of block", this->peek_previous());
+        this->user_error_tracker->expected("}", "at the end of block", this->peek_previous());
         this->synchronize();
         throw UserException();
     }
 
     return std::make_unique<Block>(Block(std::move(stmts)));
+}
+
+std::unique_ptr<Stmt> Parser::if_stmt()
+{
+    if (this->advance().token_type != Token::Type::IF)
+    {
+        throw BirdException("Expected 'if' at the beginning of if statement");
+    }
+
+    auto condition = this->expr();
+
+    auto statement = this->stmt();
+
+    if (this->peek().token_type == Token::Type::ELSE)
+    {
+        this->advance();
+        return std::make_unique<IfStmt>(
+            std::move(condition), 
+            std::move(statement), 
+            std::make_optional<std::unique_ptr<Stmt>>(std::move(this->stmt()))
+            );
+    }
+    
+    return std::make_unique<IfStmt>(
+            std::move(condition), 
+            std::move(statement), 
+            std::nullopt
+            );
 }
 
 std::unique_ptr<Stmt> Parser::expr_stmt()
@@ -151,7 +184,7 @@ std::unique_ptr<Stmt> Parser::expr_stmt()
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
-        this->user_error_tracker->expected("{", "at the end of expression", this->peek_previous());
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
         this->synchronize();
         throw UserException();
     }

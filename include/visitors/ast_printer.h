@@ -11,6 +11,7 @@
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
+#include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
 #include "../ast_node/stmt/block.h"
@@ -37,6 +38,11 @@ public:
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
                 print_stmt->accept(this);
+            }
+
+            if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
+            {
+                if_stmt->accept(this);
             }
 
             if (auto block = dynamic_cast<Block *>(stmt.get()))
@@ -112,6 +118,21 @@ public:
     void visit_const_stmt(ConstStmt *const_stmt)
     {
         throw BirdException("implement const statment visit");
+    }
+
+    void visit_if_stmt(IfStmt *if_stmt)
+    {
+        std::cout << "if ";
+        if_stmt->condition->accept(this);
+
+        std::cout << " ";
+        if_stmt->then_branch->accept(this);
+
+        if (if_stmt->else_branch.has_value())
+        {
+            std::cout << " else ";
+            if_stmt->else_branch.value()->accept(this);
+        }
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
