@@ -8,6 +8,7 @@
 #include "../include/ast_node/stmt/print_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
+#include "../include/ast_node/stmt/while_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 
 #include "../include/exceptions/bird_exception.h"
@@ -52,6 +53,10 @@ std::unique_ptr<Stmt> Parser::stmt()
     if (this->peek().token_type == Token::Type::PRINT)
     {
         return this->print_stmt();
+    }
+    if (this->peek().token_type == Token::Type::WHILE)
+    {
+        return this->while_stmt();
     }
     if (this->peek().token_type == Token::Type::LBRACE)
     {
@@ -184,6 +189,20 @@ std::unique_ptr<Stmt> Parser::print_stmt()
 
     auto result = std::make_unique<PrintStmt>(PrintStmt(std::move(values)));
     return result;
+}
+
+std::unique_ptr<Stmt> Parser::while_stmt()
+{
+    if (this->advance().token_type != Token::Type::WHILE)
+    {
+        throw BirdException("Expected 'while' at the beginning of while statement");
+    }
+
+    auto condition = this->expr();
+
+    auto stmt = this->stmt();
+
+    return std::make_unique<WhileStmt>(WhileStmt(std::move(condition), std::move(stmt)));
 }
 
 std::unique_ptr<Stmt> Parser::var_decl()

@@ -10,8 +10,9 @@ class Primary;
 class DeclStmt;
 class ExprStmt;
 class PrintStmt;
-class Block;
 class ConstStmt;
+class WhileStmt;
+class Block;
 
 /*
  * the interface for all visitors,
@@ -27,6 +28,7 @@ public:
     virtual void visit_decl_stmt(DeclStmt *) = 0;
     virtual void visit_expr_stmt(ExprStmt *) = 0;
     virtual void visit_print_stmt(PrintStmt *) = 0;
-    virtual void visit_block(Block *) = 0;
     virtual void visit_const_stmt(ConstStmt *) = 0;
+    virtual void visit_while_stmt(WhileStmt *) = 0;
+    virtual void visit_block(Block *) = 0;
 };

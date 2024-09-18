@@ -13,6 +13,7 @@
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
+#include "../ast_node/stmt/while_stmt.h"
 #include "../ast_node/stmt/block.h"
 
 #include "../exceptions/bird_exception.h"
@@ -161,6 +162,11 @@ public:
     void visit_expr_stmt(ExprStmt *expr_stmt)
     {
         expr_stmt->expr->accept(this);
+    }
+
+    void visit_while_stmt(WhileStmt *while_stmt)
+    {
+        throw BirdException("Implement while statement code gen");
     }
 
     void visit_binary(Binary *binary)
