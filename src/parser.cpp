@@ -141,7 +141,7 @@ std::unique_ptr<Stmt> Parser::block()
 
     if (this->advance().token_type != Token::Type::RBRACE)
     {
-        this->user_error_tracker->expected("{", "at the end of block", this->peek_previous());
+        this->user_error_tracker->expected("}", "at the end of block", this->peek_previous());
         this->synchronize();
         throw UserException();
     }
@@ -156,48 +156,25 @@ std::unique_ptr<Stmt> Parser::if_stmt()
         throw BirdException("Expected 'if' at the beginning of if statement");
     }
 
-    if (this->advance().token_type != Token::Type::LPAREN)
-    {
-        this->user_error_tracker->expected("(", "at the beginning of conditional", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
-
     auto condition = this->expr();
 
-    if (this->advance().token_type != Token::Type::RPAREN)
-    {
-        this->user_error_tracker->expected(")", "at the end of conditional", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    auto statement = this->stmt();
 
-    if (this->peek().token_type != Token::Type::LBRACE)
-    {
-        this->user_error_tracker->expected("{", "at the beginning of block", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
-
-    auto block = this->block();
-
-    std::unique_ptr<Stmt> else_branch = nullptr;
-
-    if (this->advance().token_type == Token::Type::ELSE)
+    if (this->peek().token_type == Token::Type::ELSE)
     {
         this->advance();
-        if (this->peek().token_type == Token::Type::IF) {
-            else_branch = this->if_stmt();
-        } else {
-            else_branch = this->block();
-        }
+        return std::make_unique<IfStmt>(
+            std::move(condition), 
+            std::move(statement), 
+            std::make_optional<std::unique_ptr<Stmt>>(std::move(this->stmt()))
+            );
     }
-
-    auto result = std::make_unique<IfStmt>(
-        IfStmt(std::move(condition), std::move(block), std::move(else_branch))
-    );
     
-    return result;
+    return std::make_unique<IfStmt>(
+            std::move(condition), 
+            std::move(statement), 
+            std::nullopt
+            );
 }
 
 std::unique_ptr<Stmt> Parser::expr_stmt()
@@ -207,7 +184,7 @@ std::unique_ptr<Stmt> Parser::expr_stmt()
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
-        this->user_error_tracker->expected("{", "at the end of expression", this->peek_previous());
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
         this->synchronize();
         throw UserException();
     }

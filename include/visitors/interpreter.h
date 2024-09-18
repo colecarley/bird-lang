@@ -224,4 +224,9 @@ public:
         }
         }
     }
+
+    void visit_if_stmt(IfStmt *if_stmt)
+    {
+        throw BirdException("implement if statement visit");
+    }
 };

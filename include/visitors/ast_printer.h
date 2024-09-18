@@ -128,10 +128,10 @@ public:
         std::cout << " ";
         if_stmt->then_branch->accept(this);
 
-        if (if_stmt->else_branch)
+        if (if_stmt->else_branch.has_value())
         {
             std::cout << "else ";
-            if_stmt->else_branch->accept(this);
+            if_stmt->else_branch.value()->accept(this);
         }
     }
 
