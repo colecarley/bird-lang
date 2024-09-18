@@ -134,6 +134,36 @@ public:
             this->stack.push_back(left * right);
             break;
         }
+        case Token::Type::GREATER:
+        {
+            this->stack.push_back(left > right);
+            break;
+        }
+        case Token::Type::GREATER_EQUAL:
+        {
+            this->stack.push_back(left >= right);
+            break;
+        }
+        case Token::Type::LESS:
+        {
+            this->stack.push_back(left < right);
+            break;
+        }
+        case Token::Type::LESS_EQUAL:
+        {
+            this->stack.push_back(left <= right);
+            break;
+        }
+        case Token::Type::BANG_EQUAL:
+        {
+            this->stack.push_back(left != right);
+            break;
+        }
+        case Token::Type::EQUAL_EQUAL:
+        {
+            this->stack.push_back(left == right);
+            break;
+        }
         default:
         {
             throw BirdException("undefined binary operator");
