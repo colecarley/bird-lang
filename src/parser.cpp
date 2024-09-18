@@ -9,6 +9,8 @@
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
 #include "../include/ast_node/stmt/block.h"
+#include "../include/ast_node/stmt/func.h"
+
 
 #include "../include/exceptions/bird_exception.h"
 #include "../include/exceptions/user_exception.h"
@@ -41,24 +43,45 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 
 std::unique_ptr<Stmt> Parser::stmt()
 {
-    if (this->peek().token_type == Token::Type::VAR)
+    switch (this->peek().token_type) 
     {
-        return this->var_decl();
-    }
-    if (this->peek().token_type == Token::Type::CONST)
-    {
-        return this->const_decl();
-    }
-    if (this->peek().token_type == Token::Type::PRINT)
-    {
-        return this->print_stmt();
-    }
-    if (this->peek().token_type == Token::Type::LBRACE)
-    {
-        return this->block();
+        case Token::Type::VAR:
+            return this->var_decl();
+
+        case Token::Type::CONST:
+            return this->const_decl();
+
+        case Token::Type::PRINT:
+            return this->print_stmt();
+
+        case Token::Type::LBRACE:
+            return this->block();
+
+        case Token::Type::FN:
+            return this->func();
+
+        default:
+            return this->expr_stmt();
     }
 
-    return this->expr_stmt();
+    // if (this->peek().token_type == Token::Type::VAR)
+    // {
+    //     return this->var_decl();
+    // }
+    // if (this->peek().token_type == Token::Type::CONST)
+    // {
+    //     return this->const_decl();
+    // }
+    // if (this->peek().token_type == Token::Type::PRINT)
+    // {
+    //     return this->print_stmt();
+    // }
+    // if (this->peek().token_type == Token::Type::LBRACE)
+    // {
+    //     return this->block();
+    // }
+
+    // return this->expr_stmt();
 }
 
 std::unique_ptr<Stmt> Parser::const_decl()
@@ -86,7 +109,7 @@ std::unique_ptr<Stmt> Parser::const_decl()
 
     auto type_identifier = this->advance();
 
-    if (type_identifier.token_type != Token::Type::TYPE_IDENTIIFER)
+    if (type_identifier.token_type != Token::Type::TYPE_IDENTIFIER)
     {
         this->user_error_tracker->expected("type identifier", "after identifier", this->peek());
         this->synchronize();
@@ -314,14 +337,16 @@ std::unique_ptr<Expr> Parser::grouping()
     return expr;
 }
 
-std::unique_ptr<Func> Parser::func()
+std::unique_ptr<Stmt> Parser::func()
 {
     if (this->advance().token_type != Token::Type::FN)
     {
         throw BirdException("expected fn keyword");
     }
 
-    if (this->advance().token_type != Token::Type::IDENTIFIER)
+    auto fn_identifier = this->advance();
+
+    if (fn_identifier.token_type != Token::Type::IDENTIFIER)
     {
         this->user_error_tracker->expected("identifier", "after keyword", this->peek_previous());
         this->synchronize();
@@ -338,24 +363,79 @@ std::unique_ptr<Func> Parser::func()
 
     if (this->advance().token_type != Token::Type::RPAREN)
     {
-        this->user_error_tracker->expected(")", "after function parameters", this->peek_previous());
+        this->user_error_tracker->expected(")", "after function parameter list", this->peek_previous());
         this->synchronize();
         throw UserException();
     }
 
     auto fn_return_type = this->fn_return_type();
-
+    
     auto block = this->block();
 
-    return 
+    return std::make_unique<Func>(Func(fn_identifier, fn_return_type, fn_params, std::move(block)));
 }
 
-Parser::fn_params()
+std::vector<std::pair<Token, Token>> Parser::fn_params()
 {
-        while(true)
+    if(this->peek().token_type == Token::Type::RPAREN)
+    {
+        return {};
+    }
+
+    std::vector<std::pair<Token, Token>> params;
+
+    while(true)
+    {
+        params.push_back(this->param_decl());
+
+        if(this->peek().token_type == Token::Type::RPAREN)
         {
-            auto ident_decl = this->ident_decl();
-        }    
+            return params;
+        }
+        else if(this->advance().token_type != Token::Type::COMMA) 
+        {
+            this->user_error_tracker->expected(",", "after function parameter", this->peek_previous());
+            this->synchronize();
+            throw UserException();
+        }
+    }    
+}
+
+std::pair<Token,Token> Parser::param_decl()
+{
+    auto identifier = this->advance(); // TODO: check that this is an identifier
+
+    if (this->advance().token_type != Token::Type::COLON)
+    {
+        this->user_error_tracker->expected(":", "after identifier in assignment", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto type_identifier = this->advance(); // TODO: check that this is a type identifier
+
+    return {identifier, type_identifier};
+}
+
+std::optional<Token> Parser::fn_return_type()
+{
+    if (this->peek().token_type != Token::Type::ARROW)
+    {
+        return {};
+    }
+
+    this->advance();
+
+    auto return_type = this->advance();
+
+    if (return_type.token_type != Token::Type::TYPE_IDENTIFIER)
+    {
+        this->user_error_tracker->expected("return type", "after arrow", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return return_type;
 }
 
 Token Parser::advance()

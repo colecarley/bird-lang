@@ -20,7 +20,7 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::LBRACE, "LBRACE"},
     {Token::Type::RPAREN, "RPAREN"},
     {Token::Type::LPAREN, "LPAREN"},
-    {Token::Type::TYPE_IDENTIIFER, "TYPE_IDENTIFIER"},
+    {Token::Type::TYPE_IDENTIFIER, "TYPE_IDENTIFIER"},
     {Token::Type::FLOAT_LITERAL, "FLOAT_LITERAL"},
     {Token::Type::BOOL_LITERAL, "BOOL_LITERAL"},
     {Token::Type::STR_LITERAL, "STR_LITERAL"},
@@ -31,6 +31,7 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::GREATER, "GREATER"},
     {Token::Type::LESS, "LESS"},
     {Token::Type::BANG, "BANG"},
+    {Token::Type::ARROW, "ARROW"},
     {Token::Type::GREATER_EQUAL, "GREATER_EQUAL"},
     {Token::Type::LESS_EQUAL, "LESS_EQUAL"},
     {Token::Type::EQUAL_EQUAL, "EQUAL_EQUAL"},
@@ -78,10 +79,11 @@ const std::map<std::string, Token::Type> Lexer::keywords = {
     {"if", Token::Type::IF},
     {"else", Token::Type::ELSE},
     {"while", Token::Type::WHILE},
-    {"int", Token::Type::TYPE_IDENTIIFER},
-    {"float", Token::Type::TYPE_IDENTIIFER},
-    {"str", Token::Type::TYPE_IDENTIIFER},
-    {"bool", Token::Type::TYPE_IDENTIIFER},
+    {"int", Token::Type::TYPE_IDENTIFIER},
+    {"float", Token::Type::TYPE_IDENTIFIER},
+    {"str", Token::Type::TYPE_IDENTIFIER},
+    {"bool", Token::Type::TYPE_IDENTIFIER},
+    {"void", Token::Type::TYPE_IDENTIFIER},
     {"true", Token::Type::BOOL_LITERAL},
     {"false", Token::Type::BOOL_LITERAL},
     {"fn", Token::Type::FN},
@@ -129,7 +131,15 @@ std::vector<Token> Lexer::lex()
             this->push_token(Token::Type::PLUS, "+");
             break;
         case '-':
-            this->push_token(Token::Type::MINUS, "-");
+            if (this->peek_next() == '>')
+            {
+                this->advance();
+                this->push_token(Token::Type::ARROW, "->");
+            }
+            else
+            {
+                this->push_token(Token::Type::MINUS, "-");
+            }
             break;
         case '*':
             this->push_token(Token::Type::STAR, "*");

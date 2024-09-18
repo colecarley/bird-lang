@@ -41,6 +41,14 @@ public:
 
     std::unique_ptr<Stmt> print_stmt();
 
+    std::unique_ptr<Stmt> func();
+
+    std::vector<std::pair<Token, Token>> fn_params();
+
+    std::pair<Token, Token> param_decl();
+
+    std::optional<Token> fn_return_type();
+
     // exprs
     std::unique_ptr<Expr> expr();
 
@@ -54,9 +62,6 @@ public:
 
     std::unique_ptr<Expr> grouping();
 
-    // funcs
-
-    std::unique_ptr<Func> func();
 
     Token advance();
 
