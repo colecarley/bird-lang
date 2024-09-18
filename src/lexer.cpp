@@ -9,6 +9,7 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::VAR, "VAR"},
     {Token::Type::CONST, "CONST"},
     {Token::Type::MINUS, "MINUS"},
+    {Token::Type::PERCENT, "PERCENT"},
     {Token::Type::PLUS, "PLUS"},
     {Token::Type::SLASH, "SLASH"},
     {Token::Type::STAR, "STAR"},
@@ -143,6 +144,9 @@ std::vector<Token> Lexer::lex()
             break;
         case '*':
             this->push_token(Token::Type::STAR, "*");
+            break;
+        case '%':
+            this->push_token(Token::Type::PERCENT, "%");
             break;
         case ';':
             this->push_token(Token::Type::SEMICOLON, ";");

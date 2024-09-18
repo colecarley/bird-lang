@@ -49,8 +49,14 @@ public:
 
     std::optional<Token> fn_return_type();
 
+    std::unique_ptr<Stmt> while_stmt();
+
     // exprs
     std::unique_ptr<Expr> expr();
+
+    std::unique_ptr<Expr> equality();
+
+    std::unique_ptr<Expr> comparison();
 
     std::unique_ptr<Expr> term();
 
@@ -61,7 +67,6 @@ public:
     std::unique_ptr<Expr> primary();
 
     std::unique_ptr<Expr> grouping();
-
 
     Token advance();
 

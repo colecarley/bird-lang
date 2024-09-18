@@ -8,9 +8,9 @@
 #include "../include/ast_node/stmt/print_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
+#include "../include/ast_node/stmt/while_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 #include "../include/ast_node/stmt/func.h"
-
 
 #include "../include/exceptions/bird_exception.h"
 #include "../include/exceptions/user_exception.h"
@@ -43,25 +43,28 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 
 std::unique_ptr<Stmt> Parser::stmt()
 {
-    switch (this->peek().token_type) 
+    switch (this->peek().token_type)
     {
-        case Token::Type::VAR:
-            return this->var_decl();
+    case Token::Type::VAR:
+        return this->var_decl();
 
-        case Token::Type::CONST:
-            return this->const_decl();
+    case Token::Type::CONST:
+        return this->const_decl();
 
-        case Token::Type::PRINT:
-            return this->print_stmt();
+    case Token::Type::PRINT:
+        return this->print_stmt();
 
-        case Token::Type::LBRACE:
-            return this->block();
+    case Token::Type::LBRACE:
+        return this->block();
 
-        case Token::Type::FN:
-            return this->func();
+    case Token::Type::FN:
+        return this->func();
 
-        default:
-            return this->expr_stmt();
+    case Token::Type::WHILE:
+        return this->while_stmt();
+
+    default:
+        return this->expr_stmt();
     }
 }
 
@@ -190,6 +193,20 @@ std::unique_ptr<Stmt> Parser::print_stmt()
     return result;
 }
 
+std::unique_ptr<Stmt> Parser::while_stmt()
+{
+    if (this->advance().token_type != Token::Type::WHILE)
+    {
+        throw BirdException("Expected 'while' at the beginning of while statement");
+    }
+
+    auto condition = this->expr();
+
+    auto stmt = this->stmt();
+
+    return std::make_unique<WhileStmt>(WhileStmt(std::move(condition), std::move(stmt)));
+}
+
 std::unique_ptr<Stmt> Parser::var_decl()
 {
     if (this->advance().token_type != Token::Type::VAR)
@@ -233,7 +250,39 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
 std::unique_ptr<Expr> Parser::expr()
 {
-    return this->term();
+    return this->equality();
+}
+
+std::unique_ptr<Expr> Parser::equality()
+{
+    auto left = this->comparison();
+
+    while (this->peek().token_type == Token::Type::EQUAL_EQUAL ||
+           this->peek().token_type == Token::Type::BANG_EQUAL)
+    {
+        Token op = this->advance();
+        std::unique_ptr<Expr> right = this->comparison();
+        left = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
+    }
+
+    return left;
+}
+
+std::unique_ptr<Expr> Parser::comparison()
+{
+    auto left = this->term();
+
+    while (this->peek().token_type == Token::Type::GREATER ||
+           this->peek().token_type == Token::Type::GREATER_EQUAL ||
+           this->peek().token_type == Token::Type::LESS ||
+           this->peek().token_type == Token::Type::LESS_EQUAL)
+    {
+        Token op = this->advance();
+        std::unique_ptr<Expr> right = this->term();
+        left = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
+    }
+
+    return left;
 }
 
 std::unique_ptr<Expr> Parser::term()
@@ -254,7 +303,9 @@ std::unique_ptr<Expr> Parser::factor()
 {
     auto left = this->unary();
 
-    while (this->peek().token_type == Token::Type::STAR || this->peek().token_type == Token::Type::SLASH)
+    while (this->peek().token_type == Token::Type::STAR ||
+           this->peek().token_type == Token::Type::SLASH ||
+           this->peek().token_type == Token::Type::PERCENT)
     {
         Token op = this->advance();
         auto right = this->unary();
@@ -350,7 +401,7 @@ std::unique_ptr<Stmt> Parser::func()
     }
 
     auto fn_return_type = this->fn_return_type();
-    
+
     auto block = this->block();
 
     return std::make_unique<Func>(Func(fn_identifier, fn_return_type, fn_params, std::move(block)));
@@ -358,31 +409,31 @@ std::unique_ptr<Stmt> Parser::func()
 
 std::vector<std::pair<Token, Token>> Parser::fn_params()
 {
-    if(this->peek().token_type == Token::Type::RPAREN)
+    if (this->peek().token_type == Token::Type::RPAREN)
     {
         return {};
     }
 
     std::vector<std::pair<Token, Token>> params;
 
-    while(true)
+    while (true)
     {
         params.push_back(this->param_decl());
 
-        if(this->peek().token_type == Token::Type::RPAREN)
+        if (this->peek().token_type == Token::Type::RPAREN)
         {
             return params;
         }
-        else if(this->advance().token_type != Token::Type::COMMA) 
+        else if (this->advance().token_type != Token::Type::COMMA)
         {
             this->user_error_tracker->expected(",", "after function parameter", this->peek_previous());
             this->synchronize();
             throw UserException();
         }
-    }    
+    }
 }
 
-std::pair<Token,Token> Parser::param_decl()
+std::pair<Token, Token> Parser::param_decl()
 {
     auto identifier = this->advance(); // TODO: check that this is an identifier
 
