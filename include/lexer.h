@@ -32,6 +32,7 @@ public:
         PLUS,
         MINUS,
         SEMICOLON,
+        PERCENT,
         EQUAL,
         COMMA,
         RBRACE,

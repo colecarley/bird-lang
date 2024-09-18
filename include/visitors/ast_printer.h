@@ -13,6 +13,7 @@
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
+#include "../ast_node/stmt/while_stmt.h"
 #include "../ast_node/stmt/block.h"
 
 #include "../exceptions/bird_exception.h"
@@ -52,6 +53,11 @@ public:
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
+            }
+
+            if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
+            {
+                while_stmt->accept(this);
             }
             std::cout << std::endl;
         }
@@ -116,6 +122,24 @@ public:
 
     void visit_if_stmt(IfStmt *if_stmt)
     {
-        // TODO: needs to be implemented
+        std::cout << "if ";
+        if_stmt->condition->accept(this);
+
+        std::cout << " ";
+        if_stmt->then_branch->accept(this);
+
+        if (if_stmt->else_branch)
+        {
+            std::cout << "else ";
+            if_stmt->else_branch->accept(this);
+        }
+    }
+
+    void visit_while_stmt(WhileStmt *while_stmt)
+    {
+        std::cout << "while (";
+        while_stmt->condition->accept(this);
+        std::cout << ") ";
+        while_stmt->stmt->accept(this);
     }
 };

@@ -9,6 +9,7 @@
 #include "../include/ast_node/stmt/if_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
+#include "../include/ast_node/stmt/while_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 
 #include "../include/exceptions/bird_exception.h"
@@ -53,6 +54,10 @@ std::unique_ptr<Stmt> Parser::stmt()
     if (this->peek().token_type == Token::Type::PRINT)
     {
         return this->print_stmt();
+    }
+    if (this->peek().token_type == Token::Type::WHILE)
+    {
+        return this->while_stmt();
     }
     if (this->peek().token_type == Token::Type::LBRACE)
     {
@@ -242,6 +247,20 @@ std::unique_ptr<Stmt> Parser::print_stmt()
     return result;
 }
 
+std::unique_ptr<Stmt> Parser::while_stmt()
+{
+    if (this->advance().token_type != Token::Type::WHILE)
+    {
+        throw BirdException("Expected 'while' at the beginning of while statement");
+    }
+
+    auto condition = this->expr();
+
+    auto stmt = this->stmt();
+
+    return std::make_unique<WhileStmt>(WhileStmt(std::move(condition), std::move(stmt)));
+}
+
 std::unique_ptr<Stmt> Parser::var_decl()
 {
     if (this->advance().token_type != Token::Type::VAR)
@@ -338,7 +357,9 @@ std::unique_ptr<Expr> Parser::factor()
 {
     auto left = this->unary();
 
-    while (this->peek().token_type == Token::Type::STAR || this->peek().token_type == Token::Type::SLASH)
+    while (this->peek().token_type == Token::Type::STAR ||
+           this->peek().token_type == Token::Type::SLASH ||
+           this->peek().token_type == Token::Type::PERCENT)
     {
         Token op = this->advance();
         auto right = this->unary();

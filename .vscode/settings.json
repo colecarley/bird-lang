@@ -1,5 +1,7 @@
 {
     "files.associations": {
+        "makefile": "makefile",
+        "*.cpp": "cpp",
         "array": "cpp",
         "atomic": "cpp",
         "bit": "cpp",
@@ -72,6 +74,8 @@
         "fstream": "cpp",
         "numeric": "cpp",
         "ranges": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "execution": "cpp",
+        "__node_handle": "cpp"
     }
 }
