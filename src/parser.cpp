@@ -164,17 +164,15 @@ std::unique_ptr<Stmt> Parser::if_stmt()
     {
         this->advance();
         return std::make_unique<IfStmt>(
-            std::move(condition), 
-            std::move(statement), 
-            std::make_optional<std::unique_ptr<Stmt>>(std::move(this->stmt()))
-            );
+            std::move(condition),
+            std::move(statement),
+            std::make_optional<std::unique_ptr<Stmt>>(std::move(this->stmt())));
     }
-    
+
     return std::make_unique<IfStmt>(
-            std::move(condition), 
-            std::move(statement), 
-            std::nullopt
-            );
+        std::move(condition),
+        std::move(statement),
+        std::nullopt);
 }
 
 std::unique_ptr<Stmt> Parser::expr_stmt()
