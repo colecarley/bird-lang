@@ -116,7 +116,17 @@ public:
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
-        throw BirdException("Implement while statement interpreter");
+        while_stmt->condition->accept(this);
+        auto condition_result = this->stack.back();
+        this->stack.pop_back();
+
+        while (condition_result) {
+            while_stmt->stmt->accept(this);
+
+            while_stmt->condition->accept(this);
+            condition_result = this->stack.back();
+            this->stack.pop_back();
+        }
     }
 
     void visit_binary(Binary *binary)
