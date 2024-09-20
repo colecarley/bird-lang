@@ -213,14 +213,6 @@ public:
             this->stack.push_back(std::stoi(primary->value.lexeme));
             break;
         }
-        // take out before push!
-        case Token::Type::BOOL_LITERAL:
-        {
-            std::cout << "found bool literal: " << primary->value.lexeme << " compare is " << (primary->value.lexeme == "true" ? 1 : 0) << std::endl;
-            this->stack.push_back(
-                primary->value.lexeme == "true" ? 1 : 0);
-            break;
-        }
         case Token::Type::IDENTIFIER:
         {
             auto value = this->environment->get(primary->value.lexeme);
