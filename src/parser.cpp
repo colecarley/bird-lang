@@ -458,16 +458,28 @@ std::vector<std::pair<Token, Token>> Parser::fn_params()
 
 std::pair<Token, Token> Parser::param_decl()
 {
-    auto identifier = this->advance(); // TODO: check that this is an identifier
+    auto identifier = this->advance();
 
-    if (this->advance().token_type != Token::Type::COLON)
+    if (identifier.token_type != Token::Type::IDENTIFIER)
     {
-        this->user_error_tracker->expected(":", "after identifier in assignment", this->peek_previous());
+        this->user_error_tracker->expected("identifier", "in function parameter list", this->peek_previous());
         this->synchronize();
         throw UserException();
     }
 
-    auto type_identifier = this->advance(); // TODO: check that this is a type identifier
+    if (this->advance().token_type != Token::Type::COLON)
+    {
+        this->user_error_tracker->expected(":", "after identifier in parameter declaration", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    auto type_identifier = this->advance();
+
+    if (type_identifier.token_type != Token::Type::TYPE_IDENTIFIER)
+    {
+        this->user_error_tracker->expected("type identifier", "after \':\' in parameter declaration", this->peek_previous());
+    }
 
     return {identifier, type_identifier};
 }
