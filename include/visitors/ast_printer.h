@@ -120,6 +120,11 @@ public:
         throw BirdException("implement const statment visit");
     }
 
+    void visit_func(Func *func)
+    {
+        throw BirdException("implement func visit");
+    }
+
     void visit_if_stmt(IfStmt *if_stmt)
     {
         std::cout << "if ";

@@ -220,6 +220,11 @@ public:
         }
     }
 
+    void visit_func(Func *func)
+    {
+        throw BirdException("implement func visit");
+    }
+
     void visit_if_stmt(IfStmt *if_stmt)
     {
         throw BirdException("implement if statement visit");

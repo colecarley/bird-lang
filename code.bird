@@ -51,6 +51,9 @@ var unterminated = "hello there";
 // this is after
 
 
-fn add(first: int, second: int) {
+fn add(first: int, second: int): int {
     return first + second;
 }
+
+var sum = add(1, 2);
+
