@@ -24,7 +24,7 @@ public:
         CONST,
 
         // types
-        TYPE_IDENTIIFER,
+        TYPE_IDENTIFIER,
 
         // single character
         STAR,
@@ -49,6 +49,7 @@ public:
         LESS_EQUAL,
         EQUAL_EQUAL,
         BANG_EQUAL,
+        ARROW,
 
         // values
         IDENTIFIER,

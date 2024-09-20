@@ -47,11 +47,12 @@ void repl()
 
         Parser parser(tokens, &error_tracker);
         auto ast = parser.parse();
-
+        
         if (error_tracker.has_errors())
         {
             error_tracker.print_errors_and_exit();
         }
+
 
         AstPrinter printer;
         printer.print_ast(&ast);
