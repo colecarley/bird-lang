@@ -63,7 +63,13 @@ public:
             {
                 while_stmt->accept(this);
             }
+
+            if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
+            {
+                if_stmt->accept(this);
+            }
         }
+
         this->stack.clear();
     }
 
@@ -207,6 +213,14 @@ public:
             this->stack.push_back(std::stoi(primary->value.lexeme));
             break;
         }
+        // take out before push!
+        case Token::Type::BOOL_LITERAL:
+        {
+            std::cout << "found bool literal: " << primary->value.lexeme << " compare is " << (primary->value.lexeme == "true" ? 1 : 0) << std::endl;
+            this->stack.push_back(
+                primary->value.lexeme == "true" ? 1 : 0);
+            break;
+        }
         case Token::Type::IDENTIFIER:
         {
             auto value = this->environment->get(primary->value.lexeme);
@@ -222,6 +236,20 @@ public:
 
     void visit_if_stmt(IfStmt *if_stmt)
     {
-        throw BirdException("implement if statement visit");
+        if_stmt->condition->accept(this);
+        auto result = this->stack.back();
+        this->stack.pop_back();
+
+        if (result == 1)
+        {
+            if_stmt->then_branch->accept(this);
+        }
+        else
+        {
+            if (if_stmt->else_branch.has_value())
+            {
+                if_stmt->else_branch.value()->accept(this);
+            }
+        }
     }
 };
