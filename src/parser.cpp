@@ -479,6 +479,8 @@ std::pair<Token, Token> Parser::param_decl()
     if (type_identifier.token_type != Token::Type::TYPE_IDENTIFIER)
     {
         this->user_error_tracker->expected("type identifier", "after \':\' in parameter declaration", this->peek_previous());
+        this->synchronize();
+        throw UserException();
     }
 
     return {identifier, type_identifier};
