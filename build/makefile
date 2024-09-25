@@ -75,6 +75,16 @@ edit_cache:
 edit_cache/fast: edit_cache
 .PHONY : edit_cache/fast
 
+# Special rule for the target test
+test:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
+	/opt/cmake/bin/ctest --force-new-ctest-process $(ARGS)
+.PHONY : test
+
+# Special rule for the target test
+test/fast: test
+.PHONY : test/fast
+
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
@@ -156,6 +166,19 @@ acc_gen/fast:
 .PHONY : acc_gen/fast
 
 #=============================================================================
+# Target rules for targets named hello_test
+
+# Build rule for target.
+hello_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hello_test
+.PHONY : hello_test
+
+# fast build rule for target.
+hello_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hello_test.dir/build.make CMakeFiles/hello_test.dir/build
+.PHONY : hello_test/fast
+
+#=============================================================================
 # Target rules for targets named compiler
 
 # Build rule for target.
@@ -180,6 +203,30 @@ RISCVTargetParserTableGen: cmake_check_build_system
 RISCVTargetParserTableGen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/RISCVTargetParserTableGen.dir/build.make CMakeFiles/RISCVTargetParserTableGen.dir/build
 .PHONY : RISCVTargetParserTableGen/fast
+
+hello_test.o: hello_test.cpp.o
+.PHONY : hello_test.o
+
+# target to build an object file
+hello_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hello_test.dir/build.make CMakeFiles/hello_test.dir/hello_test.cpp.o
+.PHONY : hello_test.cpp.o
+
+hello_test.i: hello_test.cpp.i
+.PHONY : hello_test.i
+
+# target to preprocess a source file
+hello_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hello_test.dir/build.make CMakeFiles/hello_test.dir/hello_test.cpp.i
+.PHONY : hello_test.cpp.i
+
+hello_test.s: hello_test.cpp.s
+.PHONY : hello_test.s
+
+# target to generate assembly for a file
+hello_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hello_test.dir/build.make CMakeFiles/hello_test.dir/hello_test.cpp.s
+.PHONY : hello_test.cpp.s
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -261,11 +308,16 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... test"
 	@echo "... RISCVTargetParserTableGen"
 	@echo "... acc_gen"
 	@echo "... intrinsics_gen"
 	@echo "... omp_gen"
 	@echo "... compiler"
+	@echo "... hello_test"
+	@echo "... hello_test.o"
+	@echo "... hello_test.i"
+	@echo "... hello_test.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
