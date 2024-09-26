@@ -14,6 +14,8 @@ include_directories(${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
+add_definitions(-DGTEST_HAS_CXXABI_H_=0) # dont touch this
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
@@ -24,5 +26,13 @@ add_executable(compiler main.cpp ${SOURCES})
 # that we wish to use
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
-
 target_link_libraries(compiler ${llvm_libs})
+
+enable_testing()
+
+find_package(GTest REQUIRED)
+
+add_executable(hello_test hello_test.cpp)
+target_link_libraries(hello_test GTest::gtest GTest::gtest_main)
+
+add_test(AllTestsInFoo hello_test)
