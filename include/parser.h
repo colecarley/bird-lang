@@ -10,7 +10,6 @@ class Expr;
 class Stmt;
 class Func;
 class UserErrorTracker;
-struct ParseOption;
 
 /*
  * Parser will take the tokens as input
@@ -24,6 +23,8 @@ public:
     const std::vector<Token> tokens;
     unsigned int position;
     UserErrorTracker *user_error_tracker;
+
+    struct ParseOption;
 
     Parser(std::vector<Token> tokens, UserErrorTracker *user_error_tracker);
 
@@ -82,23 +83,23 @@ public:
     bool is_at_end();
 
     void synchronize();
-};
 
-// A type to facilitate error handling in parsing code
-// Example usage: `this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("identifier after var keyword")`
-struct ParseOption
-{
-private:
-    std::optional<Token> token;
-    Parser *parser;
+    // A type to facilitate error handling in parsing code
+    // Example usage: `this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("identifier after var keyword")`
+    struct ParseOption
+    {
+    private:
+        std::optional<Token> token;
+        Parser &parser;
 
-    ParseOption(Token token, Parser *parser) : token(token), parser(parser) {}
-    ParseOption(Parser *parser) : token({}), parser(parser) {}
+        ParseOption(Token token, Parser &parser) : token(token), parser(parser) {}
+        ParseOption(Parser &parser) : token({}), parser(parser) {}
 
-public:
-    friend ParseOption Parser::expect_token(Token::Type type);
+    public:
+        friend ParseOption Parser::expect_token(Token::Type type);
 
-    // if the parseoption contains a token, advance and return the token, otherwise throw the appropriate error
-    Token adv_or_user_error(std::string symbol, std::string where);
-    Token adv_or_bird_error(std::string message);
+        // if the parseoption contains a token, advance and return the token, otherwise throw the appropriate error
+        Token adv_or_user_error(std::string context);
+        Token adv_or_bird_error(std::string message);
+    };
 };

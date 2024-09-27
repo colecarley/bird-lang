@@ -120,9 +120,9 @@ public:
     /*
      * Used when a symbol is expected, in a position but is not found
      */
-    void expected(std::string symbol, std::string where, Token token)
+    void expected(std::string context, Token token)
     {
-        this->errors.push_back(std::make_tuple(this->format_message("expected " + symbol + " " + where, token.line_num, token.char_num), token));
+        this->errors.push_back(std::make_tuple(this->format_message("expected " + context, token.line_num, token.char_num), token));
     }
 
     void print_errors()
