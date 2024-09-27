@@ -14,6 +14,7 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::SLASH, "SLASH"},
     {Token::Type::STAR, "STAR"},
     {Token::Type::SEMICOLON, "SEMICOLON"},
+    {Token::Type::QUESTION, "QUESTION"},
     {Token::Type::EQUAL, "EQUAL"},
     {Token::Type::PRINT, "PRINT"},
     {Token::Type::COMMA, "COMMA"},
@@ -151,6 +152,9 @@ std::vector<Token> Lexer::lex()
         case ';':
             this->push_token(Token::Type::SEMICOLON, ";");
             break;
+        case '?':
+            this->push_token(Token::Type::QUESTION, "?");
+            break;
         case '=':
         {
             if (this->peek_next() == '=')
@@ -286,6 +290,9 @@ void Lexer::handle_alpha()
                      identifier);
 }
 
+/*
+ * TODO: decimal
+ */
 void Lexer::handle_number()
 {
     std::string number = "";

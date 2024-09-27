@@ -9,6 +9,7 @@
 #include "../ast_node/expr/binary.h"
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
+#include "../ast_node/expr/ternary.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
@@ -223,6 +224,24 @@ public:
         {
             throw BirdException("undefined primary value");
         }
+        }
+    }
+
+    void visit_ternary(Ternary *ternary)
+    {
+        ternary->condition->accept(this);
+
+        auto result = this->stack.back();
+
+        this->stack.pop_back();
+
+        if (result == 1)
+        {
+            ternary->true_expr->accept(this);
+        }
+        else
+        {
+            ternary->false_expr->accept(this);
         }
     }
 

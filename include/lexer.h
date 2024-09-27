@@ -32,6 +32,8 @@ public:
         PLUS,
         MINUS,
         SEMICOLON,
+        QUESTION, // adding ternary tokens to lexer
+
         PERCENT,
         EQUAL,
         COMMA,

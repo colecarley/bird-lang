@@ -9,6 +9,7 @@
 #include "../ast_node/expr/binary.h"
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
+#include "../ast_node/expr/ternary.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
@@ -252,6 +253,11 @@ public:
             throw BirdException("undefined primary value");
         }
         }
+    }
+
+    void visit_ternary(Ternary *ternary)
+    {
+        throw BirdException("implement ternary visit");
     }
 
     void visit_const_stmt(ConstStmt *const_stmt)

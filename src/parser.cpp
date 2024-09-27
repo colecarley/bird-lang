@@ -3,6 +3,7 @@
 #include "../include/ast_node/expr/binary.h"
 #include "../include/ast_node/expr/unary.h"
 #include "../include/ast_node/expr/primary.h"
+#include "../include/ast_node/expr/ternary.h"
 
 #include "../include/ast_node/stmt/decl_stmt.h"
 #include "../include/ast_node/stmt/print_stmt.h"
@@ -273,7 +274,35 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
 std::unique_ptr<Expr> Parser::expr()
 {
-    return this->equality();
+    return this->ternary();
+}
+
+std::unique_ptr<Expr> Parser::ternary()
+{
+    auto condition = this->equality();
+
+    if (this->peek().token_type == Token::Type::QUESTION)
+    {
+        this->advance();
+
+        auto true_expr = this->expr();
+
+        if (this->advance().token_type != Token::Type::COLON)
+        {
+            this->user_error_tracker->expected(":", "after true expression in ternary operator", this->peek_previous());
+            this->synchronize();
+            throw UserException();
+        }
+
+        auto false_expr = this->expr();
+
+        return std::make_unique<Ternary>(
+            std::move(condition),
+            std::move(true_expr),
+            std::move(false_expr));
+    }
+
+    return condition;
 }
 
 std::unique_ptr<Expr> Parser::equality()
