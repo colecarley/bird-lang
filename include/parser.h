@@ -101,5 +101,7 @@ public:
         // if the parseoption contains a token, advance and return the token, otherwise throw the appropriate error
         Token adv_or_user_error(std::string context);
         Token adv_or_bird_error(std::string message);
+        bool is_valid();
+        bool is_invalid();
     };
 };
