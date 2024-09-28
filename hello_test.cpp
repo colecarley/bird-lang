@@ -108,7 +108,7 @@ TEST(LexerTest, TokenizeExprStmt)
 
 TEST(LexerTest, TokenizeFuncStmt)
 {
-  std::string code = "fn add(first: int, second: int): int { return first + second; }";
+  std::string code = "fn add(first: int, second: int) -> int { return first + second; }";
 
   auto tokens = lex_code(code);
 
@@ -129,7 +129,7 @@ TEST(LexerTest, TokenizeFuncStmt)
   EXPECT_EQ(tokens[9].token_type, Token::Type::TYPE_IDENTIFIER);
   EXPECT_EQ(tokens[9].lexeme, "int");
   EXPECT_EQ(tokens[10].token_type, Token::Type::RPAREN);
-  EXPECT_EQ(tokens[11].token_type, Token::Type::COLON);
+  EXPECT_EQ(tokens[11].token_type, Token::Type::ARROW);
   EXPECT_EQ(tokens[12].token_type, Token::Type::TYPE_IDENTIFIER);
   EXPECT_EQ(tokens[12].lexeme, "int");
   EXPECT_EQ(tokens[13].token_type, Token::Type::LBRACE);
