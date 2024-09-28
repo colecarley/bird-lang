@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <variant>
 
 #include "../ast_node/stmt/stmt.h"
 #include "../ast_node/expr/expr.h"
@@ -21,18 +22,80 @@
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
 
+#define HANDLE_INT_OPERATOR(left, right, operator) \
+    if (std::holds_alternative<int>(left.data) && std::holds_alternative<int>(right.data)) \
+    { \
+        this->stack.push_back(Value(DataType::INT, variant(std::get<int>(left.data) operator std::get<int>(right.data)))); \
+        break; \
+    }
+
+#define HANDLE_NUMERIC_OPERATOR(left, right, operator) \
+    if ((std::holds_alternative<int>(left.data) || std::holds_alternative<float>(left.data)) && (std::holds_alternative<int>(right.data) || std::holds_alternative<float>(right.data))) \
+    { \
+        float left_float = std::holds_alternative<int>(left.data) ? std::get<int>(left.data) : std::get<float>(left.data); \
+        float right_float = std::holds_alternative<int>(right.data) ? std::get<int>(right.data) : std::get<float>(right.data); \
+        \
+        this->stack.push_back(Value(DataType::FLOAT, variant(left_float operator right_float))); \
+        break; \
+    }
+
+#define HANDLE_STRING_OPERATOR(left, right, operator) \
+    if (std::holds_alternative<std::string>(left.data) && std::holds_alternative<std::string>(right.data)) \
+    { \
+        this->stack.push_back(Value(DataType::STR, variant(std::get<std::string>(left.data) operator std::get<std::string>(right.data)))); \
+        break; \
+    }
+
+#define HANDLE_BOOL_OPERATOR(left, right, operator) \
+    if (std::holds_alternative<bool>(left.data) && std::holds_alternative<bool>(right.data)) \
+    { \
+        this->stack.push_back(Value(DataType::BOOL, variant(std::get<bool>(left.data) == std::get<bool>(right.data)))); \
+        break; \
+    }
+
+#define HANDLE_UNKNOWN_OPERATOR(operator) \
+    throw BirdException("The '" #operator "' operator could not be used to interpret these values."); \
+    break;
+
+enum DataType
+{
+    INT,
+    FLOAT,
+    STR,
+    BOOL,
+};
+
+using variant = std::variant<int, float, std::string, bool>;
+
+class Value
+{
+public:
+    DataType data_type;
+    std::variant<int, float, std::string, bool> data;
+    bool is_mutable;
+
+    Value(DataType data_type, variant data, bool is_mutable = false)
+    {
+        this->is_mutable = is_mutable;
+        this->data = data;
+        this->data_type = data_type;
+    }
+
+    Value() {};
+};
+
 /*
  * Visitor that interprets and evaluates the AST
  */
 class Interpreter : public Visitor
 {
-    std::unique_ptr<SymbolTable<int>> environment;
-    std::vector<int> stack;
+    std::unique_ptr<SymbolTable<Value>> environment;
+    std::vector<Value> stack;
 
 public:
     Interpreter()
     {
-        this->environment = std::make_unique<SymbolTable<int>>(SymbolTable<int>());
+        this->environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
     }
 
     void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
@@ -69,7 +132,7 @@ public:
 
     void visit_block(Block *block)
     {
-        auto new_environment = std::make_unique<SymbolTable<int>>(SymbolTable<int>());
+        auto new_environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
         new_environment->set_enclosing(std::move(this->environment));
         this->environment = std::move(new_environment);
 
@@ -85,7 +148,7 @@ public:
     {
         decl_stmt->value->accept(this);
 
-        auto result = this->stack[this->stack.size() - 1];
+        auto result = this->stack.back();
         this->stack.pop_back();
 
         this->environment->insert(decl_stmt->identifier.lexeme, result);
@@ -104,7 +167,7 @@ public:
             auto result = this->stack[this->stack.size() - 1];
             this->stack.pop_back();
 
-            std::cout << result;
+            std::cout << std::get<int>(result.data);
         }
         std::cout << std::endl;
     }
@@ -120,7 +183,7 @@ public:
         auto condition_result = this->stack.back();
         this->stack.pop_back();
 
-        while (condition_result) {
+        while (std::get<bool>(condition_result.data)) {
             while_stmt->stmt->accept(this);
 
             while_stmt->condition->accept(this);
@@ -144,57 +207,70 @@ public:
         {
         case Token::Type::PLUS:
         {
-            this->stack.push_back(left + right);
-            break;
+            HANDLE_INT_OPERATOR(left, right, +);
+            HANDLE_NUMERIC_OPERATOR(left, right, +);
+            HANDLE_STRING_OPERATOR(left, right, +);
+            HANDLE_UNKNOWN_OPERATOR(+);
         }
         case Token::Type::MINUS:
         {
-            this->stack.push_back(left - right);
-            break;
+            HANDLE_INT_OPERATOR(left, right, -);
+            HANDLE_NUMERIC_OPERATOR(left, right, -);
+            HANDLE_UNKNOWN_OPERATOR(-);
         }
         case Token::Type::SLASH:
         {
-            this->stack.push_back(left / right);
-            break;
+            HANDLE_INT_OPERATOR(left, right, /);
+            HANDLE_NUMERIC_OPERATOR(left, right, /);
+            HANDLE_UNKNOWN_OPERATOR(/);
         }
         case Token::Type::STAR:
         {
-            this->stack.push_back(left * right);
-            break;
+            HANDLE_INT_OPERATOR(left, right, *);
+            HANDLE_NUMERIC_OPERATOR(left, right, *);
+            HANDLE_UNKNOWN_OPERATOR(*);
         }
         case Token::Type::GREATER:
         {
-            this->stack.push_back(left > right);
-            break;
+            HANDLE_INT_OPERATOR(left, right, >);
+            HANDLE_NUMERIC_OPERATOR(left, right, >);
+            HANDLE_UNKNOWN_OPERATOR(>);
         }
         case Token::Type::GREATER_EQUAL:
         {
-            this->stack.push_back(left >= right);
-            break;
+            HANDLE_INT_OPERATOR(left, right, >=);
+            HANDLE_NUMERIC_OPERATOR(left, right, >=);
+            HANDLE_UNKNOWN_OPERATOR(>=);
         }
         case Token::Type::LESS:
         {
-            this->stack.push_back(left < right);
-            break;
+            HANDLE_INT_OPERATOR(left, right, <);
+            HANDLE_NUMERIC_OPERATOR(left, right, <);
+            HANDLE_UNKNOWN_OPERATOR(<);
         }
         case Token::Type::LESS_EQUAL:
         {
-            this->stack.push_back(left <= right);
-            break;
+            HANDLE_INT_OPERATOR(left, right, <=);
+            HANDLE_NUMERIC_OPERATOR(left, right, <=);
+            HANDLE_UNKNOWN_OPERATOR(<=);
         }
         case Token::Type::BANG_EQUAL:
         {
-            this->stack.push_back(left != right);
-            break;
+            HANDLE_NUMERIC_OPERATOR(left, right, !=);
+            HANDLE_STRING_OPERATOR(left, right, !=);
+            HANDLE_BOOL_OPERATOR(left, right, !=);
+            HANDLE_UNKNOWN_OPERATOR(!=);
         }
         case Token::Type::EQUAL_EQUAL:
         {
-            this->stack.push_back(left == right);
-            break;
+            HANDLE_NUMERIC_OPERATOR(left, right, ==);
+            HANDLE_STRING_OPERATOR(left, right, ==);
+            HANDLE_BOOL_OPERATOR(left, right, ==);
+            HANDLE_UNKNOWN_OPERATOR(==);
         }
         default:
         {
-            throw BirdException("undefined binary operator");
+            throw BirdException("Undefined binary operator.");
         }
         }
     }
@@ -205,16 +281,35 @@ public:
         auto expr = this->stack[this->stack.size() - 1];
         this->stack.pop_back();
 
-        this->stack.push_back(-expr);
+        this->stack.push_back(Value(DataType::INT, variant(-std::get<int>(expr.data))));
     }
 
     void visit_primary(Primary *primary)
     {
         switch (primary->value.token_type)
         {
+        case Token::Type::FLOAT_LITERAL:
+        {
+            this->stack.push_back(Value(DataType::FLOAT,
+                                        variant(std::stof(primary->value.lexeme))));
+            break;
+        }
+        case Token::Type::BOOL_LITERAL:
+        {
+            this->stack.push_back(Value(DataType::BOOL,
+                                        variant(primary->value.lexeme == "true" ? true : false)));
+            break;
+        }
+        case Token::Type::STR_LITERAL:
+        {
+            this->stack.push_back(Value(DataType::STR,
+                                        variant(primary->value.lexeme)));
+            break;
+        }
         case Token::Type::INT_LITERAL:
         {
-            this->stack.push_back(std::stoi(primary->value.lexeme));
+            this->stack.push_back(Value(DataType::INT,
+                                        variant(std::stoi(primary->value.lexeme))));
             break;
         }
         case Token::Type::IDENTIFIER:
