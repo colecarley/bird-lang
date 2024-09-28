@@ -2,60 +2,11 @@
 #include "src/lexer.cpp"
 #include "src/parser.cpp"
 #include "include/exceptions/user_error_tracker.h"
-// Demonstrate some basic assertions.
-// TEST(HelloTest, BasicAssertions)
-// {
-//   // Expect two strings not to be equal.
-//   EXPECT_STRNE("hello", "world");
-//   // Expect equality.
-//   EXPECT_EQ(7 * 6, 42);
-// }
 
 // helper function prototypes
 std::vector<Token> lex_code(const std::string &code);
 std::vector<std::unique_ptr<Stmt>> parse_code(const std::string &code);
 void print_expr(Expr *expr);
-
-TEST(LexerTest, TokenizeDeclStmt)
-{
-  std::string code = "var x: int = 3;";
-
-  auto tokens = lex_code(code);
-
-  EXPECT_EQ(tokens.size(), 8);
-  EXPECT_EQ(tokens[0].token_type, Token::Type::VAR);
-  EXPECT_EQ(tokens[1].token_type, Token::Type::IDENTIFIER);
-  EXPECT_EQ(tokens[1].lexeme, "x");
-  EXPECT_EQ(tokens[2].token_type, Token::Type::COLON);
-  EXPECT_EQ(tokens[3].token_type, Token::Type::TYPE_IDENTIFIER);
-  EXPECT_EQ(tokens[3].lexeme, "int");
-  EXPECT_EQ(tokens[4].token_type, Token::Type::EQUAL);
-  EXPECT_EQ(tokens[5].token_type, Token::Type::INT_LITERAL);
-  EXPECT_EQ(tokens[5].lexeme, "3");
-  EXPECT_EQ(tokens[6].token_type, Token::Type::SEMICOLON);
-  EXPECT_EQ(tokens[7].token_type, Token::Type::END);
-}
-
-TEST(LexerTest, TokenizeConstStmt)
-{
-  std::string code = "const z: str = \"foobar\";";
-
-  auto tokens = lex_code(code);
-  ;
-
-  EXPECT_EQ(tokens.size(), 8);
-  EXPECT_EQ(tokens[0].token_type, Token::Type::CONST);
-  EXPECT_EQ(tokens[1].token_type, Token::Type::IDENTIFIER);
-  EXPECT_EQ(tokens[1].lexeme, "z");
-  EXPECT_EQ(tokens[2].token_type, Token::Type::COLON);
-  EXPECT_EQ(tokens[3].token_type, Token::Type::TYPE_IDENTIFIER);
-  EXPECT_EQ(tokens[3].lexeme, "str");
-  EXPECT_EQ(tokens[4].token_type, Token::Type::EQUAL);
-  EXPECT_EQ(tokens[5].token_type, Token::Type::STR_LITERAL);
-  EXPECT_EQ(tokens[5].lexeme, "foobar");
-  EXPECT_EQ(tokens[6].token_type, Token::Type::SEMICOLON);
-  EXPECT_EQ(tokens[7].token_type, Token::Type::END);
-}
 
 TEST(LexerTest, TokenizeBlockStmt)
 {
@@ -88,9 +39,49 @@ TEST(LexerTest, TokenizeBlockStmt)
   EXPECT_EQ(tokens[15].token_type, Token::Type::END);
 }
 
+TEST(LexerTest, TokenizeConstStmt)
+{
+  std::string code = "const z: str = \"foobar\";";
+
+  auto tokens = lex_code(code);
+
+  EXPECT_EQ(tokens.size(), 8);
+  EXPECT_EQ(tokens[0].token_type, Token::Type::CONST);
+  EXPECT_EQ(tokens[1].token_type, Token::Type::IDENTIFIER);
+  EXPECT_EQ(tokens[1].lexeme, "z");
+  EXPECT_EQ(tokens[2].token_type, Token::Type::COLON);
+  EXPECT_EQ(tokens[3].token_type, Token::Type::TYPE_IDENTIFIER);
+  EXPECT_EQ(tokens[3].lexeme, "str");
+  EXPECT_EQ(tokens[4].token_type, Token::Type::EQUAL);
+  EXPECT_EQ(tokens[5].token_type, Token::Type::STR_LITERAL);
+  EXPECT_EQ(tokens[5].lexeme, "foobar");
+  EXPECT_EQ(tokens[6].token_type, Token::Type::SEMICOLON);
+  EXPECT_EQ(tokens[7].token_type, Token::Type::END);
+}
+
+TEST(LexerTest, TokenizeDeclStmt)
+{
+  std::string code = "var x: int = 3;";
+
+  auto tokens = lex_code(code);
+
+  EXPECT_EQ(tokens.size(), 8);
+  EXPECT_EQ(tokens[0].token_type, Token::Type::VAR);
+  EXPECT_EQ(tokens[1].token_type, Token::Type::IDENTIFIER);
+  EXPECT_EQ(tokens[1].lexeme, "x");
+  EXPECT_EQ(tokens[2].token_type, Token::Type::COLON);
+  EXPECT_EQ(tokens[3].token_type, Token::Type::TYPE_IDENTIFIER);
+  EXPECT_EQ(tokens[3].lexeme, "int");
+  EXPECT_EQ(tokens[4].token_type, Token::Type::EQUAL);
+  EXPECT_EQ(tokens[5].token_type, Token::Type::INT_LITERAL);
+  EXPECT_EQ(tokens[5].lexeme, "3");
+  EXPECT_EQ(tokens[6].token_type, Token::Type::SEMICOLON);
+  EXPECT_EQ(tokens[7].token_type, Token::Type::END);
+}
+
 TEST(LexerTest, TokenizeExprStmt)
 {
-  std::string code = "1 + 2 - 3 / 2 * 4 <= 4";
+  std::string code = "1 + 2 - 3 / 6 * 4 <= 4";
 
   auto tokens = lex_code(code);
 
@@ -105,7 +96,7 @@ TEST(LexerTest, TokenizeExprStmt)
   EXPECT_EQ(tokens[4].lexeme, "3");
   EXPECT_EQ(tokens[5].token_type, Token::Type::SLASH);
   EXPECT_EQ(tokens[6].token_type, Token::Type::INT_LITERAL);
-  EXPECT_EQ(tokens[6].lexeme, "2");
+  EXPECT_EQ(tokens[6].lexeme, "6");
   EXPECT_EQ(tokens[7].token_type, Token::Type::STAR);
   EXPECT_EQ(tokens[8].token_type, Token::Type::INT_LITERAL);
   EXPECT_EQ(tokens[8].lexeme, "4");
@@ -115,7 +106,7 @@ TEST(LexerTest, TokenizeExprStmt)
   EXPECT_EQ(tokens[11].token_type, Token::Type::END);
 }
 
-TEST(LexerTest, TokenizeFunc)
+TEST(LexerTest, TokenizeFuncStmt)
 {
   std::string code = "fn add(first: int, second: int): int { return first + second; }";
 
@@ -153,24 +144,6 @@ TEST(LexerTest, TokenizeFunc)
   EXPECT_EQ(tokens[20].token_type, Token::Type::END);
 }
 
-TEST(LexerTest, TokenizePrintStmt)
-{
-  /*
-   * TODO: PRINT STR_LITERAL
-   */
-
-  std::string code = "print 28;";
-
-  auto tokens = lex_code(code);
-
-  EXPECT_EQ(tokens.size(), 4);
-  EXPECT_EQ(tokens[0].token_type, Token::Type::PRINT);
-  EXPECT_EQ(tokens[1].token_type, Token::Type::INT_LITERAL);
-  EXPECT_EQ(tokens[1].lexeme, "28");
-  EXPECT_EQ(tokens[2].token_type, Token::Type::SEMICOLON);
-  EXPECT_EQ(tokens[3].token_type, Token::Type::END);
-}
-
 TEST(LexerTest, TokenizeIfStmt)
 {
   std::string code = "if 1 > 2 print 1; else if 1 == 2 print 2; else print 3;";
@@ -205,6 +178,20 @@ TEST(LexerTest, TokenizeIfStmt)
   EXPECT_EQ(tokens[17].lexeme, "3");
   EXPECT_EQ(tokens[18].token_type, Token::Type::SEMICOLON);
   EXPECT_EQ(tokens[19].token_type, Token::Type::END);
+}
+
+TEST(LexerTest, TokenizePrintStmt)
+{
+  std::string code = "print 28;";
+
+  auto tokens = lex_code(code);
+
+  EXPECT_EQ(tokens.size(), 4);
+  EXPECT_EQ(tokens[0].token_type, Token::Type::PRINT);
+  EXPECT_EQ(tokens[1].token_type, Token::Type::INT_LITERAL);
+  EXPECT_EQ(tokens[1].lexeme, "28");
+  EXPECT_EQ(tokens[2].token_type, Token::Type::SEMICOLON);
+  EXPECT_EQ(tokens[3].token_type, Token::Type::END);
 }
 
 TEST(LexerTest, TokenizeWhileStmt)
@@ -303,15 +290,15 @@ TEST(ParserTest, ParseDeclStmt)
 TEST(ParserTest, ParseExprStmt)
 {
   /*
-   *                       (1 + 2 - 3 / 6 * 4 <=  4)
-   *                            /              |   \
-   *               (1 + 2 - 3 / 6 * 4)        `<=`  `4`
-   *              /       |        \
-   *         (1 + 2)     `-`    (3 / 6 * 4)
-   *        /   |  \            /      |  \
-   *      `1`  `+` `2`      (3  / 6)  `*` `4`
-   *                         /  |   \
-   *                       `3` `/` `6`
+   *                    (1 + 2 - 3 / 6 * 4 <=  4)
+   *                        /              |   \
+   *           (1 + 2 - 3 / 6 * 4)        `<=`  `4`
+   *          /       |        \
+   *     (1 + 2)     `-`    (3 / 6 * 4)
+   *    /   |  \            /      |  \
+   *  `1`  `+` `2`      (3  / 6)  `*` `4`
+   *                     /  |   \
+   *                   `3` `/` `6`
    */
   std::string code = "1 + 2 - 3 / 6 * 4 <= 4;";
 
@@ -381,6 +368,190 @@ TEST(ParserTest, ParseExprStmt)
   // std::cout << std::endl;
 }
 
+TEST(ParserTest, ParseFuncStmt)
+{
+  /*
+   * fn IDENTIFIER (IDENTIFIER: TYPE_IDENTIFIER, IDENTIFIER: TYPE_IDENTIFIER) ARROW TYPE_IDENTIFIER { BLOCK; }
+   */
+  std::string code = "fn add(first: int, second: int) -> int { first + second; }";
+
+  auto stmts = parse_code(code);
+
+  ASSERT_EQ(stmts.size(), 1);
+  Func *func_stmt = dynamic_cast<Func *>(stmts[0].get());
+  ASSERT_NE(func_stmt, nullptr);
+
+  // match Func class identifier, check optional return type
+  EXPECT_EQ(func_stmt->identifier.lexeme, "add");
+  ASSERT_TRUE(func_stmt->return_type.has_value());
+  EXPECT_EQ(func_stmt->return_type->lexeme, "int");
+
+  // std::pair (first: IDENTIFIER, second: TYPE_IDENTIFIER)
+  ASSERT_EQ(func_stmt->param_list.size(), 2);
+  EXPECT_EQ(func_stmt->param_list[0].first.lexeme, "first");
+  EXPECT_EQ(func_stmt->param_list[0].second.lexeme, "int");
+  EXPECT_EQ(func_stmt->param_list[1].first.lexeme, "second");
+  EXPECT_EQ(func_stmt->param_list[1].second.lexeme, "int");
+
+  // get Block and check for not nullptr
+  Block *block_stmt = dynamic_cast<Block *>(func_stmt->block.get());
+  ASSERT_NE(block_stmt, nullptr);
+  ASSERT_EQ(block_stmt->stmts.size(), 1);
+
+  // get expression statement, check for not nullptr
+  ExprStmt *expr_stmt = dynamic_cast<ExprStmt *>(block_stmt->stmts[0].get());
+  ASSERT_NE(expr_stmt, nullptr);
+
+  // get binary expression `first + second` check op
+  Binary *binary_expr = dynamic_cast<Binary *>(expr_stmt->expr.get());
+  ASSERT_NE(binary_expr, nullptr);
+  EXPECT_EQ(binary_expr->op.lexeme, "+");
+
+  // back to expression parse checking, luckily not as bad as last expression test
+  Primary *lhs_primary = dynamic_cast<Primary *>(binary_expr->left.get());
+  ASSERT_NE(lhs_primary, nullptr);
+  EXPECT_EQ(lhs_primary->value.lexeme, "first");
+
+  Primary *rhs_primary = dynamic_cast<Primary *>(binary_expr->right.get());
+  ASSERT_NE(rhs_primary, nullptr);
+  EXPECT_EQ(rhs_primary->value.lexeme, "second");
+}
+
+TEST(ParserTest, ParseIfStmt)
+{
+  /*
+   * if EXPRESSION STATEMENT;
+   * else if EXPRESSION STATEMENT;
+   * else STATEMENT;
+   */
+  std::string code = "if 1 > 2 print 1; else if 1 == 2 print 2; else print 3;";
+
+  auto stmts = parse_code(code);
+
+  ASSERT_EQ(stmts.size(), 1);
+  IfStmt *if_stmt = dynamic_cast<IfStmt *>(stmts[0].get());
+  ASSERT_NE(if_stmt, nullptr);
+
+  // binary expression for conditional
+  Binary *condition_if = dynamic_cast<Binary *>(if_stmt->condition.get());
+  ASSERT_NE(condition_if, nullptr);
+  EXPECT_EQ(condition_if->op.lexeme, ">");
+
+  // left is primary should be `1`
+  Primary *lhs_condition_if = dynamic_cast<Primary *>(condition_if->left.get());
+  ASSERT_NE(lhs_condition_if, nullptr);
+  EXPECT_EQ(lhs_condition_if->value.lexeme, "1");
+
+  // right is primary should be `1`
+  Primary *rhs_condition_if = dynamic_cast<Primary *>(condition_if->right.get());
+  ASSERT_NE(rhs_condition_if, nullptr);
+  EXPECT_EQ(rhs_condition_if->value.lexeme, "2");
+
+  // then branch should have a print statement with one arg (primary expression)
+  PrintStmt *then_print_stmt = dynamic_cast<PrintStmt *>(if_stmt->then_branch.get());
+  ASSERT_NE(then_print_stmt, nullptr);
+  ASSERT_EQ(then_print_stmt->args.size(), 1);
+
+  // then arg is a primary expression should be `1`
+  Primary *then_arg = dynamic_cast<Primary *>(then_print_stmt->args[0].get());
+  ASSERT_NE(then_arg, nullptr);
+  EXPECT_EQ(then_arg->value.lexeme, "1");
+
+  /*
+   * check if else branch has value, in this test
+   * we ASSERT_TRUE because we already know it should
+   */
+
+  ASSERT_TRUE(if_stmt->else_branch.has_value());
+  IfStmt *else_if_stmt = dynamic_cast<IfStmt *>(if_stmt->else_branch->get());
+  ASSERT_NE(else_if_stmt, nullptr);
+
+  // another binary expression as condition, expect `==`
+  Binary *condition_else_if = dynamic_cast<Binary *>(else_if_stmt->condition.get());
+  ASSERT_NE(condition_else_if, nullptr);
+  EXPECT_EQ(condition_else_if->op.lexeme, "==");
+
+  // lhs else if, primary expression = `1`
+  Primary *lhs_condition_else_if = dynamic_cast<Primary *>(condition_else_if->left.get());
+  ASSERT_NE(lhs_condition_else_if, nullptr);
+  EXPECT_EQ(lhs_condition_else_if->value.lexeme, "1");
+
+  // rhs else if, primary expression = `2`
+  Primary *rhs_condition_else_if = dynamic_cast<Primary *>(condition_else_if->right.get());
+  ASSERT_NE(rhs_condition_else_if, nullptr);
+  EXPECT_EQ(rhs_condition_else_if->value.lexeme, "2");
+
+  // repeat
+  PrintStmt *else_if_print_stmt = dynamic_cast<PrintStmt *>(else_if_stmt->then_branch.get());
+  ASSERT_NE(else_if_print_stmt, nullptr);
+  ASSERT_EQ(else_if_print_stmt->args.size(), 1);
+
+  Primary *else_if_arg = dynamic_cast<Primary *>(else_if_print_stmt->args[0].get());
+  ASSERT_NE(else_if_arg, nullptr);
+  EXPECT_EQ(else_if_arg->value.lexeme, "2");
+
+  ASSERT_TRUE(else_if_stmt->else_branch.has_value());
+  PrintStmt *else_print_stmt = dynamic_cast<PrintStmt *>(else_if_stmt->else_branch->get());
+  ASSERT_NE(else_print_stmt, nullptr);
+  ASSERT_EQ(else_print_stmt->args.size(), 1);
+
+  Primary *else_arg = dynamic_cast<Primary *>(else_print_stmt->args[0].get());
+  ASSERT_NE(else_arg, nullptr);
+  EXPECT_EQ(else_arg->value.lexeme, "3");
+}
+
+TEST(ParserTest, ParsePrintStmt)
+{
+  /*
+   * PRINT EXPRESSION[i]
+   */
+  std::string code = "print 28;";
+
+  auto stmts = parse_code(code);
+
+  ASSERT_EQ(stmts.size(), 1);
+  PrintStmt *print_stmt = dynamic_cast<PrintStmt *>(stmts[0].get());
+  ASSERT_NE(print_stmt, nullptr);
+
+  // print primary expression `28`
+  ASSERT_EQ(print_stmt->args.size(), 1);
+  Primary *primary_expr = dynamic_cast<Primary *>(print_stmt->args[0].get());
+  ASSERT_NE(primary_expr, nullptr);
+  EXPECT_EQ(primary_expr->value.lexeme, "28");
+}
+
+TEST(ParserTest, ParseWhileStmt)
+{
+  std::string code = "while (true) { print 1; }";
+
+  auto stmts = parse_code(code);
+
+  // check for while statement
+  ASSERT_EQ(stmts.size(), 1);
+  WhileStmt *while_stmt = dynamic_cast<WhileStmt *>(stmts[0].get());
+  ASSERT_NE(while_stmt, nullptr);
+
+  // primary expression as condition: `true`
+  Primary *condition_expr = dynamic_cast<Primary *>(while_stmt->condition.get());
+  ASSERT_NE(condition_expr, nullptr);
+  EXPECT_EQ(condition_expr->value.lexeme, "true");
+
+  // check for block
+  Block *block_stmt = dynamic_cast<Block *>(while_stmt->stmt.get());
+  ASSERT_NE(block_stmt, nullptr);
+  ASSERT_EQ(block_stmt->stmts.size(), 1);
+
+  // check for print statement with one arg
+  PrintStmt *print_stmt = dynamic_cast<PrintStmt *>(block_stmt->stmts[0].get());
+  ASSERT_NE(print_stmt, nullptr);
+  ASSERT_EQ(print_stmt->args.size(), 1);
+
+  Primary *print_arg = dynamic_cast<Primary *>(print_stmt->args[0].get());
+  ASSERT_NE(print_arg, nullptr);
+  EXPECT_EQ(print_arg->value.lexeme, "1");
+}
+
+// helper function which returns a vector of tokens
 std::vector<Token> lex_code(const std::string &code)
 {
   UserErrorTracker error_tracker(code);
@@ -388,6 +559,7 @@ std::vector<Token> lex_code(const std::string &code)
   return lexer.lex();
 }
 
+// helper function which returns a vector of statement pointers
 std::vector<std::unique_ptr<Stmt>> parse_code(const std::string &code)
 {
   UserErrorTracker error_tracker(code);
@@ -398,6 +570,7 @@ std::vector<std::unique_ptr<Stmt>> parse_code(const std::string &code)
   return parser.parse();
 }
 
+// verify expression parsing visually
 void print_expr(Expr *expr)
 {
   if (auto binary = dynamic_cast<Binary *>(expr))
