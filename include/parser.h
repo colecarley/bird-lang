@@ -93,7 +93,7 @@ public:
         Parser &parser;
 
         ParseOption(Token token, Parser &parser) : token(token), parser(parser) {}
-        ParseOption(Parser &parser) : token({}), parser(parser) {}
+        ParseOption(Parser &parser) : token(std::nullopt), parser(parser) {}
 
     public:
         friend ParseOption Parser::expect_token(Token::Type type);
