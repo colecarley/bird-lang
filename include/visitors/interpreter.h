@@ -190,7 +190,8 @@ public:
         auto condition_result = this->stack.back();
         this->stack.pop_back();
 
-        while (std::get<bool>(condition_result.data)) {
+        while (std::get<bool>(condition_result.data))
+        {
             while_stmt->stmt->accept(this);
 
             while_stmt->condition->accept(this);
@@ -300,7 +301,6 @@ public:
         {
             throw BirdException("Unknown type used with unary value.");
         }
-        
     }
 
     void visit_primary(Primary *primary)
@@ -352,7 +352,7 @@ public:
 
         this->stack.pop_back();
 
-        if (result == 1)
+        if (std::get<bool>(result.data))
         {
             ternary->true_expr->accept(this);
         }
@@ -373,7 +373,7 @@ public:
         auto result = this->stack.back();
         this->stack.pop_back();
 
-        if (result == 1)
+        if (std::get<bool>(result.data))
         {
             if_stmt->then_branch->accept(this);
         }
