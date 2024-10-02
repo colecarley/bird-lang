@@ -39,5 +39,5 @@ add_executable(parser_tests ../tests/parser_tests.cpp)
 target_link_libraries(lexer_tests GTest::gtest GTest::gtest_main)
 target_link_libraries(parser_tests GTest::gtest GTest::gtest_main)
 
-add_test(AllTestsInFoo lexer_tests)
-add_test(AllTestsInFoo parser_tests)
+add_test(AllTestsInLexerTests lexer_tests)
+add_test(AllTestsInParserTests parser_tests)
