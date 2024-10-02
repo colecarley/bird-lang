@@ -352,6 +352,11 @@ public:
 
         this->stack.pop_back();
 
+        if (!std::holds_alternative<bool>(result.data))
+        {
+            throw BirdException("expected bool result for ternary condition");
+        }
+
         if (std::get<bool>(result.data))
         {
             ternary->true_expr->accept(this);
@@ -370,9 +375,16 @@ public:
     void visit_if_stmt(IfStmt *if_stmt)
     {
         if_stmt->condition->accept(this);
+
         auto result = this->stack.back();
+
         this->stack.pop_back();
 
+        if (!std::holds_alternative<bool>(result.data))
+        {
+            throw BirdException("expected bool result for if-statement condition");
+        }
+    
         if (std::get<bool>(result.data))
         {
             if_stmt->then_branch->accept(this);
