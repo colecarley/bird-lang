@@ -17,6 +17,7 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 add_definitions(-DGTEST_HAS_CXXABI_H_=0) # dont touch this
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/tests)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
@@ -32,7 +33,11 @@ enable_testing()
 
 find_package(GTest REQUIRED)
 
-add_executable(hello_test hello_test.cpp)
-target_link_libraries(hello_test GTest::gtest GTest::gtest_main)
+add_executable(lexer_tests ../tests/lexer_tests.cpp)
+add_executable(parser_tests ../tests/parser_tests.cpp)
 
-add_test(AllTestsInFoo hello_test)
+target_link_libraries(lexer_tests GTest::gtest GTest::gtest_main)
+target_link_libraries(parser_tests GTest::gtest GTest::gtest_main)
+
+add_test(AllTestsInFoo lexer_tests)
+add_test(AllTestsInFoo parser_tests)
