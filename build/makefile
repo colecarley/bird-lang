@@ -127,6 +127,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named parser_tests
+
+# Build rule for target.
+parser_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 parser_tests
+.PHONY : parser_tests
+
+# fast build rule for target.
+parser_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_tests.dir/build.make CMakeFiles/parser_tests.dir/build
+.PHONY : parser_tests/fast
+
+#=============================================================================
 # Target rules for targets named omp_gen
 
 # Build rule for target.
@@ -153,6 +166,19 @@ intrinsics_gen/fast:
 .PHONY : intrinsics_gen/fast
 
 #=============================================================================
+# Target rules for targets named lexer_tests
+
+# Build rule for target.
+lexer_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lexer_tests
+.PHONY : lexer_tests
+
+# fast build rule for target.
+lexer_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_tests.dir/build.make CMakeFiles/lexer_tests.dir/build
+.PHONY : lexer_tests/fast
+
+#=============================================================================
 # Target rules for targets named acc_gen
 
 # Build rule for target.
@@ -164,19 +190,6 @@ acc_gen: cmake_check_build_system
 acc_gen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/acc_gen.dir/build.make CMakeFiles/acc_gen.dir/build
 .PHONY : acc_gen/fast
-
-#=============================================================================
-# Target rules for targets named hello_test
-
-# Build rule for target.
-hello_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hello_test
-.PHONY : hello_test
-
-# fast build rule for target.
-hello_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hello_test.dir/build.make CMakeFiles/hello_test.dir/build
-.PHONY : hello_test/fast
 
 #=============================================================================
 # Target rules for targets named compiler
@@ -203,30 +216,6 @@ RISCVTargetParserTableGen: cmake_check_build_system
 RISCVTargetParserTableGen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/RISCVTargetParserTableGen.dir/build.make CMakeFiles/RISCVTargetParserTableGen.dir/build
 .PHONY : RISCVTargetParserTableGen/fast
-
-hello_test.o: hello_test.cpp.o
-.PHONY : hello_test.o
-
-# target to build an object file
-hello_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hello_test.dir/build.make CMakeFiles/hello_test.dir/hello_test.cpp.o
-.PHONY : hello_test.cpp.o
-
-hello_test.i: hello_test.cpp.i
-.PHONY : hello_test.i
-
-# target to preprocess a source file
-hello_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hello_test.dir/build.make CMakeFiles/hello_test.dir/hello_test.cpp.i
-.PHONY : hello_test.cpp.i
-
-hello_test.s: hello_test.cpp.s
-.PHONY : hello_test.s
-
-# target to generate assembly for a file
-hello_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hello_test.dir/build.make CMakeFiles/hello_test.dir/hello_test.cpp.s
-.PHONY : hello_test.cpp.s
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -300,6 +289,54 @@ src/parser.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/parser.cpp.s
 .PHONY : src/parser.cpp.s
 
+tests/lexer_tests.o: tests/lexer_tests.cpp.o
+.PHONY : tests/lexer_tests.o
+
+# target to build an object file
+tests/lexer_tests.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_tests.dir/build.make CMakeFiles/lexer_tests.dir/tests/lexer_tests.cpp.o
+.PHONY : tests/lexer_tests.cpp.o
+
+tests/lexer_tests.i: tests/lexer_tests.cpp.i
+.PHONY : tests/lexer_tests.i
+
+# target to preprocess a source file
+tests/lexer_tests.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_tests.dir/build.make CMakeFiles/lexer_tests.dir/tests/lexer_tests.cpp.i
+.PHONY : tests/lexer_tests.cpp.i
+
+tests/lexer_tests.s: tests/lexer_tests.cpp.s
+.PHONY : tests/lexer_tests.s
+
+# target to generate assembly for a file
+tests/lexer_tests.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_tests.dir/build.make CMakeFiles/lexer_tests.dir/tests/lexer_tests.cpp.s
+.PHONY : tests/lexer_tests.cpp.s
+
+tests/parser_tests.o: tests/parser_tests.cpp.o
+.PHONY : tests/parser_tests.o
+
+# target to build an object file
+tests/parser_tests.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_tests.dir/build.make CMakeFiles/parser_tests.dir/tests/parser_tests.cpp.o
+.PHONY : tests/parser_tests.cpp.o
+
+tests/parser_tests.i: tests/parser_tests.cpp.i
+.PHONY : tests/parser_tests.i
+
+# target to preprocess a source file
+tests/parser_tests.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_tests.dir/build.make CMakeFiles/parser_tests.dir/tests/parser_tests.cpp.i
+.PHONY : tests/parser_tests.cpp.i
+
+tests/parser_tests.s: tests/parser_tests.cpp.s
+.PHONY : tests/parser_tests.s
+
+# target to generate assembly for a file
+tests/parser_tests.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_tests.dir/build.make CMakeFiles/parser_tests.dir/tests/parser_tests.cpp.s
+.PHONY : tests/parser_tests.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -314,10 +351,8 @@ help:
 	@echo "... intrinsics_gen"
 	@echo "... omp_gen"
 	@echo "... compiler"
-	@echo "... hello_test"
-	@echo "... hello_test.o"
-	@echo "... hello_test.i"
-	@echo "... hello_test.s"
+	@echo "... lexer_tests"
+	@echo "... parser_tests"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
@@ -327,6 +362,12 @@ help:
 	@echo "... src/parser.o"
 	@echo "... src/parser.i"
 	@echo "... src/parser.s"
+	@echo "... tests/lexer_tests.o"
+	@echo "... tests/lexer_tests.i"
+	@echo "... tests/lexer_tests.s"
+	@echo "... tests/parser_tests.o"
+	@echo "... tests/parser_tests.i"
+	@echo "... tests/parser_tests.s"
 .PHONY : help
 
 
