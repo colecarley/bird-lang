@@ -281,7 +281,19 @@ public:
         auto expr = this->stack[this->stack.size() - 1];
         this->stack.pop_back();
 
-        this->stack.push_back(Value(DataType::INT, variant(-std::get<int>(expr.data))));
+        if (std::holds_alternative<int>(expr.data))
+        {
+            this->stack.push_back(Value(DataType::INT, variant(-std::get<int>(expr.data))));
+        }
+        else if (std::holds_alternative<float>(expr.data))
+        {
+            this->stack.push_back(Value(DataType::FLOAT, variant(-std::get<float>(expr.data))));
+        }
+        else
+        {
+            throw BirdException("Unknown type used with unary value.");
+        }
+        
     }
 
     void visit_primary(Primary *primary)
