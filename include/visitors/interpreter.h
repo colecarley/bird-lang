@@ -106,6 +106,11 @@ public:
             {
                 decl_stmt->accept(this);
             }
+            
+            if (auto const_stmt = dynamic_cast<ConstStmt *>(stmt.get()))
+            {
+                const_stmt->accept(this);
+            }
 
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
@@ -151,6 +156,26 @@ public:
         auto result = this->stack.back();
         this->stack.pop_back();
 
+        std::string type_lexeme = decl_stmt->type_identifier.lexeme;
+
+        // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
+        if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
+        {
+            throw BirdException("mismatching type in assignment, expected int");
+        } 
+        else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
+        {
+            throw BirdException("mismatching type in assignment, expected float");
+        } 
+        else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
+        {
+            throw BirdException("mismatching type in assignment, expected str");
+        } 
+        else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
+        {
+            throw BirdException("mismatching type in assignment, expected bool");
+        } 
+
         this->environment->insert(decl_stmt->identifier.lexeme, result);
     }
 
@@ -167,14 +192,54 @@ public:
             auto result = this->stack[this->stack.size() - 1];
             this->stack.pop_back();
 
-            std::cout << std::get<int>(result.data);
+            if (std::holds_alternative<int>(result.data)) 
+            {
+                std::cout << std::get<int>(result.data) << std::endl;
+            }
+            else if (std::holds_alternative<float>(result.data))
+            {
+                std::cout << std::get<float>(result.data) << std::endl;
+            }
+            else if (std::holds_alternative<std::string>(result.data))
+            {
+                std::cout << std::get<std::string>(result.data) << std::endl;
+            }
+            else if (std::holds_alternative<bool>(result.data))
+            {
+                std::cout << std::get<bool>(result.data) << std::endl;
+            }
         }
         std::cout << std::endl;
     }
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        throw BirdException("implement const statment visit");
+        const_stmt->value->accept(this);
+
+        auto result = this->stack.back();
+        this->stack.pop_back();
+
+        std::string type_lexeme = const_stmt->type_identifier.lexeme;
+
+        // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
+        if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
+        {
+            throw BirdException("mismatching type in assignment, expected int");
+        } 
+        else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
+        {
+            throw BirdException("mismatching type in assignment, expected float");
+        } 
+        else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
+        {
+            throw BirdException("mismatching type in assignment, expected str");
+        } 
+        else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
+        {
+            throw BirdException("mismatching type in assignment, expected bool");
+        } 
+
+        this->environment->insert(const_stmt->identifier.lexeme, result);
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
@@ -182,6 +247,11 @@ public:
         while_stmt->condition->accept(this);
         auto condition_result = this->stack.back();
         this->stack.pop_back();
+        
+        if (!std::holds_alternative<bool>(condition_result.data))
+        {
+            throw BirdException("expected bool in while statement condition");
+        } 
 
         while (std::get<bool>(condition_result.data)) {
             while_stmt->stmt->accept(this);
