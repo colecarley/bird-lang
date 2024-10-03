@@ -18,10 +18,10 @@ class ConstStmt : public Stmt
 {
 public:
     Token identifier;
-    Token type_identifier;
+    std::optional<Token> type_identifier;
     std::unique_ptr<Expr> value;
 
-    ConstStmt(Token identifier, Token type_identifier, std::unique_ptr<Expr> value)
+    ConstStmt(Token identifier, std::optional<Token> type_identifier, std::unique_ptr<Expr> value)
     {
         this->identifier = identifier;
         this->type_identifier = type_identifier;
