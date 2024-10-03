@@ -23,39 +23,39 @@
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
 
-#define HANDLE_INT_OPERATOR(left, right, operator) \
-    if (std::holds_alternative<int>(left.data) && std::holds_alternative<int>(right.data)) \
-    { \
+#define HANDLE_INT_OPERATOR(left, right, operator)                                                                         \
+    if (std::holds_alternative<int>(left.data) && std::holds_alternative<int>(right.data))                                 \
+    {                                                                                                                      \
         this->stack.push_back(Value(DataType::INT, variant(std::get<int>(left.data) operator std::get<int>(right.data)))); \
-        break; \
+        break;                                                                                                             \
     }
 
-#define HANDLE_NUMERIC_OPERATOR(left, right, operator) \
+#define HANDLE_NUMERIC_OPERATOR(left, right, operator)                                                                                                                                  \
     if ((std::holds_alternative<int>(left.data) || std::holds_alternative<float>(left.data)) && (std::holds_alternative<int>(right.data) || std::holds_alternative<float>(right.data))) \
-    { \
-        float left_float = std::holds_alternative<int>(left.data) ? std::get<int>(left.data) : std::get<float>(left.data); \
-        float right_float = std::holds_alternative<int>(right.data) ? std::get<int>(right.data) : std::get<float>(right.data); \
-        \
-        this->stack.push_back(Value(DataType::FLOAT, variant(left_float operator right_float))); \
-        break; \
+    {                                                                                                                                                                                   \
+        float left_float = std::holds_alternative<int>(left.data) ? std::get<int>(left.data) : std::get<float>(left.data);                                                              \
+        float right_float = std::holds_alternative<int>(right.data) ? std::get<int>(right.data) : std::get<float>(right.data);                                                          \
+                                                                                                                                                                                        \
+        this->stack.push_back(Value(DataType::FLOAT, variant(left_float operator right_float)));                                                                                        \
+        break;                                                                                                                                                                          \
     }
 
-#define HANDLE_STRING_OPERATOR(left, right, operator) \
-    if (std::holds_alternative<std::string>(left.data) && std::holds_alternative<std::string>(right.data)) \
-    { \
+#define HANDLE_STRING_OPERATOR(left, right, operator)                                                                                      \
+    if (std::holds_alternative<std::string>(left.data) && std::holds_alternative<std::string>(right.data))                                 \
+    {                                                                                                                                      \
         this->stack.push_back(Value(DataType::STR, variant(std::get<std::string>(left.data) operator std::get<std::string>(right.data)))); \
-        break; \
+        break;                                                                                                                             \
     }
 
-#define HANDLE_BOOL_OPERATOR(left, right, operator) \
-    if (std::holds_alternative<bool>(left.data) && std::holds_alternative<bool>(right.data)) \
-    { \
+#define HANDLE_BOOL_OPERATOR(left, right, operator)                                                                     \
+    if (std::holds_alternative<bool>(left.data) && std::holds_alternative<bool>(right.data))                            \
+    {                                                                                                                   \
         this->stack.push_back(Value(DataType::BOOL, variant(std::get<bool>(left.data) == std::get<bool>(right.data)))); \
-        break; \
+        break;                                                                                                          \
     }
 
-#define HANDLE_UNKNOWN_OPERATOR(operator) \
-    throw BirdException("The '" #operator "' operator could not be used to interpret these values."); \
+#define HANDLE_UNKNOWN_OPERATOR(operator)                                                            \
+    throw BirdException("The '" #operator"' operator could not be used to interpret these values."); \
     break;
 
 enum DataType
@@ -107,7 +107,7 @@ public:
             {
                 decl_stmt->accept(this);
             }
-            
+
             if (auto const_stmt = dynamic_cast<ConstStmt *>(stmt.get()))
             {
                 const_stmt->accept(this);
@@ -162,26 +162,30 @@ public:
 
         auto result = this->stack.back();
         this->stack.pop_back();
+        result.is_mutable = true;
 
-        std::string type_lexeme = decl_stmt->type_identifier.lexeme;
+        if (decl_stmt->type_identifier.has_value())
+        {
+            std::string type_lexeme = decl_stmt->type_identifier.value().lexeme;
 
-        // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-        if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected int");
-        } 
-        else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected float");
-        } 
-        else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected str");
-        } 
-        else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected bool");
-        } 
+            // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
+            if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected int");
+            }
+            else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected float");
+            }
+            else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected str");
+            }
+            else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected bool");
+            }
+        }
 
         this->environment->insert(decl_stmt->identifier.lexeme, result);
     }
@@ -199,7 +203,7 @@ public:
             auto result = this->stack[this->stack.size() - 1];
             this->stack.pop_back();
 
-            if (std::holds_alternative<int>(result.data)) 
+            if (std::holds_alternative<int>(result.data))
             {
                 std::cout << std::get<int>(result.data) << std::endl;
             }
@@ -226,25 +230,28 @@ public:
         auto result = this->stack.back();
         this->stack.pop_back();
 
-        std::string type_lexeme = const_stmt->type_identifier.lexeme;
+        if (const_stmt->type_identifier.has_value())
+        {
+            std::string type_lexeme = const_stmt->type_identifier.value().lexeme;
 
-        // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-        if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected int");
-        } 
-        else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected float");
-        } 
-        else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected str");
-        } 
-        else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected bool");
-        } 
+            // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
+            if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected int");
+            }
+            else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected float");
+            }
+            else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected str");
+            }
+            else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected bool");
+            }
+        }
 
         this->environment->insert(const_stmt->identifier.lexeme, result);
     }
@@ -254,11 +261,11 @@ public:
         while_stmt->condition->accept(this);
         auto condition_result = this->stack.back();
         this->stack.pop_back();
-        
+
         if (!std::holds_alternative<bool>(condition_result.data))
         {
             throw BirdException("expected bool in while statement condition");
-        } 
+        }
 
         while (std::get<bool>(condition_result.data))
         {
@@ -454,7 +461,7 @@ public:
         {
             throw BirdException("expected bool result for if-statement condition");
         }
-    
+
         if (std::get<bool>(result.data))
         {
             if_stmt->then_branch->accept(this);
