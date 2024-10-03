@@ -51,7 +51,11 @@ std::unique_ptr<Stmt> Parser::stmt()
     case Token::Type::VAR:
         return this->var_decl();
     case Token::Type::IDENTIFIER:
-        return this->assign_stmt();
+        if (this->peek_next().token_type == Token::Type::EQUAL)
+        {
+            return this->assign_stmt();
+        }
+        break;
     case Token::Type::IF:
         return this->if_stmt();
     case Token::Type::CONST:
@@ -64,9 +68,9 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->func();
     case Token::Type::WHILE:
         return this->while_stmt();
-    default:
-        return this->expr_stmt();
     }
+
+    return this->expr_stmt();
 }
 
 std::unique_ptr<Stmt> Parser::const_decl()
@@ -577,6 +581,11 @@ Token Parser::advance()
 Token Parser::peek()
 {
     return this->tokens[this->position];
+}
+
+Token Parser::peek_next()
+{
+    return this->tokens[this->position + 1];
 }
 
 Token Parser::peek_previous()
