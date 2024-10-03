@@ -33,4 +33,9 @@ public:
     {
         this->enclosing = std::move(enclosing);
     }
+
+    bool contains(std::string identifier)
+    {
+        return vars.find(identifier) != vars.end();
+    }
 };

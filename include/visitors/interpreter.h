@@ -13,6 +13,7 @@
 #include "../ast_node/expr/ternary.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
+#include "../ast_node/stmt/assign_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/const_stmt.h"
@@ -113,6 +114,11 @@ public:
                 const_stmt->accept(this);
             }
 
+            if (auto assign_stmt = dynamic_cast<AssignStmt *>(stmt.get()))
+            {
+                assign_stmt->accept(this);
+            }
+
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
                 print_stmt->accept(this);
@@ -184,6 +190,25 @@ public:
         } 
 
         this->environment->insert(decl_stmt->identifier.lexeme, result);
+    }
+
+    void visit_assign_stmt(AssignStmt *assign_stmt)
+    {
+        if (!this->environment->contains(assign_stmt->identifier.lexeme))
+        {
+            throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not initialized.");
+        }
+
+        assign_stmt->value->accept(this);
+        auto value = this->stack.back();
+        this->stack.pop_back();
+
+        if (!value.is_mutable)
+        {
+            throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not mutable.");
+        }
+
+        this->environment->insert(assign_stmt->identifier.lexeme, value);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)

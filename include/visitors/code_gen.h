@@ -12,6 +12,7 @@
 #include "../ast_node/expr/ternary.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
+#include "../ast_node/stmt/assign_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
@@ -139,6 +140,11 @@ public:
         this->stack.pop_back();
 
         this->environment->insert(decl_stmt->identifier.lexeme, result);
+    }
+
+    void visit_assign_stmt(AssignStmt *assign_stmt)
+    {
+        throw BirdException("Implement assign statement code gen.");
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)
