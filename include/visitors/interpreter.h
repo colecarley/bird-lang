@@ -10,6 +10,7 @@
 #include "../ast_node/expr/binary.h"
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
+#include "../ast_node/expr/ternary.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
@@ -131,7 +132,13 @@ public:
             {
                 while_stmt->accept(this);
             }
+
+            if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
+            {
+                if_stmt->accept(this);
+            }
         }
+
         this->stack.clear();
     }
 
@@ -253,7 +260,8 @@ public:
             throw BirdException("expected bool in while statement condition");
         } 
 
-        while (std::get<bool>(condition_result.data)) {
+        while (std::get<bool>(condition_result.data))
+        {
             while_stmt->stmt->accept(this);
 
             while_stmt->condition->accept(this);
@@ -363,7 +371,6 @@ public:
         {
             throw BirdException("Unknown type used with unary value.");
         }
-        
     }
 
     void visit_primary(Primary *primary)
@@ -407,6 +414,29 @@ public:
         }
     }
 
+    void visit_ternary(Ternary *ternary)
+    {
+        ternary->condition->accept(this);
+
+        auto result = this->stack.back();
+
+        this->stack.pop_back();
+
+        if (!std::holds_alternative<bool>(result.data))
+        {
+            throw BirdException("expected bool result for ternary condition");
+        }
+
+        if (std::get<bool>(result.data))
+        {
+            ternary->true_expr->accept(this);
+        }
+        else
+        {
+            ternary->false_expr->accept(this);
+        }
+    }
+
     void visit_func(Func *func)
     {
         throw BirdException("implement func visit");
@@ -414,6 +444,27 @@ public:
 
     void visit_if_stmt(IfStmt *if_stmt)
     {
-        throw BirdException("implement if statement visit");
+        if_stmt->condition->accept(this);
+
+        auto result = this->stack.back();
+
+        this->stack.pop_back();
+
+        if (!std::holds_alternative<bool>(result.data))
+        {
+            throw BirdException("expected bool result for if-statement condition");
+        }
+    
+        if (std::get<bool>(result.data))
+        {
+            if_stmt->then_branch->accept(this);
+        }
+        else
+        {
+            if (if_stmt->else_branch.has_value())
+            {
+                if_stmt->else_branch.value()->accept(this);
+            }
+        }
     }
 };

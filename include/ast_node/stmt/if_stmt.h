@@ -14,11 +14,11 @@ class Expr;
  * if "(" expression ")" "{" statement "}"
  * else if "{" statment "}"
  * else "{" statement "}"
- * 
+ *
  * or
- * 
+ *
  * ex:
- * if expression 
+ * if expression
  *       statement
  * else
  *       statment
@@ -30,7 +30,7 @@ public:
     std::unique_ptr<Stmt> then_branch;
     std::optional<std::unique_ptr<Stmt>> else_branch;
 
-    IfStmt(std::unique_ptr<Expr> condition, 
+    IfStmt(std::unique_ptr<Expr> condition,
            std::unique_ptr<Stmt> then_branch,
            std::optional<std::unique_ptr<Stmt>> else_branch)
     {

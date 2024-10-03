@@ -5,6 +5,7 @@ Aiden Kirk
 
 Nicholas Langley
 
+Nathan Wright
 
 # Building The Project
 For ease of development over multiple operating systems, the project should be run in a container. There is a `.devcontainer` folder that outlines the proper container. 

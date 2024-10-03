@@ -56,6 +56,8 @@ public:
     // exprs
     std::unique_ptr<Expr> expr();
 
+    std::unique_ptr<Expr> ternary();
+
     std::unique_ptr<Expr> equality();
 
     std::unique_ptr<Expr> comparison();
