@@ -27,12 +27,10 @@ public:
             std::optional<std::unique_ptr<Expr>> condition,
             std::optional<std::unique_ptr<Expr>> increment,
             std::unique_ptr<Stmt> body)
-    {
-        this->initializer = std::move(initializer);
-        this->condition = std::move(condition);
-        this->increment = std::move(increment);
-        this->body = std::move(body);
-    }
+        : initializer(std::move(initializer)),
+          condition(std::move(condition)),
+          increment(std::move(increment)),
+          body(std::move(body)) {}
 
     void accept(Visitor *visitor)
     {
