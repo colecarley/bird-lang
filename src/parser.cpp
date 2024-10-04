@@ -243,7 +243,7 @@ std::unique_ptr<Stmt> Parser::for_stmt()
 
     this->advance();
 
-    std::optional<std::unique_ptr<Stmt>> initializer = std::nullopt;
+    std::optional<std::unique_ptr<Stmt>> initializer;
     if (this->peek().token_type != Token::Type::SEMICOLON)
     {
         initializer = this->stmt();
@@ -251,7 +251,7 @@ std::unique_ptr<Stmt> Parser::for_stmt()
 
     this->advance();
 
-    std::optional<std::unique_ptr<Expr>> condition = std::nullopt;
+    std::optional<std::unique_ptr<Expr>> condition;
     if (this->peek().token_type != Token::Type::SEMICOLON)
     {
         condition = this->expr();
@@ -259,7 +259,7 @@ std::unique_ptr<Stmt> Parser::for_stmt()
 
     this->advance();
 
-    std::optional<std::unique_ptr<Expr>> increment = std::nullopt;
+    std::optional<std::unique_ptr<Expr>> increment;
     if (this->peek().token_type != Token::Type::RPAREN)
     {
         increment = this->expr();
