@@ -122,7 +122,7 @@ public:
      */
     void expected(std::string context, Token token)
     {
-        this->errors.push_back(std::make_tuple(this->format_message("expected " + context, token.line_num, token.char_num), token));
+        this->errors.push_back(std::make_tuple(this->format_message(context, token.line_num, token.char_num), token));
     }
 
     void print_errors()

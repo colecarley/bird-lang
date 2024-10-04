@@ -68,29 +68,28 @@ std::unique_ptr<Stmt> Parser::stmt()
 // CONST_DECL: const IDENTIFIER: TYPE_IDENTIFIER = EXPR;
 std::unique_ptr<Stmt> Parser::const_decl()
 {
-    this->expect_token(Token::Type::CONST).adv_or_bird_error("Expected \'const\' at the beginning of const decl");
+    this->expect_token(Token::Type::CONST).adv_or_bird_error("Expected 'const' at the beginning of const decl");
 
-    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("identifier after const");
+    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier after const");
 
-    this->expect_token(Token::Type::COLON).adv_or_user_error(": after identifier");
+    this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after identifier");
 
-    auto type_identifier = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("type identifier after identifier");
+    auto type_identifier = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("expected type identifier after identifier");
 
-    this->expect_token(Token::Type::EQUAL).adv_or_user_error("= after type identifier");
+    this->expect_token(Token::Type::EQUAL).adv_or_user_error("expected '=' after type identifier");
 
     auto expr = this->expr();
 
-    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("; after const statement");
+    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("expected ';' after const statement");
 
     return std::make_unique<ConstStmt>(
-        ConstStmt(
-            identifier, type_identifier, std::move(expr)));
+        ConstStmt(identifier, type_identifier, std::move(expr)));
 }
 
 // BLOCK: {STMT*}
 std::unique_ptr<Stmt> Parser::block()
 {
-    this->expect_token(Token::Type::LBRACE).adv_or_bird_error("Expected \'{\' at the beginning of block");
+    this->expect_token(Token::Type::LBRACE).adv_or_bird_error("Expected '{' at the beginning of block");
 
     auto stmts = std::vector<std::unique_ptr<Stmt>>();
 
@@ -100,7 +99,7 @@ std::unique_ptr<Stmt> Parser::block()
         stmts.push_back(std::move(stmt));
     }
 
-    this->expect_token(Token::Type::RBRACE).adv_or_user_error("} at the end of block");
+    this->expect_token(Token::Type::RBRACE).adv_or_user_error("expected '}' at the end of block");
 
     return std::make_unique<Block>(Block(std::move(stmts)));
 }
@@ -137,7 +136,7 @@ std::unique_ptr<Stmt> Parser::expr_stmt()
     auto result = std::make_unique<ExprStmt>(
         ExprStmt(this->expr()));
 
-    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("; at the end of expression");
+    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("expected ';' at the end of expression");
 
     return result;
 }
@@ -161,7 +160,7 @@ std::unique_ptr<Stmt> Parser::print_stmt()
         this->advance();
     }
 
-    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("; after 'print'");
+    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("expected ';' after print statement");
 
     return std::make_unique<PrintStmt>(PrintStmt(std::move(values)));
 }
@@ -184,13 +183,13 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
     this->expect_token(Token::Type::VAR).adv_or_bird_error("Expected 'var' keyword");
 
-    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("identifier in variable declaration");
+    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier in variable declaration");
 
-    this->expect_token(Token::Type::COLON).adv_or_user_error(": after identifier in variable declaration");
+    this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after identifier in variable declaration");
 
-    auto type_identifier = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("type identifer after : in variable declaration");
+    auto type_identifier = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("expected type identifer after ':' in variable declaration");
 
-    this->expect_token(Token::Type::EQUAL).adv_or_user_error("= in variable assignment");
+    this->expect_token(Token::Type::EQUAL).adv_or_user_error("expected '=' in variable assignment");
 
     auto result = std::make_unique<DeclStmt>(
         DeclStmt(
@@ -198,7 +197,7 @@ std::unique_ptr<Stmt> Parser::var_decl()
             type_identifier,
             this->expr()));
 
-    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("; at the end of expression");
+    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("expected ';' at the end of expression");
 
     return result;
 }
@@ -298,7 +297,7 @@ std::unique_ptr<Expr> Parser::primary()
         return this->grouping();
     default:
     {
-        this->user_error_tracker->expected("identifier or i32", this->peek());
+        this->user_error_tracker->expected("expected identifier or i32", this->peek());
         this->synchronize();
         throw UserException();
     }
@@ -316,7 +315,7 @@ std::unique_ptr<Expr> Parser::grouping()
 
     if (this->advance().token_type != Token::Type::RPAREN)
     {
-        this->user_error_tracker->expected("( after grouping", this->peek_previous());
+        this->user_error_tracker->expected("expected ')' after grouping", this->peek_previous());
         this->synchronize();
         throw UserException();
     }
@@ -327,15 +326,15 @@ std::unique_ptr<Expr> Parser::grouping()
 // FUNC: fn IDENTIFIER(?FN_PARAMS) ?FN_RETURN_TYPE BLOCK
 std::unique_ptr<Stmt> Parser::func()
 {
-    this->expect_token(Token::Type::FN).adv_or_bird_error("expected fn keyword");
+    this->expect_token(Token::Type::FN).adv_or_bird_error("Expected fn keyword");
 
-    auto fn_identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("identifier after keyword");
+    auto fn_identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier after 'fn' keyword");
 
-    this->expect_token(Token::Type::LPAREN).adv_or_user_error("( after identifier");
+    this->expect_token(Token::Type::LPAREN).adv_or_user_error("expected '(' after identifier in function declaration");
 
     auto fn_params = this->fn_params();
 
-    this->expect_token(Token::Type::RPAREN).adv_or_user_error(") after function parameter list");
+    this->expect_token(Token::Type::RPAREN).adv_or_user_error("expected ')' after function parameter list");
 
     auto fn_return_type = this->fn_return_type();
 
@@ -363,18 +362,18 @@ std::vector<std::pair<Token, Token>> Parser::fn_params()
             return params;
         }
 
-        this->expect_token(Token::Type::COMMA).adv_or_user_error(", after function parameter");
+        this->expect_token(Token::Type::COMMA).adv_or_user_error("expected ',' after function parameter");
     }
 }
 
 // PARAM_DECL: IDENTIFIER: TYPE_IDENTIFIER
 std::pair<Token, Token> Parser::param_decl()
 {
-    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("identifier in function parameter list");
+    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier in function parameter list");
 
-    this->expect_token(Token::Type::COLON).adv_or_user_error(": after identifier in parameter declaration");
+    this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after identifier in parameter declaration");
 
-    auto type_identifier = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("type identifier after \':\' in parameter declaration");
+    auto type_identifier = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("expected type identifier after ':' in parameter declaration");
 
     return {identifier, type_identifier};
 }
@@ -389,7 +388,7 @@ std::optional<Token> Parser::fn_return_type()
 
     this->advance();
 
-    auto return_type = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("return type after arrow");
+    auto return_type = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("expected return type after '->' in function declaration");
 
     return return_type;
 }
