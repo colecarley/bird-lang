@@ -177,28 +177,32 @@ public:
 
         auto result = std::move(this->stack.back());
         this->stack.pop_back();
+        result.is_mutable = true;
 
-        std::string type_lexeme = decl_stmt->type_identifier.lexeme;
+        if (decl_stmt->type_identifier.has_value())
+        {
+            std::string type_lexeme = decl_stmt->type_identifier.value().lexeme;
 
-        // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-        if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected int");
-        }
-        else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected float");
-        }
-        else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected str");
-        }
-        else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected bool");
-        }
+            // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
+            if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected int");
+            }
+            else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected float");
+            }
+            else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected str");
+            }
+            else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected bool");
+            }
 
-        this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
+            this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
+        }
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -241,27 +245,30 @@ public:
         auto result = std::move(this->stack.back());
         this->stack.pop_back();
 
-        std::string type_lexeme = const_stmt->type_identifier.lexeme;
+        if (const_stmt->type_identifier.has_value())
+        {
+            std::string type_lexeme = const_stmt->type_identifier.value().lexeme;
 
-        // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-        if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected int");
-        }
-        else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected float");
-        }
-        else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected str");
-        }
-        else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected bool");
-        }
+            // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
+            if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected int");
+            }
+            else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected float");
+            }
+            else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected str");
+            }
+            else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected bool");
+            }
 
-        this->environment->insert(const_stmt->identifier.lexeme, std::move(result));
+            this->environment->insert(const_stmt->identifier.lexeme, std::move(result));
+        }
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)

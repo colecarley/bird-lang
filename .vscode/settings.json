@@ -77,6 +77,9 @@
                 "span": "cpp",
                 "execution": "cpp",
                 "__node_handle": "cpp",
-                "__split_buffer": "cpp"
+                "set": "cpp",
+                "iomanip": "cpp",
+                "__split_buffer": "cpp",
+                "__tree": "cpp"
         }
 }
