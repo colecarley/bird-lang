@@ -13,6 +13,7 @@ class ExprStmt;
 class PrintStmt;
 class ConstStmt;
 class WhileStmt;
+class ForStmt;
 class Block;
 class IfStmt;
 
@@ -35,5 +36,6 @@ public:
     virtual void visit_func(Func *) = 0;
     virtual void visit_if_stmt(IfStmt *) = 0;
     virtual void visit_while_stmt(WhileStmt *) = 0;
+    virtual void visit_for_stmt(ForStmt *) = 0;
     virtual void visit_block(Block *) = 0;
 };

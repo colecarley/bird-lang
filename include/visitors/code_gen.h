@@ -15,6 +15,7 @@
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/for_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
 
@@ -273,5 +274,10 @@ public:
     void visit_if_stmt(IfStmt *if_stmt)
     {
         throw BirdException("implement if statement visit");
+    }
+
+    void visit_for_stmt(ForStmt *for_stmt)
+    {
+        throw BirdException("implement for statement visit");
     }
 };

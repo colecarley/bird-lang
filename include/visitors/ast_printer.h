@@ -15,6 +15,7 @@
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/for_stmt.h"
 #include "../ast_node/stmt/block.h"
 
 #include "../exceptions/bird_exception.h"
@@ -60,6 +61,12 @@ public:
             {
                 while_stmt->accept(this);
             }
+
+            if (auto for_stmt = dynamic_cast<ForStmt *>(stmt.get()))
+            {
+                for_stmt->accept(this);
+            }
+
             std::cout << std::endl;
         }
     }
@@ -158,5 +165,27 @@ public:
         while_stmt->condition->accept(this);
         std::cout << ") ";
         while_stmt->stmt->accept(this);
+    }
+
+    void visit_for_stmt(ForStmt *for_stmt)
+    {
+        std::cout << "for (";
+        if (for_stmt->initializer.has_value())
+        {
+            for_stmt->initializer.value()->accept(this);
+        }
+        std::cout << "; ";
+        if (for_stmt->condition.has_value())
+        {
+            for_stmt->condition.value()->accept(this);
+        }
+        std::cout << "; ";
+
+        if (for_stmt->increment.has_value())
+        {
+            for_stmt->increment.value()->accept(this);
+        }
+        std::cout << ") ";
+        for_stmt->body->accept(this);
     }
 };

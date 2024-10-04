@@ -53,6 +53,8 @@ public:
 
     std::unique_ptr<Stmt> while_stmt();
 
+    std::unique_ptr<Stmt> for_stmt();
+
     // exprs
     std::unique_ptr<Expr> expr();
 
