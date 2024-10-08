@@ -89,20 +89,20 @@ std::unique_ptr<Stmt> Parser::const_decl()
         throw UserException();
     }
 
-    if (this->advance().token_type != Token::Type::COLON)
+    std::optional<Token> type_identifier = std::nullopt;
+    if (this->peek().token_type == Token::Type::COLON)
     {
-        this->user_error_tracker->expected(":", "after identifier", this->peek());
-        this->synchronize();
-        throw UserException();
-    }
-
-    auto type_identifier = this->advance();
-
-    if (type_identifier.token_type != Token::Type::TYPE_IDENTIFIER)
-    {
-        this->user_error_tracker->expected("type identifier", "after identifier", this->peek());
-        this->synchronize();
-        throw UserException();
+        this->advance();
+        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
+        {
+            type_identifier = std::make_optional<Token>(this->advance());
+        }
+        else
+        {
+            this->user_error_tracker->expected("type identifier", "after : in assignment", this->peek());
+            this->synchronize();
+            throw UserException();
+        }
     }
 
     if (this->advance().token_type != Token::Type::EQUAL)
@@ -247,14 +247,21 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
     auto identifier = this->advance(); // TODO: check that this is an identifier
 
-    if (this->advance().token_type != Token::Type::COLON)
+    std::optional<Token> type_identifier = std::nullopt;
+    if (this->peek().token_type == Token::Type::COLON)
     {
-        this->user_error_tracker->expected(":", "after identifier in assignment", this->peek_previous());
-        this->synchronize();
-        throw UserException();
+        this->advance();
+        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
+        {
+            type_identifier = std::make_optional<Token>(this->advance());
+        }
+        else
+        {
+            this->user_error_tracker->expected("type identifier", "after : in assignment", this->peek());
+            this->synchronize();
+            throw UserException();
+        }
     }
-
-    auto type_identifier = this->advance(); // TODO: check that this is a type identifier
 
     if (this->advance().token_type != Token::Type::EQUAL)
     {

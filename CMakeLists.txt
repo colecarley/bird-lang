@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.20.0)
 
 project(compiler VERSION 1.0)
 
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
@@ -25,9 +28,13 @@ add_executable(compiler main.cpp ${SOURCES})
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-llvm_map_components_to_libnames(llvm_libs support core irreader)
+llvm_map_components_to_libnames(llvm_libs ${LLVM_TARGETS_TO_BUILD} support core irreader)
 
-target_link_libraries(compiler ${llvm_libs})
+foreach(target ${LLVM_TARGETS_TO_BUILD})
+  list(APPEND targets "LLVM${target}CodeGen")
+endforeach()
+
+target_link_libraries(compiler ${llvm_libs} ${targets})
 
 enable_testing()
 

@@ -77,5 +77,11 @@
                 "span": "cpp",
                 "execution": "cpp",
                 "__node_handle": "cpp",
+                "set": "cpp",
+                "iomanip": "cpp",
+                "__split_buffer": "cpp",
+                "__tree": "cpp",
+                "__hash_table": "cpp",
+                "*.def": "cpp"
         }
 }

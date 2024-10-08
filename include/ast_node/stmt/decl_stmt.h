@@ -18,10 +18,10 @@ class DeclStmt : public Stmt
 {
 public:
     Token identifier;
-    Token type_identifier;
+    std::optional<Token> type_identifier;
     std::unique_ptr<Expr> value;
 
-    DeclStmt(Token identifier, Token type_identifier, std::unique_ptr<Expr> value)
+    DeclStmt(Token identifier, std::optional<Token> type_identifier, std::unique_ptr<Expr> value)
     {
         this->identifier = identifier;
         this->type_identifier = type_identifier;
