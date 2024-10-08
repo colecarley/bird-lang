@@ -206,9 +206,9 @@ public:
             {
                 throw BirdException("mismatching type in assignment, expected bool");
             }
-
-            this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
         }
+
+        this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
     }
 
     void visit_assign_stmt(AssignStmt *assign_stmt)
@@ -219,15 +219,15 @@ public:
         }
 
         assign_stmt->value->accept(this);
-        auto value = this->stack.back();
+        auto value = std::move(this->stack.back());
         this->stack.pop_back();
 
-        if (!value.is_mutable)
+        if (!this->environment->get(assign_stmt->identifier.lexeme).is_mutable)
         {
             throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not mutable.");
         }
 
-        this->environment->insert(assign_stmt->identifier.lexeme, value);
+        this->environment->insert(assign_stmt->identifier.lexeme, std::move(value));
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
