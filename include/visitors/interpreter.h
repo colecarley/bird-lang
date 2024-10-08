@@ -20,6 +20,7 @@
 #include "../ast_node/stmt/while_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
+#include "../ast_node/stmt/func.h"
 
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
@@ -92,6 +93,7 @@ enum DataType
     FLOAT,
     STR,
     BOOL,
+    VOID,
 };
 
 using variant = std::variant<int, float, std::string, bool>;
@@ -100,17 +102,23 @@ class Value
 {
 public:
     DataType data_type;
-    std::variant<int, float, std::string, bool> data;
+    variant data;
     bool is_mutable;
 
-    Value(DataType data_type, variant data, bool is_mutable = false)
-    {
-        this->is_mutable = is_mutable;
-        this->data = data;
-        this->data_type = data_type;
-    }
+    Value(DataType data_type, variant data, bool is_mutable = false) : data_type(data_type), data(std::move(data)), is_mutable(is_mutable) {}
 
     Value() {};
+};
+
+class Callable
+{
+    std::vector<std::pair<Token, Token>> param_list;
+    std::unique_ptr<Stmt> block;
+    DataType return_type;
+
+public:
+    Callable(std::vector<std::pair<Token, Token>> param_list, std::unique_ptr<Stmt> block, DataType return_type) : param_list(param_list), block(std::move(block)), return_type(return_type) {}
+    Callable() = default;
 };
 
 /*
@@ -119,12 +127,14 @@ public:
 class Interpreter : public Visitor
 {
     std::unique_ptr<SymbolTable<Value>> environment;
+    std::unique_ptr<SymbolTable<Callable>> call_table;
     std::vector<Value> stack;
 
 public:
     Interpreter()
     {
         this->environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
+        this->call_table = std::make_unique<SymbolTable<Callable>>(SymbolTable<Callable>());
     }
 
     void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
@@ -170,6 +180,11 @@ public:
             {
                 if_stmt->accept(this);
             }
+
+            if (auto func = dynamic_cast<Func *>(stmt.get()))
+            {
+                func->accept(this);
+            }
         }
 
         this->stack.clear();
@@ -193,7 +208,7 @@ public:
     {
         decl_stmt->value->accept(this);
 
-        auto result = this->stack.back();
+        auto result = std::move(this->stack.back());
         this->stack.pop_back();
         // This does not correctly update the is_mutable field and will be ignored until a fix is made.
         // result.is_mutable = true;
@@ -221,7 +236,7 @@ public:
             }
         }
 
-        this->environment->insert(decl_stmt->identifier.lexeme, result);
+        this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
     }
 
     void visit_assign_stmt(AssignStmt *assign_stmt)
@@ -232,7 +247,7 @@ public:
         }
 
         assign_stmt->value->accept(this);
-        auto value = this->stack.back();
+        auto value = std::move(this->stack.back());
         this->stack.pop_back();
 
         // Will ignore is_mutable field until a fix is made.
@@ -310,7 +325,7 @@ public:
         for (auto &arg : print_stmt->args)
         {
             arg->accept(this);
-            auto result = this->stack[this->stack.size() - 1];
+            auto result = std::move(this->stack.back());
             this->stack.pop_back();
 
             if (std::holds_alternative<int>(result.data))
@@ -337,7 +352,7 @@ public:
     {
         const_stmt->value->accept(this);
 
-        auto result = this->stack.back();
+        auto result = std::move(this->stack.back());
         this->stack.pop_back();
 
         if (const_stmt->type_identifier.has_value())
@@ -361,15 +376,15 @@ public:
             {
                 throw BirdException("mismatching type in assignment, expected bool");
             }
-        }
 
-        this->environment->insert(const_stmt->identifier.lexeme, result);
+            this->environment->insert(const_stmt->identifier.lexeme, std::move(result));
+        }
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
         while_stmt->condition->accept(this);
-        auto condition_result = this->stack.back();
+        auto condition_result = std::move(this->stack.back());
         this->stack.pop_back();
 
         if (!std::holds_alternative<bool>(condition_result.data))
@@ -382,7 +397,7 @@ public:
             while_stmt->stmt->accept(this);
 
             while_stmt->condition->accept(this);
-            condition_result = this->stack.back();
+            condition_result = std::move(this->stack.back());
             this->stack.pop_back();
         }
     }
@@ -392,10 +407,10 @@ public:
         binary->left->accept(this);
         binary->right->accept(this);
 
-        auto right = this->stack.back();
+        auto right = std::move(this->stack.back());
         this->stack.pop_back();
 
-        auto left = this->stack.back();
+        auto left = std::move(this->stack.back());
         this->stack.pop_back();
 
         switch (binary->op.token_type)
@@ -473,7 +488,7 @@ public:
     void visit_unary(Unary *unary)
     {
         unary->expr->accept(this);
-        auto expr = this->stack[this->stack.size() - 1];
+        auto expr = std::move(this->stack.back());
         this->stack.pop_back();
 
         if (std::holds_alternative<int>(expr.data))
@@ -535,8 +550,7 @@ public:
     {
         ternary->condition->accept(this);
 
-        auto result = this->stack.back();
-
+        auto result = std::move(this->stack.back());
         this->stack.pop_back();
 
         if (!std::holds_alternative<bool>(result.data))
@@ -556,15 +570,15 @@ public:
 
     void visit_func(Func *func)
     {
-        throw BirdException("implement func visit");
+        Callable callable = Callable(func->param_list, std::move(func->block), DataType::VOID);
+        this->call_table.get()->insert(func->identifier.lexeme, std::move(callable));
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
     {
         if_stmt->condition->accept(this);
 
-        auto result = this->stack.back();
-
+        auto result = std::move(this->stack.back());
         this->stack.pop_back();
 
         if (!std::holds_alternative<bool>(result.data))

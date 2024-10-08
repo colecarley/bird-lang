@@ -78,8 +78,9 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->func();
     case Token::Type::WHILE:
         return this->while_stmt();
+    default:
+        break;
     }
-
     return this->expr_stmt();
 }
 
