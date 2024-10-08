@@ -1,59 +1,26 @@
+if (false) {
+    print "if";
+} 
+print "else";
 
-
-var x: int = 3;
-
-var y: int = 4;
-
-const z: str = "foobar";
-
-
-if (x > y) {
-    print "x is greater";
-} else if (x == y) {
-    print "they are equal";
+if (true) {
+    print "if";
 } else {
-    print "y is greater";
+    print "else";
 }
 
-
-while (true) {
-    print "foobar shoebar";
+if (true) {
+    print "if" ;
+} else if (true) {
+    print "else if";
+} else {
+    print "else";
 }
 
-var greater: bool = x > y;
-var greater_equal: bool = x >= y;
-var less: bool = x < y;
-var less_equal: bool = x <= y;
-var equal: bool = x == y;
-var not_equal = x != y;
-
-var t: bool = true; 
-var f: bool = false;
-
-
-var string: str = "hello world"; 
-
-
-var division: int = 2 / 3;
-var float_division: float = 2.34 / 3.4;
-
-// we have comments
-
-/*
-    even multiline!
-    
-    print "this won't run"
-
-*/
-
-// this is before
-var unterminated = "hello there";
-// this is after
-
-
-fn add(first: int, second: int): int {
-    return first + second;
-}
-
-var sum = add(1, 2);
+print 12;
+print 14.0;
+print true;
+print false;
+print "hello", " ", "world";
+print "world";
 
