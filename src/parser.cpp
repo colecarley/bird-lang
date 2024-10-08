@@ -93,7 +93,7 @@ std::unique_ptr<Stmt> Parser::block()
 
     auto stmts = std::vector<std::unique_ptr<Stmt>>();
 
-    while (this->peek().token_type != Token::Type::RBRACE && !this->is_at_end())
+    while (this->expect_token(Token::Type::RBRACE).is_invalid() && !this->is_at_end())
     {
         auto stmt = this->stmt();
         stmts.push_back(std::move(stmt));
@@ -147,12 +147,12 @@ std::unique_ptr<Stmt> Parser::print_stmt()
     this->expect_token(Token::Type::PRINT).adv_or_bird_error("Expected 'print' keyword");
 
     auto values = std::vector<std::unique_ptr<Expr>>();
-    while (this->peek().token_type != Token::Type::SEMICOLON)
+    while (this->expect_token(Token::Type::SEMICOLON).is_invalid())
     {
         auto expr = this->expr();
         values.push_back(std::move(expr));
 
-        if (this->peek().token_type != Token::Type::COMMA)
+        if (this->expect_token(Token::Type::COMMA).is_invalid())
         {
             break;
         }
@@ -211,15 +211,17 @@ std::unique_ptr<Expr> Parser::equality()
 {
     auto left = this->comparison();
 
-    while (this->peek().token_type == Token::Type::EQUAL_EQUAL ||
-           this->peek().token_type == Token::Type::BANG_EQUAL)
+    std::unique_ptr<Binary> equality_expr;
+
+    while (this->expect_token(Token::Type::EQUAL_EQUAL).is_valid() ||
+           this->expect_token(Token::Type::BANG_EQUAL).is_valid())
     {
         Token op = this->advance();
         std::unique_ptr<Expr> right = this->comparison();
-        left = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
+        equality_expr = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
     }
 
-    return left;
+    return equality_expr;
 }
 
 std::unique_ptr<Expr> Parser::comparison()
