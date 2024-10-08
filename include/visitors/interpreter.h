@@ -24,40 +24,67 @@
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
 
-#define HANDLE_INT_OPERATOR(left, right, operator) \
-    if (std::holds_alternative<int>(left.data) && std::holds_alternative<int>(right.data)) \
+
+#define HANDLE_GENERAL_BINARY_OPERATOR(left, right, data_type, bird_type, op) \
+    if (std::holds_alternative<data_type>(left.data) && std::holds_alternative<data_type>(right.data)) \
     { \
-        this->stack.push_back(Value(DataType::INT, variant(std::get<int>(left.data) operator std::get<int>(right.data)))); \
+        this->stack.push_back(Value(DataType::bird_type, variant(std::get<data_type>(left.data) op std::get<data_type>(right.data)))); \
         break; \
     }
 
-#define HANDLE_NUMERIC_OPERATOR(left, right, operator) \
+#define HANDLE_NUMERIC_BINARY_OPERATOR(left, right, op) \
     if ((std::holds_alternative<int>(left.data) || std::holds_alternative<float>(left.data)) && (std::holds_alternative<int>(right.data) || std::holds_alternative<float>(right.data))) \
     { \
         float left_float = std::holds_alternative<int>(left.data) ? std::get<int>(left.data) : std::get<float>(left.data); \
         float right_float = std::holds_alternative<int>(right.data) ? std::get<int>(right.data) : std::get<float>(right.data); \
         \
-        this->stack.push_back(Value(DataType::FLOAT, variant(left_float operator right_float))); \
+        this->stack.push_back(Value(DataType::FLOAT, variant(left_float op right_float))); \
         break; \
     }
 
-#define HANDLE_STRING_OPERATOR(left, right, operator) \
-    if (std::holds_alternative<std::string>(left.data) && std::holds_alternative<std::string>(right.data)) \
+#define HANDLE_UNKNOWN_BINARY_OPERATOR(op) \
+    throw BirdException("The '"#op"' binary operator could not be used to interpret these values.");
+
+
+#define HANDLE_GENERAL_ASSIGN(data_type) \
+    if (std::holds_alternative<data_type>(previous_value.data) && (std::holds_alternative<data_type>(value.data))) \
     { \
-        this->stack.push_back(Value(DataType::STR, variant(std::get<std::string>(left.data) operator std::get<std::string>(right.data)))); \
+        this->environment->insert(assign_stmt->identifier.lexeme, value); \
         break; \
     }
 
-#define HANDLE_BOOL_OPERATOR(left, right, operator) \
-    if (std::holds_alternative<bool>(left.data) && std::holds_alternative<bool>(right.data)) \
+#define HANDLE_GENERAL_COMPASSIGN_OPERATOR(data_type, bird_type, op) \
+    if (std::holds_alternative<data_type>(previous_value.data) && (std::holds_alternative<data_type>(value.data))) \
     { \
-        this->stack.push_back(Value(DataType::BOOL, variant(std::get<bool>(left.data) == std::get<bool>(right.data)))); \
+        auto assign_value = Value(DataType::bird_type, variant(std::get<data_type>(previous_value.data) op std::get<data_type>(value.data))); \
+        \
+        this->environment->insert(assign_stmt->identifier.lexeme, assign_value); \
         break; \
     }
 
-#define HANDLE_UNKNOWN_OPERATOR(operator) \
-    throw BirdException("The '" #operator "' operator could not be used to interpret these values."); \
-    break;
+#define HANDLE_INT_COMPASSIGN_OPERATOR(op) \
+    if (std::holds_alternative<int>(previous_value.data) && (std::holds_alternative<int>(value.data) ||std::holds_alternative<float>(value.data))) \
+    { \
+        auto value_data = std::holds_alternative<int>(value.data) ? std::get<int>(value.data) : static_cast<int>(std::get<float>(value.data)); \
+        auto assign_value = Value(DataType::INT, variant(std::get<int>(previous_value.data) op value_data)); \
+        \
+        this->environment->insert(assign_stmt->identifier.lexeme, assign_value); \
+        break; \
+    }
+
+#define HANDLE_FLOAT_COMPASSIGN_OPERATOR(op) \
+    if (std::holds_alternative<float>(previous_value.data) && (std::holds_alternative<int>(value.data) ||std::holds_alternative<float>(value.data))) \
+    { \
+        auto value_data = std::holds_alternative<int>(value.data) ? std::get<int>(value.data) : std::get<float>(value.data); \
+        auto assign_value = Value(DataType::FLOAT, variant(std::get<float>(previous_value.data) op value_data)); \
+        \
+        this->environment->insert(assign_stmt->identifier.lexeme, assign_value); \
+        break; \
+    }
+
+#define HANDLE_UNKNOWN_COMPASSIGN_OPERATOR(op) \
+    throw BirdException("The '"#op"'= assignment operator could not be used to interpret these values.");
+
 
 enum DataType
 {
@@ -108,7 +135,7 @@ public:
             {
                 decl_stmt->accept(this);
             }
-            
+
             if (auto const_stmt = dynamic_cast<ConstStmt *>(stmt.get()))
             {
                 const_stmt->accept(this);
@@ -168,26 +195,31 @@ public:
 
         auto result = this->stack.back();
         this->stack.pop_back();
+        // This does not correctly update the is_mutable field and will be ignored until a fix is made.
+        // result.is_mutable = true;
 
-        std::string type_lexeme = decl_stmt->type_identifier.lexeme;
+        if (decl_stmt->type_identifier.has_value())
+        {
+            std::string type_lexeme = decl_stmt->type_identifier.value().lexeme;
 
-        // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-        if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected int");
-        } 
-        else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected float");
-        } 
-        else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected str");
-        } 
-        else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected bool");
-        } 
+            // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
+            if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected int");
+            }
+            else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected float");
+            }
+            else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected str");
+            }
+            else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected bool");
+            }
+        }
 
         this->environment->insert(decl_stmt->identifier.lexeme, result);
     }
@@ -203,12 +235,69 @@ public:
         auto value = this->stack.back();
         this->stack.pop_back();
 
-        if (!value.is_mutable)
-        {
-            throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not mutable.");
-        }
+        // Will ignore is_mutable field until a fix is made.
+        // if (!value.is_mutable)
+        // {
+        //     throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not mutable.");
+        // }
 
-        this->environment->insert(assign_stmt->identifier.lexeme, value);
+        auto previous_value = this->environment->get(assign_stmt->identifier.lexeme);
+        
+        switch (assign_stmt->assign_operator.token_type)
+        {
+        case Token::Type::EQUAL:
+        {
+            if (std::holds_alternative<int>(previous_value.data) && (std::holds_alternative<int>(value.data) ||std::holds_alternative<float>(value.data)))
+            {
+                auto value_data = std::holds_alternative<int>(value.data) ? std::get<int>(value.data) : static_cast<int>(std::get<float>(value.data));
+                auto assign_value = Value(DataType::INT, variant(value_data));
+
+                this->environment->insert(assign_stmt->identifier.lexeme, assign_value);
+                break;
+            }
+            if (std::holds_alternative<float>(previous_value.data) && (std::holds_alternative<int>(value.data) ||std::holds_alternative<float>(value.data)))
+            {
+                float value_data = std::holds_alternative<int>(value.data) ? std::get<int>(value.data) : std::get<float>(value.data);
+                auto assign_value = Value(DataType::FLOAT, variant(value_data));
+
+                this->environment->insert(assign_stmt->identifier.lexeme, assign_value);
+                break;
+            }
+            HANDLE_GENERAL_ASSIGN(bool);
+            HANDLE_GENERAL_ASSIGN(std::string);
+            throw BirdException("The assigment value type does not match the identifer type.");
+        }
+        case Token::Type::PLUS_EQUAL:
+        {
+            HANDLE_INT_COMPASSIGN_OPERATOR(+);
+            HANDLE_FLOAT_COMPASSIGN_OPERATOR(+);
+            HANDLE_GENERAL_COMPASSIGN_OPERATOR(std::string, STR, +);
+            HANDLE_UNKNOWN_COMPASSIGN_OPERATOR(+);
+        }
+        case Token::Type::MINUS_EQUAL:
+        {
+            HANDLE_INT_COMPASSIGN_OPERATOR(-);
+            HANDLE_FLOAT_COMPASSIGN_OPERATOR(-);
+            HANDLE_UNKNOWN_COMPASSIGN_OPERATOR(-);
+        }
+        case Token::Type::STAR_EQUAL:
+        {
+            HANDLE_INT_COMPASSIGN_OPERATOR(*);
+            HANDLE_FLOAT_COMPASSIGN_OPERATOR(*);
+            HANDLE_UNKNOWN_COMPASSIGN_OPERATOR(*);
+        }
+        case Token::Type::SLASH_EQUAL:
+        {
+            HANDLE_INT_COMPASSIGN_OPERATOR(/);
+            HANDLE_FLOAT_COMPASSIGN_OPERATOR(/);
+            HANDLE_UNKNOWN_COMPASSIGN_OPERATOR(/);
+        }
+        case Token::Type::PERCENT_EQUAL:
+        {
+            HANDLE_INT_COMPASSIGN_OPERATOR(%);
+            HANDLE_UNKNOWN_COMPASSIGN_OPERATOR(%);
+        }
+        }
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -224,7 +313,7 @@ public:
             auto result = this->stack[this->stack.size() - 1];
             this->stack.pop_back();
 
-            if (std::holds_alternative<int>(result.data)) 
+            if (std::holds_alternative<int>(result.data))
             {
                 std::cout << std::get<int>(result.data) << std::endl;
             }
@@ -251,25 +340,28 @@ public:
         auto result = this->stack.back();
         this->stack.pop_back();
 
-        std::string type_lexeme = const_stmt->type_identifier.lexeme;
+        if (const_stmt->type_identifier.has_value())
+        {
+            std::string type_lexeme = const_stmt->type_identifier.value().lexeme;
 
-        // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-        if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected int");
-        } 
-        else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected float");
-        } 
-        else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected str");
-        } 
-        else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
-        {
-            throw BirdException("mismatching type in assignment, expected bool");
-        } 
+            // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
+            if (type_lexeme == "int" && !std::holds_alternative<int>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected int");
+            }
+            else if (type_lexeme == "float" && !std::holds_alternative<float>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected float");
+            }
+            else if (type_lexeme == "str" && !std::holds_alternative<std::string>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected str");
+            }
+            else if (type_lexeme == "bool" && !std::holds_alternative<bool>(result.data))
+            {
+                throw BirdException("mismatching type in assignment, expected bool");
+            }
+        }
 
         this->environment->insert(const_stmt->identifier.lexeme, result);
     }
@@ -279,11 +371,11 @@ public:
         while_stmt->condition->accept(this);
         auto condition_result = this->stack.back();
         this->stack.pop_back();
-        
+
         if (!std::holds_alternative<bool>(condition_result.data))
         {
             throw BirdException("expected bool in while statement condition");
-        } 
+        }
 
         while (std::get<bool>(condition_result.data))
         {
@@ -310,66 +402,66 @@ public:
         {
         case Token::Type::PLUS:
         {
-            HANDLE_INT_OPERATOR(left, right, +);
-            HANDLE_NUMERIC_OPERATOR(left, right, +);
-            HANDLE_STRING_OPERATOR(left, right, +);
-            HANDLE_UNKNOWN_OPERATOR(+);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, INT, +);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, +);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, std::string, STR, +);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(+);
         }
         case Token::Type::MINUS:
         {
-            HANDLE_INT_OPERATOR(left, right, -);
-            HANDLE_NUMERIC_OPERATOR(left, right, -);
-            HANDLE_UNKNOWN_OPERATOR(-);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, INT, -);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, -);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(-);
         }
         case Token::Type::SLASH:
         {
-            HANDLE_INT_OPERATOR(left, right, /);
-            HANDLE_NUMERIC_OPERATOR(left, right, /);
-            HANDLE_UNKNOWN_OPERATOR(/);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, INT, /);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, /);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(/);
         }
         case Token::Type::STAR:
         {
-            HANDLE_INT_OPERATOR(left, right, *);
-            HANDLE_NUMERIC_OPERATOR(left, right, *);
-            HANDLE_UNKNOWN_OPERATOR(*);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, INT, *);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, *);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(*);
         }
         case Token::Type::GREATER:
         {
-            HANDLE_INT_OPERATOR(left, right, >);
-            HANDLE_NUMERIC_OPERATOR(left, right, >);
-            HANDLE_UNKNOWN_OPERATOR(>);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, INT, >);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, >);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(>);
         }
         case Token::Type::GREATER_EQUAL:
         {
-            HANDLE_INT_OPERATOR(left, right, >=);
-            HANDLE_NUMERIC_OPERATOR(left, right, >=);
-            HANDLE_UNKNOWN_OPERATOR(>=);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, INT, >=);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, >=);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(>=);
         }
         case Token::Type::LESS:
         {
-            HANDLE_INT_OPERATOR(left, right, <);
-            HANDLE_NUMERIC_OPERATOR(left, right, <);
-            HANDLE_UNKNOWN_OPERATOR(<);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, INT, <);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, <);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(<);
         }
         case Token::Type::LESS_EQUAL:
         {
-            HANDLE_INT_OPERATOR(left, right, <=);
-            HANDLE_NUMERIC_OPERATOR(left, right, <=);
-            HANDLE_UNKNOWN_OPERATOR(<=);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, INT, <=);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, <=);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(<=);
         }
         case Token::Type::BANG_EQUAL:
         {
-            HANDLE_NUMERIC_OPERATOR(left, right, !=);
-            HANDLE_STRING_OPERATOR(left, right, !=);
-            HANDLE_BOOL_OPERATOR(left, right, !=);
-            HANDLE_UNKNOWN_OPERATOR(!=);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, !=);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, std::string, STR, !=);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, bool, BOOL, !=);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(!=);
         }
         case Token::Type::EQUAL_EQUAL:
         {
-            HANDLE_NUMERIC_OPERATOR(left, right, ==);
-            HANDLE_STRING_OPERATOR(left, right, ==);
-            HANDLE_BOOL_OPERATOR(left, right, ==);
-            HANDLE_UNKNOWN_OPERATOR(==);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, ==);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, std::string, STR, ==);
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, bool, BOOL, ==);
+            HANDLE_UNKNOWN_BINARY_OPERATOR(==);
         }
         default:
         {
@@ -479,7 +571,7 @@ public:
         {
             throw BirdException("expected bool result for if-statement condition");
         }
-    
+
         if (std::get<bool>(result.data))
         {
             if_stmt->then_branch->accept(this);

@@ -38,6 +38,11 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::LESS_EQUAL, "LESS_EQUAL"},
     {Token::Type::EQUAL_EQUAL, "EQUAL_EQUAL"},
     {Token::Type::BANG_EQUAL, "BANG_EQUAL"},
+    {Token::Type::PLUS_EQUAL, "PLUS_EQUAL"},
+    {Token::Type::MINUS_EQUAL, "MINUS_EQUAL"},
+    {Token::Type::STAR_EQUAL, "STAR_EQUAL"},
+    {Token::Type::SLASH_EQUAL, "SLASH_EQUAL"},
+    {Token::Type::PERCENT_EQUAL, "PERCENT_EQUAL"},
     {Token::Type::RETURN, "RETURN"},
     {Token::Type::FN, "FN"},
     {Token::Type::END, "END"},
@@ -110,6 +115,13 @@ std::vector<Token> Lexer::lex()
         {
         case '/':
         {
+            if (this->peek_next() == '=')
+            {
+                this->advance();
+                this->push_token(Token::Type::SLASH_EQUAL, "/=");
+                break;
+            }
+
             if (this->peek_next() == '/')
             {
                 this->handle_comment();
@@ -130,6 +142,13 @@ std::vector<Token> Lexer::lex()
         case '\r':
             break;
         case '+':
+            if (this->peek_next() == '=')
+            {
+                this->advance();
+                this->push_token(Token::Type::PLUS_EQUAL, "+=");
+                break;
+            }
+
             this->push_token(Token::Type::PLUS, "+");
             break;
         case '-':
@@ -137,16 +156,35 @@ std::vector<Token> Lexer::lex()
             {
                 this->advance();
                 this->push_token(Token::Type::ARROW, "->");
+                break;
             }
-            else
+            else if (this->peek_next() == '=')
             {
-                this->push_token(Token::Type::MINUS, "-");
+                this->advance();
+                this->push_token(Token::Type::MINUS_EQUAL, "-=");
+                break;
             }
+
+            this->push_token(Token::Type::MINUS, "-");
             break;
         case '*':
+            if (this->peek_next() == '=')
+            {
+                this->advance();
+                this->push_token(Token::Type::STAR_EQUAL, "*=");
+                break;
+            }
+
             this->push_token(Token::Type::STAR, "*");
             break;
         case '%':
+            if (this->peek_next() == '=')
+            {
+                this->advance();
+                this->push_token(Token::Type::PERCENT_EQUAL, "%=");
+                break;
+            }
+
             this->push_token(Token::Type::PERCENT, "%");
             break;
         case ';':
@@ -163,6 +201,7 @@ std::vector<Token> Lexer::lex()
                 this->push_token(Token::Type::EQUAL_EQUAL, "==");
                 break;
             }
+
             this->push_token(Token::Type::EQUAL, "=");
             break;
         }

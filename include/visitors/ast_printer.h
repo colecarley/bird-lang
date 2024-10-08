@@ -89,7 +89,7 @@ public:
 
     void visit_assign_stmt(AssignStmt *assign_stmt)
     {
-        std::cout << assign_stmt->identifier.lexeme << " = ";
+        std::cout << assign_stmt->identifier.lexeme << " " << assign_stmt->assign_operator.lexeme << " ";
         assign_stmt->value->accept(this);
     }
 

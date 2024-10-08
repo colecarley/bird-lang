@@ -78,6 +78,8 @@ public:
 
     Token peek();
 
+    Token peek_next();
+
     Token peek_previous();
 
     bool is_at_end();

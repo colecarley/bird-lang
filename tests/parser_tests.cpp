@@ -25,8 +25,9 @@ TEST(ParserTest, ParseBlockStmt)
     // verify first statement is of type DeclStmt
     DeclStmt *first_decl_stmt = dynamic_cast<DeclStmt *>(block->stmts[0].get());
     ASSERT_NE(first_decl_stmt, nullptr);
-    EXPECT_EQ(first_decl_stmt->identifier.lexeme, "x");        // ensure lexeme is correct for identifier
-    EXPECT_EQ(first_decl_stmt->type_identifier.lexeme, "int"); // ensure lexeme is correct for type ID
+    EXPECT_EQ(first_decl_stmt->identifier.lexeme, "x"); // ensure lexeme is correct for identifier
+    EXPECT_EQ(first_decl_stmt->type_identifier.has_value(), true);
+    EXPECT_EQ(first_decl_stmt->type_identifier.value().lexeme, "int"); // ensure lexeme is correct for type ID
 
     // ensure primary expression is set
     Primary *first_decl_value = dynamic_cast<Primary *>(first_decl_stmt->value.get());
@@ -37,7 +38,8 @@ TEST(ParserTest, ParseBlockStmt)
     DeclStmt *second_decl_stmt = dynamic_cast<DeclStmt *>(block->stmts[1].get());
     ASSERT_NE(second_decl_stmt, nullptr);
     EXPECT_EQ(second_decl_stmt->identifier.lexeme, "y");
-    EXPECT_EQ(second_decl_stmt->type_identifier.lexeme, "int");
+    EXPECT_EQ(second_decl_stmt->type_identifier.has_value(), true);
+    EXPECT_EQ(second_decl_stmt->type_identifier.value().lexeme, "int");
 
     Primary *second_decl_value = dynamic_cast<Primary *>(second_decl_stmt->value.get());
     ASSERT_NE(second_decl_value, nullptr);
@@ -55,7 +57,8 @@ TEST(ParserTest, ParseConstStmt)
     ConstStmt *const_stmt = dynamic_cast<ConstStmt *>(stmts[0].get());
     ASSERT_NE(const_stmt, nullptr);
     EXPECT_EQ(const_stmt->identifier.lexeme, "z");
-    EXPECT_EQ(const_stmt->type_identifier.lexeme, "str");
+    EXPECT_EQ(const_stmt->type_identifier.has_value(), true);
+    EXPECT_EQ(const_stmt->type_identifier.value().lexeme, "str");
 
     Primary *primary_expr = dynamic_cast<Primary *>(const_stmt->value.get());
     ASSERT_NE(primary_expr, nullptr);
@@ -73,7 +76,8 @@ TEST(ParserTest, ParseDeclStmt)
     DeclStmt *decl_stmt = dynamic_cast<DeclStmt *>(stmts[0].get());
     ASSERT_NE(decl_stmt, nullptr);
     EXPECT_EQ(decl_stmt->identifier.lexeme, "x");
-    EXPECT_EQ(decl_stmt->type_identifier.lexeme, "int");
+    EXPECT_EQ(decl_stmt->type_identifier.has_value(), true);
+    EXPECT_EQ(decl_stmt->type_identifier.value().lexeme, "int");
 
     Primary *primary_expr = dynamic_cast<Primary *>(decl_stmt->value.get());
     ASSERT_NE(primary_expr, nullptr);

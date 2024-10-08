@@ -51,11 +51,21 @@ std::unique_ptr<Stmt> Parser::stmt()
     case Token::Type::VAR:
         return this->var_decl();
     case Token::Type::IDENTIFIER:
-        if (this->peek_next().token_type == Token::Type::EQUAL)
+        if (this->position + 1 >= this->tokens.size())
         {
+            break;
+        }
+
+        switch (this->tokens[this->position + 1].token_type)
+        {
+        case Token::Type::EQUAL:
+        case Token::Type::PLUS_EQUAL:
+        case Token::Type::MINUS_EQUAL:
+        case Token::Type::STAR_EQUAL:
+        case Token::Type::SLASH_EQUAL:
+        case Token::Type::PERCENT_EQUAL:
             return this->assign_stmt();
         }
-        break;
     case Token::Type::IF:
         return this->if_stmt();
     case Token::Type::CONST:
@@ -89,20 +99,20 @@ std::unique_ptr<Stmt> Parser::const_decl()
         throw UserException();
     }
 
-    if (this->advance().token_type != Token::Type::COLON)
+    std::optional<Token> type_identifier = std::nullopt;
+    if (this->peek().token_type == Token::Type::COLON)
     {
-        this->user_error_tracker->expected(":", "after identifier", this->peek());
-        this->synchronize();
-        throw UserException();
-    }
-
-    auto type_identifier = this->advance();
-
-    if (type_identifier.token_type != Token::Type::TYPE_IDENTIFIER)
-    {
-        this->user_error_tracker->expected("type identifier", "after identifier", this->peek());
-        this->synchronize();
-        throw UserException();
+        this->advance();
+        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
+        {
+            type_identifier = std::make_optional<Token>(this->advance());
+        }
+        else
+        {
+            this->user_error_tracker->expected("type identifier", "after : in assignment", this->peek());
+            this->synchronize();
+            throw UserException();
+        }
     }
 
     if (this->advance().token_type != Token::Type::EQUAL)
@@ -247,14 +257,21 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
     auto identifier = this->advance(); // TODO: check that this is an identifier
 
-    if (this->advance().token_type != Token::Type::COLON)
+    std::optional<Token> type_identifier = std::nullopt;
+    if (this->peek().token_type == Token::Type::COLON)
     {
-        this->user_error_tracker->expected(":", "after identifier in assignment", this->peek_previous());
-        this->synchronize();
-        throw UserException();
+        this->advance();
+        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
+        {
+            type_identifier = std::make_optional<Token>(this->advance());
+        }
+        else
+        {
+            this->user_error_tracker->expected("type identifier", "after : in assignment", this->peek());
+            this->synchronize();
+            throw UserException();
+        }
     }
-
-    auto type_identifier = this->advance(); // TODO: check that this is a type identifier
 
     if (this->advance().token_type != Token::Type::EQUAL)
     {
@@ -288,14 +305,26 @@ std::unique_ptr<Stmt> Parser::assign_stmt()
 
     auto identifier = this->advance();
 
-    if (this->advance().token_type != Token::Type::EQUAL)
+    switch (this->peek().token_type)
     {
-        this->user_error_tracker->expected("=", "in assignment", this->peek_previous());
+    case Token::Type::EQUAL:
+    case Token::Type::PLUS_EQUAL:
+    case Token::Type::MINUS_EQUAL:
+    case Token::Type::STAR_EQUAL:
+    case Token::Type::SLASH_EQUAL:
+    case Token::Type::PERCENT_EQUAL:
+        break;
+    default:
+    {
+        this->user_error_tracker->expected("assignment operator", "in assignment", this->peek_previous());
         this->synchronize();
         throw UserException();
     }
+    }
 
-    auto assign_stmt = std::make_unique<AssignStmt>(AssignStmt(identifier, this->expr()));
+    auto assign_operator = this->advance();
+
+    auto assign_stmt = std::make_unique<AssignStmt>(AssignStmt(identifier, assign_operator, this->expr()));
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
@@ -581,11 +610,6 @@ Token Parser::advance()
 Token Parser::peek()
 {
     return this->tokens[this->position];
-}
-
-Token Parser::peek_next()
-{
-    return this->tokens[this->position + 1];
 }
 
 Token Parser::peek_previous()

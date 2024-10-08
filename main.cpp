@@ -47,12 +47,11 @@ void repl()
 
         Parser parser(tokens, &error_tracker);
         auto ast = parser.parse();
-        
+
         if (error_tracker.has_errors())
         {
             error_tracker.print_errors_and_exit();
         }
-
 
         AstPrinter printer;
         printer.print_ast(&ast);
@@ -63,7 +62,6 @@ void repl()
 
 void compile(std::string filename)
 {
-
     std::ifstream file(filename);
     std::string code;
     if (file.is_open())
@@ -94,7 +92,5 @@ void compile(std::string filename)
     printer.print_ast(&ast);
 
     CodeGen code_gen;
-    llvm::Module *module = code_gen.generate(&ast);
-
-    // delete module;
+    code_gen.generate(&ast);
 }
