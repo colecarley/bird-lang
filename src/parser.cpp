@@ -6,6 +6,7 @@
 #include "../include/ast_node/expr/ternary.h"
 
 #include "../include/ast_node/stmt/decl_stmt.h"
+#include "../include/ast_node/stmt/assign_stmt.h"
 #include "../include/ast_node/stmt/print_stmt.h"
 #include "../include/ast_node/stmt/if_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
@@ -50,6 +51,24 @@ std::unique_ptr<Stmt> Parser::stmt()
     {
     case Token::Type::VAR:
         return this->var_decl();
+    case Token::Type::IDENTIFIER:
+        if (this->is_at_end())
+        {
+            break;
+        }
+
+        switch (this->peek_next().token_type)
+        {
+        case Token::Type::EQUAL:
+        case Token::Type::PLUS_EQUAL:
+        case Token::Type::MINUS_EQUAL:
+        case Token::Type::STAR_EQUAL:
+        case Token::Type::SLASH_EQUAL:
+        case Token::Type::PERCENT_EQUAL:
+            return this->assign_stmt();
+        default:
+            break;
+        }
     case Token::Type::IF:
         return this->if_stmt();
     case Token::Type::CONST:
@@ -65,8 +84,9 @@ std::unique_ptr<Stmt> Parser::stmt()
     case Token::Type::FOR:
         return this->for_stmt();
     default:
-        return this->expr_stmt();
+        break;
     }
+    return this->expr_stmt();
 }
 
 std::unique_ptr<Stmt> Parser::const_decl()
@@ -322,6 +342,46 @@ std::unique_ptr<Stmt> Parser::var_decl()
     }
 
     return result;
+}
+
+std::unique_ptr<Stmt> Parser::assign_stmt()
+{
+    if (this->peek().token_type != Token::Type::IDENTIFIER)
+    {
+        throw BirdException("Expected variable identifier");
+    }
+
+    auto identifier = this->advance();
+
+    switch (this->peek().token_type)
+    {
+    case Token::Type::EQUAL:
+    case Token::Type::PLUS_EQUAL:
+    case Token::Type::MINUS_EQUAL:
+    case Token::Type::STAR_EQUAL:
+    case Token::Type::SLASH_EQUAL:
+    case Token::Type::PERCENT_EQUAL:
+        break;
+    default:
+    {
+        this->user_error_tracker->expected("assignment operator", "in assignment", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+    }
+
+    auto assign_operator = this->advance();
+
+    auto assign_stmt = std::make_unique<AssignStmt>(AssignStmt(identifier, assign_operator, this->expr()));
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return assign_stmt;
 }
 
 std::unique_ptr<Expr> Parser::expr()
@@ -598,6 +658,11 @@ Token Parser::advance()
 Token Parser::peek()
 {
     return this->tokens[this->position];
+}
+
+Token Parser::peek_next()
+{
+    return this->tokens[this->position + 1];
 }
 
 Token Parser::peek_previous()

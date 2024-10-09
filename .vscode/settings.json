@@ -80,6 +80,9 @@
                 "set": "cpp",
                 "iomanip": "cpp",
                 "__split_buffer": "cpp",
-                "__tree": "cpp"
+                "__tree": "cpp",
+                "__hash_table": "cpp",
+                "*.def": "cpp",
+                "unordered_set": "cpp"
         }
 }
