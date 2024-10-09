@@ -306,6 +306,10 @@ public:
             this->stack.push_back(value);
             break;
         }
+        /*
+         * TODO: comparison operators currently only compare integers, needs type checking
+         * 2 < 2.3 would cause it to fail.
+         */
         case Token::Type::GREATER:
         {
             auto value = this->builder.CreateICmpSGT(left, right, "sgttmp");
