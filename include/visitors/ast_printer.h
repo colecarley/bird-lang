@@ -17,8 +17,8 @@
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
 #include "../ast_node/stmt/block.h"
-
-#include "../exceptions/bird_exception.h"
+#include "../ast_node/stmt/func.h"
+#include "../ast_node/stmt/const_stmt.h"
 
 /*
  * Visitor that prints the Abstract Syntax Tree
@@ -35,42 +35,57 @@ public:
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
             {
                 decl_stmt->accept(this);
+                continue;
             }
 
             if (auto assign_stmt = dynamic_cast<AssignStmt *>(stmt.get()))
             {
                 assign_stmt->accept(this);
+                continue;
             }
 
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
                 print_stmt->accept(this);
+                continue;
             }
 
             if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
             {
                 if_stmt->accept(this);
+                continue;
             }
 
             if (auto block = dynamic_cast<Block *>(stmt.get()))
             {
                 block->accept(this);
+                continue;
             }
 
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
+                continue;
             }
 
             if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
             {
                 while_stmt->accept(this);
+                continue;
             }
+
+            if (auto func = dynamic_cast<Func *>(stmt.get()))
+            {
+                func->accept(this);
+                continue;
+            }
+
             std::cout << std::endl;
         }
     }
 
-    void visit_block(Block *block)
+    void
+    visit_block(Block *block)
     {
         std::cout << "{";
         for (auto &stmt : block->stmts)
@@ -141,12 +156,26 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        throw BirdException("implement const statment visit");
+        std::cout << "const ";
+        std::cout << const_stmt->identifier.lexeme << " = ";
+        const_stmt->value->accept(this);
     }
 
     void visit_func(Func *func)
     {
-        throw BirdException("implement func visit");
+        std::cout << "fn";
+        std::cout << "(";
+        for (auto pair : func->param_list)
+        {
+            std::cout << pair.first.lexeme << ": ";
+            std::cout << pair.second.lexeme << ", ";
+        }
+
+        std::cout << "->" << (func->return_type.has_value() ? func->return_type.value().lexeme : "void");
+
+        func->block->accept(this);
+
+        std::cout << "}";
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
