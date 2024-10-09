@@ -10,6 +10,7 @@
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
 #include "../ast_node/expr/ternary.h"
+#include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/assign_stmt.h"
@@ -430,5 +431,10 @@ public:
             this->builder.CreateBr(done_block);
             this->builder.SetInsertPoint(done_block);
         }
+    }
+
+    void visit_call(Call *call)
+    {
+        throw BirdException("implement call");
     }
 };

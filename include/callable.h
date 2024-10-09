@@ -12,19 +12,24 @@ class Interpreter;
 
 class Callable
 {
+public:
     std::vector<std::pair<Token, Token>> param_list;
-    std::unique_ptr<Stmt> block;
+    std::shared_ptr<Stmt> block;
     std::optional<Token> return_type;
 
-public:
     Callable(
         std::vector<std::pair<Token, Token>> param_list,
-        std::unique_ptr<Stmt> block,
+        std::shared_ptr<Stmt> block,
         std::optional<Token> return_type)
         : param_list(param_list),
           block(std::move(block)),
           return_type(return_type) {}
     Callable() = default;
+    Callable(const Callable &other) : param_list(other.param_list),
+                                      block(std::move(other.block)),
+                                      return_type(other.return_type)
+    {
+    }
 
     void call(Interpreter *Interpreter, std::vector<std::unique_ptr<Expr>>);
 };

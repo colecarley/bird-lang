@@ -9,6 +9,7 @@
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
 #include "../ast_node/expr/ternary.h"
+#include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/assign_stmt.h"
@@ -163,18 +164,20 @@ public:
     void visit_func(Func *func)
     {
         std::cout << "fn";
+        std::cout << func->identifier.lexeme;
         std::cout << "(";
         for (auto pair : func->param_list)
         {
             std::cout << pair.first.lexeme << ": ";
             std::cout << pair.second.lexeme << ", ";
         }
+        std::cout << ")";
 
         std::cout << "->" << (func->return_type.has_value() ? func->return_type.value().lexeme : "void");
 
         func->block->accept(this);
 
-        std::cout << "}";
+        std::cout << std::endl;
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -198,5 +201,17 @@ public:
         while_stmt->condition->accept(this);
         std::cout << ") ";
         while_stmt->stmt->accept(this);
+    }
+
+    void visit_call(Call *call)
+    {
+        std::cout << call->identifier.lexeme;
+        std::cout << "(";
+
+        for (auto &arg : call->args)
+        {
+            arg->accept(this);
+        }
+        std::cout << ")" << std::endl;
     }
 };

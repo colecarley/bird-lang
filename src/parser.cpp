@@ -4,6 +4,7 @@
 #include "../include/ast_node/expr/unary.h"
 #include "../include/ast_node/expr/primary.h"
 #include "../include/ast_node/expr/ternary.h"
+#include "../include/ast_node/expr/call.h"
 
 #include "../include/ast_node/stmt/decl_stmt.h"
 #include "../include/ast_node/stmt/assign_stmt.h"
@@ -68,6 +69,7 @@ std::unique_ptr<Stmt> Parser::stmt()
         default:
             break;
         }
+        break;
     case Token::Type::IF:
         return this->if_stmt();
     case Token::Type::CONST:
@@ -83,6 +85,7 @@ std::unique_ptr<Stmt> Parser::stmt()
     default:
         break;
     }
+
     return this->expr_stmt();
 }
 
@@ -443,7 +446,47 @@ std::unique_ptr<Expr> Parser::unary()
         return std::make_unique<Unary>(Unary(op, std::move(expr)));
     }
 
-    return this->primary();
+    return this->call();
+}
+
+std::unique_ptr<Expr> Parser::call()
+{
+    auto identifier = this->primary();
+
+    if (auto primary = dynamic_cast<Primary *>(identifier.get()))
+    {
+        if (this->peek().token_type != Token::Type::LPAREN)
+            return identifier;
+
+        auto args = this->args();
+
+        return std::make_unique<Call>(Call(primary->value, std::move(args)));
+    }
+    else
+        return identifier;
+}
+
+std::vector<std::unique_ptr<Expr>> Parser::args()
+{
+    this->advance(); // advance past '('
+    std::vector<std::unique_ptr<Expr>> args;
+
+    while (this->peek().token_type != Token::Type::RPAREN)
+    {
+        args.push_back(this->expr());
+
+        if (this->peek().token_type == Token::Type::COMMA)
+            this->advance();
+    }
+
+    if (this->advance().token_type != Token::Type::RPAREN)
+    {
+        this->user_error_tracker->expected(")", "after function call", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return args;
 }
 
 std::unique_ptr<Expr> Parser::primary()
