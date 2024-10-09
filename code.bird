@@ -24,3 +24,20 @@ print false;
 print "hello", " ", "world";
 print "world";
 
+print "print 1 > 2 ? 1 : 2;";
+print 1 > 2 ? 1 : 2;
+
+print "print 1 >= 2 ? 1 : 2;";
+print 1 >= 2 ? 1 : 2;
+
+print "print 1 < 2 ? 1 : 2;";
+print 1 < 2 ? 1 : 2;
+
+print "print 1 <= 2 ? 1 : 2;";
+print 1 <= 2 ? 1 : 2;
+
+print "print 1 == 2 ? 1 : 2;";
+print 1 == 2 ? 1 : 2;
+
+print "print 1 != 2 ? 1 : 2;";
+print 1 != 2 ? 1 : 2;

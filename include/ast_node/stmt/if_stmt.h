@@ -33,10 +33,9 @@ public:
     IfStmt(std::unique_ptr<Expr> condition,
            std::unique_ptr<Stmt> then_branch,
            std::optional<std::unique_ptr<Stmt>> else_branch)
+        : condition(std::move(condition)),
+          then_branch(std::move(then_branch))
     {
-        this->condition = std::move(condition);
-        this->then_branch = std::move(then_branch);
-
         if (else_branch.has_value())
         {
             this->else_branch = std::move(else_branch);
