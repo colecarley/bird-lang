@@ -52,6 +52,11 @@ public:
         EQUAL_EQUAL,
         BANG_EQUAL,
         ARROW,
+        PLUS_EQUAL,
+        MINUS_EQUAL,
+        STAR_EQUAL,
+        SLASH_EQUAL,
+        PERCENT_EQUAL,
 
         // values
         IDENTIFIER,

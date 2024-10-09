@@ -37,6 +37,8 @@ public:
 
     std::unique_ptr<Stmt> const_decl();
 
+    std::unique_ptr<Stmt> assign_stmt();
+
     std::unique_ptr<Stmt> block();
 
     std::unique_ptr<Stmt> if_stmt();
@@ -75,6 +77,8 @@ public:
     Token advance();
 
     Token peek();
+
+    Token peek_next();
 
     Token peek_previous();
 

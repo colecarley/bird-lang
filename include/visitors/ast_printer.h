@@ -11,6 +11,7 @@
 #include "../ast_node/expr/ternary.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
+#include "../ast_node/stmt/assign_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
@@ -34,6 +35,11 @@ public:
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
             {
                 decl_stmt->accept(this);
+            }
+
+            if (auto assign_stmt = dynamic_cast<AssignStmt *>(stmt.get()))
+            {
+                assign_stmt->accept(this);
             }
 
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
@@ -79,6 +85,12 @@ public:
         std::cout << "var ";
         std::cout << decl_stmt->identifier.lexeme << " = ";
         decl_stmt->value->accept(this);
+    }
+
+    void visit_assign_stmt(AssignStmt *assign_stmt)
+    {
+        std::cout << assign_stmt->identifier.lexeme << " " << assign_stmt->assign_operator.lexeme << " ";
+        assign_stmt->value->accept(this);
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)
