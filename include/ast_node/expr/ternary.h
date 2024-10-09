@@ -20,11 +20,9 @@ public:
     Ternary(std::unique_ptr<Expr> condition,
             std::unique_ptr<Expr> true_expr,
             std::unique_ptr<Expr> false_expr)
-    {
-        this->condition = std::move(condition);
-        this->true_expr = std::move(true_expr);
-        this->false_expr = std::move(false_expr);
-    }
+        : condition(std::move(condition)),
+          true_expr(std::move(true_expr)),
+          false_expr(std::move(false_expr)) {}
 
     void accept(Visitor *visitor)
     {

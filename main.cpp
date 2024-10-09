@@ -56,7 +56,14 @@ void repl()
         AstPrinter printer;
         printer.print_ast(&ast);
 
-        interpreter.evaluate(&ast);
+        try
+        {
+            interpreter.evaluate(&ast);
+        }
+        catch (std::exception e)
+        {
+            std::cout << "err" << std::endl;
+        }
     }
 }
 

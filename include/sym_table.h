@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include "visitors/interpreter.h"
 
 /*
  * A table with key value pairs of identifiers and their respective values
@@ -16,7 +17,7 @@ class SymbolTable
 public:
     void insert(std::string identifier, T value)
     {
-        this->vars[identifier] = value;
+        this->vars[identifier] = std::move(value);
     }
 
     T get(std::string identifier)
@@ -32,5 +33,10 @@ public:
     void set_enclosing(std::unique_ptr<SymbolTable> enclosing)
     {
         this->enclosing = std::move(enclosing);
+    }
+
+    bool contains(std::string identifier)
+    {
+        return vars.find(identifier) != vars.end();
     }
 };
