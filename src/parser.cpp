@@ -51,12 +51,12 @@ std::unique_ptr<Stmt> Parser::stmt()
     case Token::Type::VAR:
         return this->var_decl();
     case Token::Type::IDENTIFIER:
-        if (this->position + 1 >= this->tokens.size())
+        if (this->is_at_end())
         {
             break;
         }
 
-        switch (this->tokens[this->position + 1].token_type)
+        switch (this->peek_next().token_type)
         {
         case Token::Type::EQUAL:
         case Token::Type::PLUS_EQUAL:
@@ -65,6 +65,8 @@ std::unique_ptr<Stmt> Parser::stmt()
         case Token::Type::SLASH_EQUAL:
         case Token::Type::PERCENT_EQUAL:
             return this->assign_stmt();
+        default:
+            break;
         }
     case Token::Type::IF:
         return this->if_stmt();
@@ -611,6 +613,11 @@ Token Parser::advance()
 Token Parser::peek()
 {
     return this->tokens[this->position];
+}
+
+Token Parser::peek_next()
+{
+    return this->tokens[this->position + 1];
 }
 
 Token Parser::peek_previous()
