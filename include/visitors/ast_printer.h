@@ -84,8 +84,7 @@ public:
         }
     }
 
-    void
-    visit_block(Block *block)
+    void visit_block(Block *block)
     {
         std::cout << "{";
         for (auto &stmt : block->stmts)

@@ -24,30 +24,32 @@
 
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
+#include "../value.h"
+#include "../callable.h"
 
-#define HANDLE_GENERAL_BINARY_OPERATOR(left, right, data_type, op) \
-    if (is_type<data_type>(left.data) &&                           \
-        is_type<data_type>(right.data))                            \
-    {                                                              \
-        this->stack.push_back(Value(                               \
-            variant(as_type<data_type>(left.data)                  \
-                        op as_type<data_type>(right.data))));      \
-        break;                                                     \
+#define HANDLE_GENERAL_BINARY_OPERATOR(left, right, data_type, op)   \
+    if (is_type<data_type>(left.data) &&                             \
+        is_type<data_type>(right.data))                              \
+    {                                                                \
+        this->stack.push_back(Value(                                 \
+            Value::variant(as_type<data_type>(left.data)             \
+                               op as_type<data_type>(right.data)))); \
+        break;                                                       \
     }
 
-#define HANDLE_NUMERIC_BINARY_OPERATOR(left, right, op)            \
-    if (is_numeric(left) && is_numeric(right))                     \
-    {                                                              \
-        float left_float = is_type<int>(left.data)                 \
-                               ? as_type<int>(left.data)           \
-                               : as_type<float>(left.data);        \
-        float right_float = is_type<int>(right.data)               \
-                                ? as_type<int>(right.data)         \
-                                : as_type<float>(right.data);      \
-                                                                   \
-        this->stack.push_back(Value(variant(left_float             \
-                                                op right_float))); \
-        break;                                                     \
+#define HANDLE_NUMERIC_BINARY_OPERATOR(left, right, op)                   \
+    if (is_numeric(left) && is_numeric(right))                            \
+    {                                                                     \
+        float left_float = is_type<int>(left.data)                        \
+                               ? as_type<int>(left.data)                  \
+                               : as_type<float>(left.data);               \
+        float right_float = is_type<int>(right.data)                      \
+                                ? as_type<int>(right.data)                \
+                                : as_type<float>(right.data);             \
+                                                                          \
+        this->stack.push_back(Value(Value::variant(left_float             \
+                                                       op right_float))); \
+        break;                                                            \
     }
 
 #define THROW_UNKNWOWN_BINARY_OPERATOR(op) \
@@ -55,19 +57,6 @@
 
 #define THROW_UNKNWOWN_COMPASSIGN_OPERATOR(op) \
     throw BirdException("The '" #op "'= assignment operator could not be used to interpret these values.");
-
-using variant = std::variant<int, float, std::string, bool>;
-
-class Value
-{
-public:
-    variant data;
-    bool is_mutable;
-
-    Value(variant data, bool is_mutable = false) : data(std::move(data)), is_mutable(is_mutable) {}
-
-    Value() {};
-};
 
 template <typename T>
 static inline bool is_type(Value value)
@@ -97,23 +86,6 @@ static inline T to_type(Value value)
 {
     return is_type<T>(value) ? as_type<T>(value) : static_cast<T>(as_type<U>(value));
 }
-
-class Callable
-{
-    std::vector<std::pair<Token, Token>> param_list;
-    std::unique_ptr<Stmt> block;
-    std::optional<Token> return_type;
-
-public:
-    Callable(
-        std::vector<std::pair<Token, Token>> param_list,
-        std::unique_ptr<Stmt> block,
-        std::optional<Token> return_type)
-        : param_list(param_list),
-          block(std::move(block)),
-          return_type(return_type) {}
-    Callable() = default;
-};
 
 /*
  * Visitor that interprets and evaluates the AST
@@ -507,9 +479,9 @@ public:
         this->stack.pop_back();
 
         if (is_type<int>(expr))
-            this->stack.push_back(Value(variant(-as_type<int>(expr.data))));
+            this->stack.push_back(Value(Value::variant(-as_type<int>(expr.data))));
         else if (is_type<float>(expr))
-            this->stack.push_back(Value(variant(-as_type<float>(expr.data))));
+            this->stack.push_back(Value(Value::variant(-as_type<float>(expr.data))));
         else
             throw BirdException("Unknown type used with unary value.");
     }
@@ -520,19 +492,19 @@ public:
         {
         case Token::Type::FLOAT_LITERAL:
             this->stack.push_back(Value(
-                variant(std::stof(primary->value.lexeme))));
+                Value::variant(std::stof(primary->value.lexeme))));
             break;
         case Token::Type::BOOL_LITERAL:
             this->stack.push_back(Value(
-                variant(primary->value.lexeme == "true" ? true : false)));
+                Value::variant(primary->value.lexeme == "true" ? true : false)));
             break;
         case Token::Type::STR_LITERAL:
             this->stack.push_back(Value(
-                variant(primary->value.lexeme)));
+                Value::variant(primary->value.lexeme)));
             break;
         case Token::Type::INT_LITERAL:
             this->stack.push_back(Value(
-                variant(std::stoi(primary->value.lexeme))));
+                Value::variant(std::stoi(primary->value.lexeme))));
             break;
         case Token::Type::IDENTIFIER:
             this->stack.push_back(

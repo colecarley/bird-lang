@@ -241,6 +241,30 @@ main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+src/callable.o: src/callable.cpp.o
+.PHONY : src/callable.o
+
+# target to build an object file
+src/callable.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/callable.cpp.o
+.PHONY : src/callable.cpp.o
+
+src/callable.i: src/callable.cpp.i
+.PHONY : src/callable.i
+
+# target to preprocess a source file
+src/callable.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/callable.cpp.i
+.PHONY : src/callable.cpp.i
+
+src/callable.s: src/callable.cpp.s
+.PHONY : src/callable.s
+
+# target to generate assembly for a file
+src/callable.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/callable.cpp.s
+.PHONY : src/callable.cpp.s
+
 src/lexer.o: src/lexer.cpp.o
 .PHONY : src/lexer.o
 
@@ -356,6 +380,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... src/callable.o"
+	@echo "... src/callable.i"
+	@echo "... src/callable.s"
 	@echo "... src/lexer.o"
 	@echo "... src/lexer.i"
 	@echo "... src/lexer.s"

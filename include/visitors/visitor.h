@@ -16,6 +16,7 @@ class ConstStmt;
 class WhileStmt;
 class Block;
 class IfStmt;
+class Func;
 
 /*
  * the interface for all visitors,
