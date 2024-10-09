@@ -126,6 +126,11 @@ public:
                 expr_stmt->accept(this);
             }
 
+            if (auto ternary_stmt = dynamic_cast<Ternary *>(stmt.get()))
+            {
+                ternary_stmt->accept(this);
+            }
+
             if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
             {
                 while_stmt->accept(this);
@@ -301,6 +306,42 @@ public:
             this->stack.push_back(value);
             break;
         }
+        case Token::Type::GREATER:
+        {
+            auto value = this->builder.CreateICmpSGT(left, right, "sgttmp");
+            this->stack.push_back(value);
+            break;
+        }
+        case Token::Type::GREATER_EQUAL:
+        {
+            auto value = this->builder.CreateICmpSGE(left, right, "sgetmp");
+            this->stack.push_back(value);
+            break;
+        }
+        case Token::Type::LESS:
+        {
+            auto value = this->builder.CreateICmpSLT(left, right, "slttmp");
+            this->stack.push_back(value);
+            break;
+        }
+        case Token::Type::LESS_EQUAL:
+        {
+            auto value = this->builder.CreateICmpSLE(left, right, "sletmp");
+            this->stack.push_back(value);
+            break;
+        }
+        case Token::Type::EQUAL_EQUAL:
+        {
+            auto value = this->builder.CreateICmpEQ(left, right, "eqtmp");
+            this->stack.push_back(value);
+            break;
+        }
+        case Token::Type::BANG_EQUAL:
+        {
+            auto value = this->builder.CreateICmpNE(left, right, "netmp");
+            this->stack.push_back(value);
+            break;
+        }
         default:
         {
             throw BirdException("undefined binary operator for code gen");
@@ -369,10 +410,56 @@ public:
         }
     }
 
-    void
-    visit_ternary(Ternary *ternary)
+    void visit_ternary(Ternary *ternary)
     {
-        throw BirdException("implement ternary visit");
+        ternary->condition->accept(this);
+        // condition contains LLVM IR i1 bool
+        auto condition = this->stack.back();
+        this->stack.pop_back();
+
+        // control flow requires parent
+        auto parent_fn = this->builder.GetInsertBlock()->getParent();
+
+        // create blocks for true and false expressions in the ternary operation, and a done block to merge control flow
+        auto true_block = llvm::BasicBlock::Create(this->context, "true", parent_fn);
+        auto flase_block = llvm::BasicBlock::Create(this->context, "false", parent_fn);
+        auto done_block = llvm::BasicBlock::Create(this->context, "done", parent_fn);
+
+        // create conditional branch for condition, if true -> true block, if false -> false block
+        this->builder.CreateCondBr(condition, true_block, flase_block);
+
+        this->builder.SetInsertPoint(true_block); // set insert point to true block for true expression instuctions
+        ternary->true_expr->accept(this);
+        auto true_result = this->stack.back();
+        this->stack.pop_back();
+
+        this->builder.CreateBr(done_block); // create branch to merge control flow
+
+        // update true block for phi node reference to predecessor
+        true_block = this->builder.GetInsertBlock();
+
+        this->builder.SetInsertPoint(flase_block); // set insert point for false block for false expression instructions
+        ternary->false_expr->accept(this);
+        auto false_result = this->stack.back();
+        this->stack.pop_back();
+
+        this->builder.CreateBr(done_block);
+
+        // update false block for phi node reference to predecessor
+        flase_block = this->builder.GetInsertBlock();
+
+        // set insert point for done (merge) block
+        this->builder.SetInsertPoint(done_block);
+
+        /*
+         * phi node which has type `result`, 2 incoming values, and is named "ternary result"
+         * this is how we select the correct result based on which branch is executed
+         */
+        auto phi_node = this->builder.CreatePHI(true_result->getType(), 2, "ternary result");
+        phi_node->addIncoming(true_result, true_block);   // associates true result to true block
+        phi_node->addIncoming(false_result, flase_block); // associates false result to false block
+
+        this->stack.push_back(phi_node); // push the phi node w branch result on to the stack
     }
 
     void visit_const_stmt(ConstStmt *const_stmt)
