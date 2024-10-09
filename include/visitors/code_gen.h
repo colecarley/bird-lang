@@ -9,6 +9,7 @@
 #include "../ast_node/expr/binary.h"
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
+#include "../ast_node/expr/ternary.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
@@ -20,14 +21,26 @@
 #include "../exceptions/bird_exception.h"
 #include "../sym_table.h"
 
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Verifier.h>
-
-// TODO: figure out a way to put this in the class
-static llvm::LLVMContext TheContext;
-static llvm::IRBuilder<> Builder(TheContext);
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/MC/TargetRegistry.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/TargetOptions.h"
+#include "llvm/TargetParser/Host.h"
 
 /*
  * Visitor that generates the LLVM IR representation of the code
@@ -38,40 +51,53 @@ class CodeGen : public Visitor
     std::unique_ptr<SymbolTable<llvm::Value *>> environment;
     std::map<std::string, llvm::FunctionCallee> std_lib;
 
+    llvm::LLVMContext context;
+    llvm::IRBuilder<> builder;
+
 public:
-    CodeGen()
+    std::unique_ptr<llvm::Module> module;
+
+    ~CodeGen()
     {
-        this->environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
+        for (auto val : this->stack)
+        {
+            free(val);
+        }
     }
 
-    void init_std_lib(llvm::Module *TheModule)
+    CodeGen() : builder(llvm::IRBuilder<>(this->context))
+    {
+        this->environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
+        this->module = std::make_unique<llvm::Module>("test_module", this->context);
+    }
+
+    void init_std_lib()
     {
         // Declare the printf function (external function)
-        llvm::FunctionType *printfType = llvm::FunctionType::get(Builder.getInt32Ty(), Builder.getPtrTy(), true);
-        llvm::FunctionCallee printfFunc = TheModule->getOrInsertFunction("printf", printfType);
+        // How can we do this better?
+        llvm::FunctionType *printfType = llvm::FunctionType::get(this->builder.getInt32Ty(), this->builder.getPtrTy(), true);
+        llvm::FunctionCallee printfFunc = this->module->getOrInsertFunction("printf", printfType);
         this->std_lib["print"] = printfFunc;
         // TODO: when to free printf?
     }
 
-    llvm::BasicBlock *create_entry_point(llvm::Module *TheModule)
+    llvm::BasicBlock *create_entry_point()
     {
         // main function
-        llvm::FunctionType *funcType = llvm::FunctionType::get(Builder.getVoidTy(), false);
-        llvm::Function *mainFunction = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", TheModule);
-        llvm::BasicBlock *entry = llvm::BasicBlock::Create(TheContext, "entry", mainFunction);
+        llvm::FunctionType *funcType = llvm::FunctionType::get(this->builder.getVoidTy(), false);
+        llvm::Function *mainFunction = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", this->module.get());
+        llvm::BasicBlock *entry = llvm::BasicBlock::Create(this->context, "entry", mainFunction);
 
         // TODO: when to free entry block?
         return entry;
     }
 
-    llvm::Module *generate(std::vector<std::unique_ptr<Stmt>> *stmts)
+    void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
-        llvm::Module *TheModule = new llvm::Module("my_module", TheContext);
+        this->init_std_lib();
+        auto entry = this->create_entry_point();
 
-        this->init_std_lib(TheModule);
-        auto entry = this->create_entry_point(TheModule);
-
-        Builder.SetInsertPoint(entry);
+        this->builder.SetInsertPoint(entry);
 
         for (auto &stmt : *stmts)
         {
@@ -85,6 +111,11 @@ public:
                 print_stmt->accept(this);
             }
 
+            if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
+            {
+                if_stmt->accept(this);
+            }
+
             if (auto block = dynamic_cast<Block *>(stmt.get()))
             {
                 block->accept(this);
@@ -94,26 +125,77 @@ public:
             {
                 expr_stmt->accept(this);
             }
+
+            if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
+            {
+                while_stmt->accept(this);
+            }
         }
 
-        Builder.CreateRetVoid();
+        this->builder.CreateRetVoid();
 
-        TheModule->print(llvm::outs(), nullptr);
+        this->module->print(llvm::outs(), nullptr);
         this->stack.clear();
 
+        std::error_code ll_EC;
+        llvm::raw_fd_ostream ll_dest("output.ll", ll_EC);
+
+        if (ll_EC)
+        {
+            llvm::errs() << "Could not open file: " << ll_EC.message();
+            exit(1);
+        }
+
+        this->module->print(ll_dest, nullptr);
+        ll_dest.close();
+
+        auto TargetTriple = llvm::Triple("wasm32-unknown-unknown");
+
+        llvm::InitializeAllTargetInfos();
+        llvm::InitializeAllTargets();
+        llvm::InitializeAllTargetMCs();
+        llvm::InitializeAllAsmParsers();
+        llvm::InitializeAllAsmPrinters();
+
+        std::string Error;
+        auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple.getTriple(), Error);
+
+        if (!Target)
+        {
+            llvm::errs() << Error;
+            return;
+        }
+
+        auto CPU = "generic";
+        auto Features = "";
+
+        llvm::TargetOptions opt;
+        auto TargetMachine = Target->createTargetMachine(TargetTriple.getTriple(), CPU, Features, opt, llvm::Reloc::PIC_);
+
+        this->module->setDataLayout(TargetMachine->createDataLayout());
+        this->module->setTargetTriple(TargetTriple.getTriple());
+
+        auto Filename = "output.o";
         std::error_code EC;
-        llvm::raw_fd_ostream dest("output.ll", EC);
+        llvm::raw_fd_ostream dest(Filename, EC, llvm::sys::fs::OF_None);
 
         if (EC)
         {
             llvm::errs() << "Could not open file: " << EC.message();
-            exit(1);
+            return;
         }
 
-        TheModule->print(dest, nullptr);
-        dest.close();
+        llvm::legacy::PassManager pass;
+        auto FileType = llvm::CodeGenFileType::ObjectFile;
 
-        return TheModule;
+        if (TargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType))
+        {
+            llvm::errs() << "TargetMachine can't emit a file of this type";
+            return;
+        }
+
+        pass.run(*this->module);
+        dest.flush();
     }
 
     void visit_block(Block *block)
@@ -147,17 +229,29 @@ public:
             arg->accept(this);
         }
 
+        // TODO: figure out a better way to do this
         auto printfFunc = this->std_lib["print"];
-        llvm::Value *formatStr = Builder.CreateGlobalStringPtr("%d");
+
         for (int i = 0; i < print_stmt->args.size(); i++)
         {
-            auto result = this->stack[this->stack.size() - 1];
+            auto result = this->stack.back();
+            llvm::Value *formatStr;
+            if (result->getType()->isIntegerTy())
+            {
+                formatStr = this->builder.CreateGlobalString("%d\n");
+            }
+            else if (result->getType()->isFloatTy())
+            {
+                formatStr = this->builder.CreateGlobalString("%f\n");
+                result = builder.CreateFPExt(result, llvm::Type::getDoubleTy(context));
+            }
+            else if (result->getType()->isPointerTy())
+            {
+                formatStr = this->builder.CreateGlobalString("%s\n");
+            }
             this->stack.pop_back();
-            Builder.CreateCall(printfFunc, {formatStr, result});
+            this->builder.CreateCall(printfFunc, {formatStr, result});
         }
-
-        llvm::Value *newline = Builder.CreateGlobalStringPtr("\n");
-        Builder.CreateCall(printfFunc, newline);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -185,25 +279,25 @@ public:
         {
         case Token::Type::PLUS:
         {
-            auto value = Builder.CreateAdd(left, right, "addtmp");
+            auto value = this->builder.CreateAdd(left, right, "addtmp");
             this->stack.push_back(value);
             break;
         }
         case Token::Type::MINUS:
         {
-            auto value = Builder.CreateSub(left, right, "subtmp");
+            auto value = this->builder.CreateSub(left, right, "subtmp");
             this->stack.push_back(value);
             break;
         }
         case Token::Type::SLASH:
         {
-            auto value = Builder.CreateSDiv(left, right, "sdivtmp");
+            auto value = this->builder.CreateSDiv(left, right, "sdivtmp");
             this->stack.push_back(value);
             break;
         }
         case Token::Type::STAR:
         {
-            auto value = Builder.CreateMul(left, right, "multmp");
+            auto value = this->builder.CreateMul(left, right, "multmp");
             this->stack.push_back(value);
             break;
         }
@@ -220,7 +314,7 @@ public:
         auto expr = this->stack[this->stack.size() - 1];
         this->stack.pop_back();
 
-        auto llvm_value = Builder.CreateNeg(expr);
+        auto llvm_value = this->builder.CreateNeg(expr);
         this->stack.push_back(
             llvm_value);
     }
@@ -231,9 +325,30 @@ public:
         {
         case Token::Type::INT_LITERAL:
         {
-            float value = std::stoi(primary->value.lexeme);
+            int value = std::stoi(primary->value.lexeme);
 
-            auto llvm_value = llvm::ConstantInt::get(TheContext, llvm::APInt(32, value));
+            auto llvm_value = llvm::ConstantInt::get(this->context, llvm::APInt(32, value));
+            this->stack.push_back(llvm_value);
+            break;
+        }
+        case Token::Type::FLOAT_LITERAL:
+        {
+            float value = std::stof(primary->value.lexeme);
+
+            auto llvm_value = llvm::ConstantFP::get(this->context, llvm::APFloat(value));
+            this->stack.push_back(llvm_value);
+            break;
+        }
+        case Token::Type::BOOL_LITERAL:
+            this->stack.push_back(
+                primary->value.lexeme == "true" ? this->builder.getTrue() : this->builder.getFalse());
+            break;
+        case Token::Type::STR_LITERAL:
+        {
+            // TODO: figure out strings
+            auto value = primary->value.lexeme;
+            auto llvm_value = this->builder.CreateGlobalString(value);
+
             this->stack.push_back(llvm_value);
             break;
         }
@@ -254,6 +369,12 @@ public:
         }
     }
 
+    void
+    visit_ternary(Ternary *ternary)
+    {
+        throw BirdException("implement ternary visit");
+    }
+
     void visit_const_stmt(ConstStmt *const_stmt)
     {
         throw BirdException("implement const statment visit");
@@ -266,6 +387,42 @@ public:
 
     void visit_if_stmt(IfStmt *if_stmt)
     {
-        throw BirdException("implement if statement visit");
+        if_stmt->condition->accept(this);
+
+        auto condition = this->stack.back();
+        this->stack.pop_back();
+
+        auto parent_fn = this->builder.GetInsertBlock()->getParent();
+        if (if_stmt->else_branch.has_value())
+        {
+            auto then_block = llvm::BasicBlock::Create(this->context, "then", parent_fn);
+            auto else_block = llvm::BasicBlock::Create(this->context, "else", parent_fn);
+            auto done_block = llvm::BasicBlock::Create(this->context, "if_cont", parent_fn);
+
+            this->builder.CreateCondBr(condition, then_block, else_block);
+
+            this->builder.SetInsertPoint(then_block);
+            if_stmt->then_branch->accept(this);
+            this->builder.CreateBr(done_block);
+
+            this->builder.SetInsertPoint(else_block);
+            if_stmt->else_branch.value().get()->accept(this);
+
+            this->builder.CreateBr(done_block);
+            this->builder.SetInsertPoint(done_block);
+        }
+        else
+        {
+            auto then_block = llvm::BasicBlock::Create(this->context, "then", parent_fn);
+            auto done_block = llvm::BasicBlock::Create(this->context, "if_cont", parent_fn);
+
+            this->builder.CreateCondBr(condition, then_block, done_block);
+
+            this->builder.SetInsertPoint(then_block);
+            if_stmt->then_branch->accept(this);
+
+            this->builder.CreateBr(done_block);
+            this->builder.SetInsertPoint(done_block);
+        }
     }
 };

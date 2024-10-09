@@ -7,6 +7,7 @@
 class Binary;
 class Unary;
 class Primary;
+class Ternary;
 class DeclStmt;
 class ExprStmt;
 class PrintStmt;
@@ -26,6 +27,7 @@ public:
     virtual void visit_binary(Binary *) = 0;
     virtual void visit_unary(Unary *) = 0;
     virtual void visit_primary(Primary *) = 0;
+    virtual void visit_ternary(Ternary *) = 0;
     virtual void visit_decl_stmt(DeclStmt *) = 0;
     virtual void visit_expr_stmt(ExprStmt *) = 0;
     virtual void visit_print_stmt(PrintStmt *) = 0;

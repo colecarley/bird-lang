@@ -8,6 +8,7 @@
 #include "../ast_node/expr/binary.h"
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
+#include "../ast_node/expr/ternary.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
@@ -113,6 +114,17 @@ public:
     void visit_primary(Primary *primary)
     {
         std::cout << primary->value.lexeme;
+    }
+
+    void visit_ternary(Ternary *ternary)
+    {
+        ternary->condition->accept(this);
+
+        std::cout << " ? ";
+        ternary->true_expr->accept(this);
+
+        std::cout << " : ";
+        ternary->false_expr->accept(this);
     }
 
     void visit_const_stmt(ConstStmt *const_stmt)

@@ -3,6 +3,7 @@
 #include "../include/ast_node/expr/binary.h"
 #include "../include/ast_node/expr/unary.h"
 #include "../include/ast_node/expr/primary.h"
+#include "../include/ast_node/expr/ternary.h"
 
 #include "../include/ast_node/stmt/decl_stmt.h"
 #include "../include/ast_node/stmt/print_stmt.h"
@@ -70,13 +71,27 @@ std::unique_ptr<Stmt> Parser::const_decl()
 {
     this->expect_token(Token::Type::CONST).adv_or_bird_error("Expected 'const' at the beginning of const decl");
 
-    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier after const");
+    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier after const keyword");
 
     this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after identifier");
 
-    auto type_identifier = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("expected type identifier after identifier");
+    std::optional<Token> type_identifier = std::nullopt;
+    if (this->peek().token_type == Token::Type::COLON)
+    {
+        this->advance();
+        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
+        {
+            type_identifier = std::make_optional<Token>(this->advance());
+        }
+        else
+        {
+            this->user_error_tracker->expected("expected type identifier after ':' in assignment", this->peek());
+            this->synchronize();
+            throw UserException();
+        }
+    }
 
-    this->expect_token(Token::Type::EQUAL).adv_or_user_error("expected '=' after type identifier");
+    this->expect_token(Token::Type::EQUAL).adv_or_user_error("expected '=' in constant declaration");
 
     auto expr = this->expr();
 
@@ -183,13 +198,25 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
     this->expect_token(Token::Type::VAR).adv_or_bird_error("Expected 'var' keyword");
 
-    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier in variable declaration");
+    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier after var keyword");
 
-    this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after identifier in variable declaration");
+    std::optional<Token> type_identifier = std::nullopt;
+    if (this->peek().token_type == Token::Type::COLON)
+    {
+        this->advance();
+        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
+        {
+            type_identifier = std::make_optional<Token>(this->advance());
+        }
+        else
+        {
+            this->user_error_tracker->expected("expected type identifier after ':' in assignment", this->peek());
+            this->synchronize();
+            throw UserException();
+        }
+    }
 
-    auto type_identifier = this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("expected type identifer after ':' in variable declaration");
-
-    this->expect_token(Token::Type::EQUAL).adv_or_user_error("expected '=' in variable assignment");
+    this->expect_token(Token::Type::EQUAL).adv_or_user_error("expected '=' in variable declaration");
 
     auto result = std::make_unique<DeclStmt>(
         DeclStmt(
@@ -204,7 +231,30 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
 std::unique_ptr<Expr> Parser::expr()
 {
-    return this->equality();
+    return this->ternary();
+}
+
+std::unique_ptr<Expr> Parser::ternary()
+{
+    auto condition = this->equality();
+
+    if (this->peek().token_type == Token::Type::QUESTION)
+    {
+        this->advance();
+
+        auto true_expr = this->expr();
+
+        this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after true branch in ternary expression");
+
+        auto false_expr = this->expr();
+
+        return std::make_unique<Ternary>(
+            std::move(condition),
+            std::move(true_expr),
+            std::move(false_expr));
+    }
+
+    return condition;
 }
 
 std::unique_ptr<Expr> Parser::equality()
