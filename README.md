@@ -1,16 +1,11 @@
-# Authors
-Cole Carley
+# Bird
+Our goal is to create a programming language that can interoperate with JavaScript, provide a web-first interface, and maintain the speed of WebAssembly. When building a website, there is only one real option for a client-side programming language: JavaScript. As websites become more complicated and more business logic is run on the web, JavaScript’s faults become more apparent; it’s just too slow. WebAssembly is an alternative that can be run on all major browsers, but it serves as a compilation target for other languages like C or C++. These languages are great but weren’t designed with the web in mind. The rise of WebAssembly as a web-compatible compilation target and the lack of a proper syntax to write fast, client-side code demands a new language. 
 
-Aiden Kirk
-
-Nicholas Langley
-
-Nathan Wright
 
 # Building The Project
 For ease of development over multiple operating systems, the project should be run in a container. There is a `.devcontainer` folder that outlines the proper container. 
 
-Our project depends on `LLVM 18.1.8` and it's built with `CMake 3.20.0` using `C++17`.
+Our project depends on `LLVM 18.1.8` and `GooglTest` and it's built with `CMake 3.20.0` using `C++17`.
 
 After running the project in a container, follow these commands:
 
@@ -29,63 +24,63 @@ Run the makefile:
 make
 ```
 
-Run the executable in either repl mode or compile mode:
+Run the executable:
+
+repl mode:
 ```
-./compiler
+./compiler 
 ```
 OR
+
+compiler mode:
 ```
-./compiler /path/to/your/code
+./compiler /path/to/your/code 
 ```
 
+OR
 
-# GRAMMAR
+interpreter mode:
+```
+./compiler -i /path/to/your/code 
+```
 
-### Keywords
+# Testing
+All tests live in the `tests` folder. Each sub folder that ends in `*_suite` contains a suite of tests. Any file in the `tests` folder than ends in `*_test.cpp`, will be built. 
 
-`var`: variable declaration
+To build and run the tests:
 
-`const`: constant variable declaration
+Enter the build folder
+```
+cd build
+```
 
-`print`: print to screen
+Generate the makefile with the `TESTS` option:
+```
+cmake .. -DTESTS=ON
+```
 
-### Statements
+Run the makefile:
+```
+make
+```
 
-Stmt -> DeclStmt | ExprStmt | PrintStmt | ConstStmt | Block;
+Run the tests:
+```
+ctest --verbose
+```
 
-DeclStmt -> "var" \<identifier\> ":" \<type_identifier\> "=" Expr ";"
+Note that the `TEST` option is persistent, so be sure to turn it off after testing to decrease your development build times.
 
-ExprStmt -> Expr ";"
+```
+cmake .. -DTESTS=OFF
+```
 
-PrintStmt -> "print" Expr ";"
+# Authors
+Cole Carley
 
-Block -> '{' Stmt* '}'
+Aiden Kirk
 
-ConstStmt -> "const" \<identifier\> ":" \<type_identifier\> "=" Expr ";"
+Nicholas Langley
 
+Nathan Wright
 
-### Expressions
-
-Expr -> Term
-
-Term -> Factor (("+" | "-" ) Factor) *
-
-Factor -> Unary (("*" | "/" ) Uary) *
-
-Unary -> ("-" Unary) | Primary
-
-Primary -> \<int_literal\> | \<identifier\> | \<string_literal\> |  \<float_literal\> | \<bool_literal\>
-
-### Terminals
-
-\<int_literals\> -> [0-9]*
-
-\<float_literals\> -> [0.9]+[\.][0.9]*
-
-\<identifier\> -> [_a-zA-Z]\([_a-zA-Z0-9]*\)
-
-\<bool_literal\> -> true | false
-
-\<string_literal\> -> "[.]*"
-
-\<type_identifier\> -> int | float | bool | str

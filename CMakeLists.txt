@@ -36,16 +36,22 @@ endforeach()
 
 target_link_libraries(compiler ${llvm_libs} ${targets})
 
-enable_testing()
+option(TESTS "Build the tests" OFF)
 
-find_package(GTest REQUIRED)
+if (TESTS) 
+  message("Building tests")
+  enable_testing()
 
-file(GLOB_RECURSE TEST_SOURCES tests/*_test.cpp)
+  find_package(GTest REQUIRED)
 
-# For each test file, create a separate test executable
-foreach(test_source ${TEST_SOURCES})
-    get_filename_component(test_name ${test_source} NAME_WE)
-    add_executable(${test_name} ${test_source})
-    target_link_libraries(${test_name} GTest::gtest GTest::gtest_main)
-    add_test(NAME ${test_name} COMMAND ${test_name})
-endforeach()
+  file(GLOB_RECURSE TEST_SOURCES tests/*_test.cpp)
+
+  # For each test file, create a separate test executable
+  foreach(test_source ${TEST_SOURCES})
+      get_filename_component(test_name ${test_source} NAME_WE)
+      add_executable(${test_name} ${test_source})
+      target_link_libraries(${test_name} GTest::gtest GTest::gtest_main)
+      add_test(NAME ${test_name} COMMAND ${test_name})
+  endforeach()
+
+endif()
