@@ -60,6 +60,10 @@ void repl()
         {
             interpreter.evaluate(&ast);
         }
+        catch (BirdException e)
+        {
+            std::cout << e.what() << std::endl;
+        }
         catch (std::exception e)
         {
             std::cout << "err" << std::endl;

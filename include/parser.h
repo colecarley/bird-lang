@@ -70,6 +70,10 @@ public:
 
     std::unique_ptr<Expr> unary();
 
+    std::unique_ptr<Expr> call();
+
+    std::vector<std::unique_ptr<Expr>> args();
+
     std::unique_ptr<Expr> primary();
 
     std::unique_ptr<Expr> grouping();

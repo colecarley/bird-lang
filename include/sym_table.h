@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include "visitors/interpreter.h"
+#include "exceptions/bird_exception.h"
 
 /*
  * A table with key value pairs of identifiers and their respective values
@@ -22,7 +23,18 @@ public:
 
     T get(std::string identifier)
     {
-        return this->vars[identifier];
+        if (this->contains(identifier))
+        {
+            return std::move(this->vars[identifier]);
+        }
+        else
+        {
+            if (this->enclosing.get() == nullptr)
+            {
+                throw BirdException("undefined identifier");
+            }
+            return std::move(this->enclosing->get(identifier));
+        }
     }
 
     std::unique_ptr<SymbolTable> get_enclosing()
