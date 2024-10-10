@@ -68,6 +68,7 @@ std::unique_ptr<Stmt> Parser::stmt()
         default:
             break;
         }
+        break;
     case Token::Type::IF:
         return this->if_stmt();
     case Token::Type::CONST:
