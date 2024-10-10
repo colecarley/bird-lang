@@ -41,3 +41,14 @@ print 1 == 2 ? 1 : 2;
 
 print "print 1 != 2 ? 1 : 2;";
 print 1 != 2 ? 1 : 2;
+
+fn printDoubleI(x: int) -> void {
+    print x * 2;
+}
+
+fn printDoubleF(x: float) -> void {
+    print x * 2;
+}
+
+printDoubleF(2.0);
+printDoubleF(1.2);

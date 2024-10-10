@@ -14,17 +14,30 @@
 
 void repl();
 void compile(std::string filename);
+void interpret(std::string filename);
+std::string read_file(std::string filename);
 
 int main(int argc, char *argv[])
 {
-    if (argc < 2)
+    if (argc == 1)
     {
         repl();
     }
-    else
+    else if (argc == 2)
     {
         std::string filename = argv[1];
         compile(filename);
+    }
+    else
+    {
+        if (!strcmp(argv[1], "-i"))
+        {
+            interpret(std::string(argv[2]));
+        }
+        else if (!strcmp(argv[2], "-i"))
+        {
+            interpret(std::string(argv[1]));
+        }
     }
 
     return 0;
@@ -73,18 +86,7 @@ void repl()
 
 void compile(std::string filename)
 {
-    std::ifstream file(filename);
-    std::string code;
-    if (file.is_open())
-    {
-        std::string line;
-        while (file.good())
-        {
-            getline(file, line);
-            code += line += '\n';
-        }
-    }
-
+    auto code = read_file(filename);
     UserErrorTracker error_tracker(code);
 
     Lexer lexer(code, &error_tracker);
@@ -104,4 +106,57 @@ void compile(std::string filename)
 
     CodeGen code_gen;
     code_gen.generate(&ast);
+}
+
+void interpret(std::string filename)
+{
+    std::cout << "filename " << filename << std::endl;
+    auto code = read_file(filename);
+    UserErrorTracker error_tracker(code);
+
+    Lexer lexer(code, &error_tracker);
+    auto tokens = lexer.lex();
+    lexer.print_tokens();
+
+    Parser parser(tokens, &error_tracker);
+    auto ast = parser.parse();
+
+    if (error_tracker.has_errors())
+    {
+        error_tracker.print_errors_and_exit();
+    }
+
+    AstPrinter printer;
+    printer.print_ast(&ast);
+    Interpreter interpreter;
+
+    try
+    {
+        interpreter.evaluate(&ast);
+    }
+    catch (BirdException e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+    catch (std::exception e)
+    {
+        std::cout << "err" << std::endl;
+    }
+}
+
+std::string read_file(std::string filename)
+{
+    std::ifstream file(filename);
+    std::string code;
+    if (file.is_open())
+    {
+        std::string line;
+        while (file.good())
+        {
+            getline(file, line);
+            code += line += '\n';
+        }
+    }
+
+    return code;
 }
