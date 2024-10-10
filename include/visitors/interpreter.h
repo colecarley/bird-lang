@@ -425,6 +425,10 @@ public:
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
+        auto new_environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
+        new_environment->set_enclosing(std::move(this->environment));
+        this->environment = std::move(new_environment);
+
         if (for_stmt->initializer.has_value())
         {
             for_stmt->initializer.value()->accept(this);
@@ -435,15 +439,15 @@ public:
             if (for_stmt->condition.has_value())
             {
                 for_stmt->condition.value()->accept(this);
-                auto condition_result = this->stack.back();
+                auto condition_result = std::move(this->stack.back());
                 this->stack.pop_back();
 
-                if (!std::holds_alternative<bool>(condition_result.data))
+                if (!is_type<bool>(condition_result.data))
                 {
-                    throw BirdException("expected boolean result for the loop condition");
+                    throw BirdException("expected bool in for statement condition");
                 }
 
-                if (!std::get<bool>(condition_result.data))
+                if (!as_type<bool>(condition_result.data))
                 {
                     break;
                 }
@@ -456,6 +460,7 @@ public:
                 for_stmt->increment.value()->accept(this);
             }
         }
+        this->environment = this->environment->get_enclosing();
     }
 
     void visit_binary(Binary *binary)

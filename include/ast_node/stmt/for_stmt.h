@@ -11,7 +11,7 @@ class Expr;
 /*
  * for statement AST Node
  * ex:
- *  for Stmt | Expr ";" Expr ";" Expr {
+ *  for Stmt | Expr ";" Expr ";" Stmt {
  *      Stmt ";"
  *  }
  */
@@ -20,12 +20,12 @@ class ForStmt : public Stmt
 public:
     std::optional<std::unique_ptr<Stmt>> initializer;
     std::optional<std::unique_ptr<Expr>> condition;
-    std::optional<std::unique_ptr<Expr>> increment;
+    std::optional<std::unique_ptr<Stmt>> increment;
     std::unique_ptr<Stmt> body;
 
     ForStmt(std::optional<std::unique_ptr<Stmt>> initializer,
             std::optional<std::unique_ptr<Expr>> condition,
-            std::optional<std::unique_ptr<Expr>> increment,
+            std::optional<std::unique_ptr<Stmt>> increment,
             std::unique_ptr<Stmt> body)
         : initializer(std::move(initializer)),
           condition(std::move(condition)),

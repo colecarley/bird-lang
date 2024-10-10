@@ -258,10 +258,8 @@ std::unique_ptr<Stmt> Parser::for_stmt()
 {
     if (this->advance().token_type != Token::Type::FOR)
     {
-        throw BirdException("expected for at the beginning of for statement");
+        throw BirdException("expected 'for' at the beginning of for statement");
     }
-
-    this->advance();
 
     std::optional<std::unique_ptr<Stmt>> initializer;
     if (this->peek().token_type != Token::Type::SEMICOLON)
@@ -269,7 +267,10 @@ std::unique_ptr<Stmt> Parser::for_stmt()
         initializer = this->stmt();
     }
 
-    this->advance();
+    if (this->peek().token_type == Token::Type::SEMICOLON)
+    {
+        this->advance();
+    }
 
     std::optional<std::unique_ptr<Expr>> condition;
     if (this->peek().token_type != Token::Type::SEMICOLON)
@@ -277,15 +278,12 @@ std::unique_ptr<Stmt> Parser::for_stmt()
         condition = this->expr();
     }
 
-    this->advance();
-
-    std::optional<std::unique_ptr<Expr>> increment;
-    if (this->peek().token_type != Token::Type::RPAREN)
+    if (this->peek().token_type == Token::Type::SEMICOLON)
     {
-        increment = this->expr();
+        this->advance();
     }
 
-    this->advance();
+    std::optional<std::unique_ptr<Stmt>> increment = this->stmt();
 
     auto body = this->stmt();
 
