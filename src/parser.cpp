@@ -12,6 +12,7 @@
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
 #include "../include/ast_node/stmt/while_stmt.h"
+#include "../include/ast_node/stmt/for_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 #include "../include/ast_node/stmt/func.h"
 
@@ -81,6 +82,8 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->func();
     case Token::Type::WHILE:
         return this->while_stmt();
+    case Token::Type::FOR:
+        return this->for_stmt();
     default:
         break;
     }
@@ -250,6 +253,48 @@ std::unique_ptr<Stmt> Parser::while_stmt()
     auto stmt = this->stmt();
 
     return std::make_unique<WhileStmt>(WhileStmt(std::move(condition), std::move(stmt)));
+}
+
+std::unique_ptr<Stmt> Parser::for_stmt()
+{
+    if (this->advance().token_type != Token::Type::FOR)
+    {
+        throw BirdException("expected for at the beginning of for statement");
+    }
+
+    this->advance();
+
+    std::optional<std::unique_ptr<Stmt>> initializer;
+    if (this->peek().token_type != Token::Type::SEMICOLON)
+    {
+        initializer = this->stmt();
+    }
+
+    this->advance();
+
+    std::optional<std::unique_ptr<Expr>> condition;
+    if (this->peek().token_type != Token::Type::SEMICOLON)
+    {
+        condition = this->expr();
+    }
+
+    this->advance();
+
+    std::optional<std::unique_ptr<Expr>> increment;
+    if (this->peek().token_type != Token::Type::RPAREN)
+    {
+        increment = this->expr();
+    }
+
+    this->advance();
+
+    auto body = this->stmt();
+
+    return std::make_unique<ForStmt>(
+        std::move(initializer),
+        std::move(condition),
+        std::move(increment),
+        std::move(body));
 }
 
 std::unique_ptr<Stmt> Parser::var_decl()

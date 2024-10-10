@@ -18,6 +18,7 @@
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/const_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/for_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
 #include "../ast_node/stmt/func.h"
@@ -175,6 +176,11 @@ public:
             {
                 while_stmt->accept(this);
                 continue;
+            }
+
+            if (auto for_stmt = dynamic_cast<ForStmt *>(stmt.get()))
+            {
+                for_stmt->accept(this);
             }
 
             if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
@@ -414,6 +420,41 @@ public:
             while_stmt->condition->accept(this);
             condition_result = std::move(this->stack.back());
             this->stack.pop_back();
+        }
+    }
+
+    void visit_for_stmt(ForStmt *for_stmt)
+    {
+        if (for_stmt->initializer.has_value())
+        {
+            for_stmt->initializer.value()->accept(this);
+        }
+
+        while (true)
+        {
+            if (for_stmt->condition.has_value())
+            {
+                for_stmt->condition.value()->accept(this);
+                auto condition_result = this->stack.back();
+                this->stack.pop_back();
+
+                if (!std::holds_alternative<bool>(condition_result.data))
+                {
+                    throw BirdException("expected boolean result for the loop condition");
+                }
+
+                if (!std::get<bool>(condition_result.data))
+                {
+                    break;
+                }
+            }
+
+            for_stmt->body->accept(this);
+
+            if (for_stmt->increment.has_value())
+            {
+                for_stmt->increment.value()->accept(this);
+            }
         }
     }
 
