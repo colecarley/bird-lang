@@ -18,6 +18,7 @@ class Block;
 class IfStmt;
 class Func;
 class Call;
+class ReturnStmt;
 
 /*
  * the interface for all visitors,
@@ -41,4 +42,5 @@ public:
     virtual void visit_while_stmt(WhileStmt *) = 0;
     virtual void visit_block(Block *) = 0;
     virtual void visit_call(Call *) = 0;
+    virtual void visit_return_stmt(ReturnStmt *) = 0;
 };
