@@ -96,19 +96,11 @@ std::unique_ptr<Stmt> Parser::const_decl()
     this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after identifier");
 
     std::optional<Token> type_identifier = std::nullopt;
-    if (this->peek().token_type == Token::Type::COLON)
+    if (this->expect_token(Token::Type::COLON).is_valid())
     {
         this->advance();
-        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
-        {
-            type_identifier = std::make_optional<Token>(this->advance());
-        }
-        else
-        {
-            this->user_error_tracker->expected("expected type identifier after ':' in assignment", this->peek());
-            this->synchronize();
-            throw UserException();
-        }
+        type_identifier = std::make_optional<Token>(
+            this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("expected type identifier after ':' in assignment"));
     }
 
     this->expect_token(Token::Type::EQUAL).adv_or_user_error("expected '=' in constant declaration");
@@ -128,7 +120,7 @@ std::unique_ptr<Stmt> Parser::block()
 
     auto stmts = std::vector<std::unique_ptr<Stmt>>();
 
-    while (this->expect_token(Token::Type::RBRACE).is_invalid() && !this->is_at_end())
+    while (this->expect_token(Token::Type::RBRACE).is_invalid())
     {
         auto stmt = this->stmt();
         stmts.push_back(std::move(stmt));
@@ -221,19 +213,11 @@ std::unique_ptr<Stmt> Parser::var_decl()
     auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier after var keyword");
 
     std::optional<Token> type_identifier = std::nullopt;
-    if (this->peek().token_type == Token::Type::COLON)
+    if (this->expect_token(Token::Type::COLON).is_valid())
     {
         this->advance();
-        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
-        {
-            type_identifier = std::make_optional<Token>(this->advance());
-        }
-        else
-        {
-            this->user_error_tracker->expected("expected type identifier after ':' in assignment", this->peek());
-            this->synchronize();
-            throw UserException();
-        }
+        type_identifier = std::make_optional<Token>(
+            this->expect_token(Token::Type::TYPE_IDENTIFIER).adv_or_user_error("expected type identifier after ':' in assignment"));
     }
 
     this->expect_token(Token::Type::EQUAL).adv_or_user_error("expected '=' in variable declaration");
@@ -251,37 +235,22 @@ std::unique_ptr<Stmt> Parser::var_decl()
 
 std::unique_ptr<Stmt> Parser::assign_stmt()
 {
-    if (this->peek().token_type != Token::Type::IDENTIFIER)
-    {
-        throw BirdException("Expected variable identifier");
-    }
+    auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_bird_error("Expected variable identifier in assignment statement");
 
-    auto identifier = this->advance();
-
-    switch (this->peek().token_type)
-    {
-    case Token::Type::EQUAL:
-    case Token::Type::PLUS_EQUAL:
-    case Token::Type::MINUS_EQUAL:
-    case Token::Type::STAR_EQUAL:
-    case Token::Type::SLASH_EQUAL:
-    case Token::Type::PERCENT_EQUAL:
-        break;
-    default:
-    {
-        this->user_error_tracker->expected("assignment operator", "in assignment", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
-    }
-
-    auto assign_operator = this->advance();
+    auto assign_operator =
+        this->expect_one_of({Token::Type::EQUAL,
+                             Token::Type::PLUS_EQUAL,
+                             Token::Type::MINUS_EQUAL,
+                             Token::Type::STAR_EQUAL,
+                             Token::Type::SLASH_EQUAL,
+                             Token::Type::PERCENT_EQUAL})
+            .adv_or_user_error("expected assignment operator in assignment");
 
     auto assign_stmt = std::make_unique<AssignStmt>(AssignStmt(identifier, assign_operator, this->expr()));
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
-        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->user_error_tracker->expected("expected ';' at the end of expression", this->peek_previous());
         this->synchronize();
         throw UserException();
     }
@@ -540,20 +509,42 @@ void Parser::synchronize()
     }
 }
 
-Parser::ParseOption Parser::expect_token(Token::Type type)
+Parser::ExpectedToken Parser::expect_token(Token::Type type)
 {
+    if (this->is_at_end())
+    {
+        this->user_error_tracker->unexpected_end_of_token_stream();
+    }
+
     auto token = this->peek();
     if (token.token_type == type)
     {
-        return ParseOption(token, *this);
+        return ExpectedToken(token, *this);
     }
-    else
-    {
-        return ParseOption(*this);
-    }
+
+    return ExpectedToken(*this);
 }
 
-Token Parser::ParseOption::adv_or_user_error(std::string context)
+Parser::ExpectedToken Parser::expect_one_of(std::initializer_list<Token::Type> types)
+{
+    if (this->is_at_end())
+    {
+        this->user_error_tracker->unexpected_end_of_token_stream();
+    }
+
+    auto token = this->peek();
+    for (auto type : types)
+    {
+        if (token.token_type == type)
+        {
+            return ExpectedToken(token, *this);
+        }
+    }
+
+    return ExpectedToken(*this);
+}
+
+Token Parser::ExpectedToken::adv_or_user_error(std::string context)
 {
     if (token)
     {
@@ -568,7 +559,7 @@ Token Parser::ParseOption::adv_or_user_error(std::string context)
     }
 }
 
-Token Parser::ParseOption::adv_or_bird_error(std::string message)
+Token Parser::ExpectedToken::adv_or_bird_error(std::string message)
 {
     if (token)
     {
@@ -581,12 +572,12 @@ Token Parser::ParseOption::adv_or_bird_error(std::string message)
     }
 }
 
-bool Parser::ParseOption::is_valid()
+bool Parser::ExpectedToken::is_valid()
 {
     return (bool)token;
 }
 
-bool Parser::ParseOption::is_invalid()
+bool Parser::ExpectedToken::is_invalid()
 {
     return !(bool)token;
 }

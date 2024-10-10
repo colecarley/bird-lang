@@ -24,7 +24,7 @@ public:
     unsigned int position;
     UserErrorTracker *user_error_tracker;
 
-    struct ParseOption;
+    struct ExpectedToken;
 
     Parser(std::vector<Token> tokens, UserErrorTracker *user_error_tracker);
 
@@ -76,7 +76,9 @@ public:
 
     std::unique_ptr<Expr> grouping();
 
-    ParseOption expect_token(Token::Type type);
+    ExpectedToken expect_token(Token::Type type);
+
+    ExpectedToken expect_one_of(std::initializer_list<Token::Type> types);
 
     Token advance();
 
@@ -92,17 +94,19 @@ public:
 
     // A type to facilitate error handling in parsing code
     // Example usage: `this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("identifier after var keyword")`
-    struct ParseOption
+    struct ExpectedToken
     {
     private:
         std::optional<Token> token;
         Parser &parser;
 
-        ParseOption(Token token, Parser &parser) : token(token), parser(parser) {}
-        ParseOption(Parser &parser) : token(std::nullopt), parser(parser) {}
+        ExpectedToken(Token token, Parser &parser) : token(token), parser(parser) {}
+        ExpectedToken(Parser &parser) : token(std::nullopt), parser(parser) {}
+        ExpectedToken() = delete;
 
     public:
-        friend ParseOption Parser::expect_token(Token::Type type);
+        friend ExpectedToken Parser::expect_token(Token::Type type);
+        friend ExpectedToken Parser::expect_one_of(std::initializer_list<Token::Type> types);
 
         // if the parseoption contains a token, advance and return the token, otherwise throw the appropriate error
         Token adv_or_user_error(std::string context);
