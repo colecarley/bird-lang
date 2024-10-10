@@ -25,7 +25,7 @@ public:
     {
         if (this->contains(identifier))
         {
-            return std::move(this->vars[identifier]);
+            return this->vars[identifier];
         }
         else
         {
@@ -33,7 +33,7 @@ public:
             {
                 throw BirdException("undefined identifier");
             }
-            return std::move(this->enclosing->get(identifier));
+            return this->enclosing->get(identifier);
         }
     }
 

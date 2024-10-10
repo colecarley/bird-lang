@@ -165,10 +165,20 @@ public:
             std::string type_lexeme = decl_stmt->type_identifier.value().lexeme;
 
             // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-            if (type_lexeme == "int" && !is_type<int>(result))
-                throw BirdException("mismatching type in assignment, expected int");
-            else if (type_lexeme == "float" && !is_type<float>(result))
-                throw BirdException("mismatching type in assignment, expected float");
+            if (type_lexeme == "int")
+            {
+                if (!is_numeric(result))
+                    throw BirdException("mismatching type in assignment, expected int");
+                else
+                    result.data = to_type<int, float>(result);
+            }
+            else if (type_lexeme == "float")
+            {
+                if (!is_numeric(result))
+                    throw BirdException("mismatching type in assignment, expected float");
+                else
+                    result.data = to_type<float, int>(result);
+            }
             else if (type_lexeme == "str" && !is_type<std::string>(result))
                 throw BirdException("mismatching type in assignment, expected str");
             else if (type_lexeme == "bool" && !is_type<bool>(result))
@@ -190,7 +200,6 @@ public:
         assign_stmt->value->accept(this);
         auto value = std::move(this->stack.back());
         this->stack.pop_back();
-        // value.is_mutable = true;
 
         switch (assign_stmt->assign_operator.token_type)
         {

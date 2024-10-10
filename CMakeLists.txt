@@ -40,11 +40,12 @@ enable_testing()
 
 find_package(GTest REQUIRED)
 
-add_executable(lexer_tests ../tests/lexer_tests.cpp)
-add_executable(parser_tests ../tests/parser_tests.cpp)
+file(GLOB_RECURSE TEST_SOURCES tests/*_test.cpp)
 
-target_link_libraries(lexer_tests GTest::gtest GTest::gtest_main)
-target_link_libraries(parser_tests GTest::gtest GTest::gtest_main)
-
-add_test(AllTestsInLexerTests lexer_tests)
-add_test(AllTestsInParserTests parser_tests)
+# For each test file, create a separate test executable
+foreach(test_source ${TEST_SOURCES})
+    get_filename_component(test_name ${test_source} NAME_WE)
+    add_executable(${test_name} ${test_source})
+    target_link_libraries(${test_name} GTest::gtest GTest::gtest_main)
+    add_test(NAME ${test_name} COMMAND ${test_name})
+endforeach()
