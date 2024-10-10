@@ -1,9 +1,7 @@
 #include <gtest/gtest.h>
-#include "../src/lexer.cpp"
+// #include "../src/lexer.cpp"
 #include "../include/exceptions/user_error_tracker.h"
-
-// helper function prototypes
-std::vector<Token> lex_code(const std::string &code);
+#include "../helpers/lex_test_helper.hpp"
 
 TEST(LexerTest, TokenizeBlockStmt)
 {
@@ -210,12 +208,4 @@ TEST(LexerTest, TokenizeWhileStmt)
     EXPECT_EQ(tokens[7].token_type, Token::Type::SEMICOLON);
     EXPECT_EQ(tokens[8].token_type, Token::Type::RBRACE);
     EXPECT_EQ(tokens[9].token_type, Token::Type::END);
-}
-
-// helper function which returns a vector of tokens
-std::vector<Token> lex_code(const std::string &code)
-{
-    UserErrorTracker error_tracker(code);
-    Lexer lexer(code, &error_tracker);
-    return lexer.lex();
 }
