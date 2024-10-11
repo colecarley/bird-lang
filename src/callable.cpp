@@ -53,16 +53,6 @@ void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>>
             interpreter->environment = interpreter->environment->get_enclosing();
             return;
         }
-        catch (BreakException e)
-        {
-            interpreter->environment = interpreter->environment->get_enclosing();
-            return;
-        }
-        catch (ContinueException e)
-        {
-            interpreter->environment = interpreter->environment->get_enclosing();
-            return;
-        }
     }
 
     interpreter->environment = interpreter->environment->get_enclosing();

@@ -4,7 +4,8 @@
 #include <string>
 
 /*
- * Exceptions that should be thrown because a user made a mistake in BIRD code
+ * Break exception that should be thrown when a break statement is present in a loop,
+ * which results in the loop exiting execution.
  */
 class BreakException : public std::exception
 {

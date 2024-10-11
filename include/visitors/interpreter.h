@@ -169,7 +169,18 @@ public:
 
         for (auto &stmt : block->stmts)
         {
-            stmt->accept(this);
+            try
+            {
+                stmt->accept(this);
+            }
+            catch (BreakException e)
+            {
+                break;
+            }
+            catch (ContinueException e)
+            {
+                break;
+            }
         }
 
         this->environment = this->environment->get_enclosing();
