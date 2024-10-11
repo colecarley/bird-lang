@@ -44,6 +44,8 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::SLASH_EQUAL, "SLASH_EQUAL"},
     {Token::Type::PERCENT_EQUAL, "PERCENT_EQUAL"},
     {Token::Type::RETURN, "RETURN"},
+    {Token::Type::BREAK, "BREAK"},
+    {Token::Type::CONTINUE, "CONTINUE"},
     {Token::Type::FN, "FN"},
     {Token::Type::END, "END"},
 };
@@ -95,6 +97,8 @@ const std::map<std::string, Token::Type> Lexer::keywords = {
     {"false", Token::Type::BOOL_LITERAL},
     {"fn", Token::Type::FN},
     {"return", Token::Type::RETURN},
+    {"break", Token::Type::BREAK},
+    {"continue", Token::Type::CONTINUE},
     {"const", Token::Type::CONST},
 };
 

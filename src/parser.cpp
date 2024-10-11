@@ -16,6 +16,8 @@
 #include "../include/ast_node/stmt/return_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 #include "../include/ast_node/stmt/func.h"
+#include "../include/ast_node/stmt/break_stmt.h"
+#include "../include/ast_node/stmt/continue_stmt.h"
 
 #include "../include/exceptions/bird_exception.h"
 #include "../include/exceptions/user_exception.h"
@@ -85,6 +87,10 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->while_stmt();
     case Token::Type::RETURN:
         return this->return_stmt();
+    case Token::Type::BREAK:
+        return this->break_stmt();
+    case Token::Type::CONTINUE:
+        return this->continue_stmt();
     default:
         break;
     }
@@ -368,6 +374,40 @@ std::unique_ptr<Stmt> Parser::assign_stmt()
     }
 
     return assign_stmt;
+}
+
+std::unique_ptr<Stmt> Parser::break_stmt()
+{
+    if (this->advance().token_type != Token::Type::BREAK)
+    {
+        throw BirdException("Expected 'break' at the beginning of break stmt");
+    }
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return std::make_unique<BreakStmt>();
+}
+
+std::unique_ptr<Stmt> Parser::continue_stmt()
+{
+    if (this->advance().token_type != Token::Type::CONTINUE)
+    {
+        throw BirdException("Expected 'continue' at the beginning of continue stmt");
+    }
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return std::make_unique<ContinueStmt>();
 }
 
 std::unique_ptr<Expr> Parser::expr()

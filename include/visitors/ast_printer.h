@@ -21,6 +21,8 @@
 #include "../ast_node/stmt/block.h"
 #include "../ast_node/stmt/func.h"
 #include "../ast_node/stmt/const_stmt.h"
+#include "../ast_node/stmt/break_stmt.h"
+#include "../ast_node/stmt/continue_stmt.h"
 
 /*
  * Visitor that prints the Abstract Syntax Tree
@@ -86,6 +88,16 @@ public:
             {
                 return_stmt->accept(this);
                 continue;
+            }
+
+            if (auto break_stmt = dynamic_cast<BreakStmt *>(stmt.get()))
+            {
+                break_stmt->accept(this);
+            }
+
+            if (auto continue_stmt = dynamic_cast<ContinueStmt *>(stmt.get()))
+            {
+                continue_stmt->accept(this);
             }
 
             std::cout << std::endl;
@@ -230,5 +242,15 @@ public:
             arg->accept(this);
         }
         std::cout << ")" << std::endl;
+    }
+
+    void visit_break_stmt(BreakStmt *break_stmt)
+    {
+        std::cout << "break";
+    }
+
+    void visit_continue_stmt(ContinueStmt *break_stmt)
+    {
+        std::cout << "continue";
     }
 };

@@ -18,6 +18,8 @@
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
 #include "../ast_node/stmt/return_stmt.h"
+#include "../ast_node/stmt/break_stmt.h"
+#include "../ast_node/stmt/continue_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
 
@@ -142,6 +144,16 @@ public:
             if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
             {
                 return_stmt->accept(this);
+            }
+
+            if (auto break_stmt = dynamic_cast<BreakStmt *>(stmt.get()))
+            {
+                break_stmt->accept(this);
+            }
+
+            if (auto continue_stmt = dynamic_cast<ContinueStmt *>(stmt.get()))
+            {
+                continue_stmt->accept(this);
             }
         }
 
@@ -538,5 +550,15 @@ public:
     void visit_return_stmt(ReturnStmt *return_stmt)
     {
         throw BirdException("implement return stmt");
+    }
+
+    void visit_break_stmt(BreakStmt *break_stmt)
+    {
+        throw BirdException("implement break statement");
+    }
+
+    void visit_continue_stmt(ContinueStmt *continue_stmt)
+    {
+        throw BirdException("implement continue statement");
     }
 };

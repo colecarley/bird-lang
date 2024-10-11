@@ -343,3 +343,29 @@ TEST(ParserTest, ParseWhileStmt)
     ASSERT_NE(print_arg, nullptr);
     EXPECT_EQ(print_arg->value.lexeme, "1");
 }
+
+// Should be incorporated into a comprehensive loop test when loops are implemented.
+TEST(ParserTest, ParseBreakStmt)
+{
+    std::string code = "break;";
+
+    auto stmts = parse_code(code);
+
+    // check for break statement
+    ASSERT_EQ(stmts.size(), 1);
+    BreakStmt *break_stmt = dynamic_cast<BreakStmt *>(stmts[0].get());
+    ASSERT_NE(break_stmt, nullptr);
+}
+
+// Should be incorporated into a comprehensive loop test when loops are implemented.
+TEST(ParserTest, ParseContinueStmt)
+{
+    std::string code = "continue;";
+
+    auto stmts = parse_code(code);
+
+    // check for break statement
+    ASSERT_EQ(stmts.size(), 1);
+    ContinueStmt *continue_stmt = dynamic_cast<ContinueStmt *>(stmts[0].get());
+    ASSERT_NE(continue_stmt, nullptr);
+}
