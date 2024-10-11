@@ -2,8 +2,6 @@
 #include <fstream>
 #include <memory>
 
-#include <llvm/IR/Module.h>
-
 #include "include/lexer.h"
 #include "include/parser.h"
 #include "include/visitors/ast_printer.h"
