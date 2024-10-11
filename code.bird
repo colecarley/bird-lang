@@ -76,4 +76,6 @@ fn concat(first: str, second: str) -> int {
 
 print concat("foo", "bar");
 
-for var x: int = 1; x <= 5; x += 1 do print x;
+print "for loop";
+for var x: int = 1; x <= 5; x += 1 do 
+    print "x = ", x;
