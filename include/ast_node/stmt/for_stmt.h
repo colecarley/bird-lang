@@ -20,12 +20,12 @@ class ForStmt : public Stmt
 public:
     std::optional<std::unique_ptr<Stmt>> initializer;
     std::optional<std::unique_ptr<Expr>> condition;
-    std::optional<std::unique_ptr<Stmt>> increment;
+    std::optional<std::unique_ptr<Expr>> increment;
     std::unique_ptr<Stmt> body;
 
     ForStmt(std::optional<std::unique_ptr<Stmt>> initializer,
             std::optional<std::unique_ptr<Expr>> condition,
-            std::optional<std::unique_ptr<Stmt>> increment,
+            std::optional<std::unique_ptr<Expr>> increment,
             std::unique_ptr<Stmt> body)
         : initializer(std::move(initializer)),
           condition(std::move(condition)),

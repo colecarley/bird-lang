@@ -14,7 +14,7 @@
 #include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
-#include "../ast_node/stmt/assign_stmt.h"
+#include "../ast_node/expr/assign_expr.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/const_stmt.h"
@@ -95,9 +95,9 @@ public:
                 continue;
             }
 
-            if (auto assign_stmt = dynamic_cast<AssignStmt *>(stmt.get()))
+            if (auto assign_expr = dynamic_cast<AssignExpr *>(stmt.get()))
             {
-                assign_stmt->accept(this);
+                assign_expr->accept(this);
                 continue;
             }
 
@@ -128,6 +128,7 @@ public:
             if (auto for_stmt = dynamic_cast<ForStmt *>(stmt.get()))
             {
                 for_stmt->accept(this);
+                continue;
             }
 
             if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
@@ -202,20 +203,20 @@ public:
         this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
     }
 
-    void visit_assign_stmt(AssignStmt *assign_stmt)
+    void visit_assign_expr(AssignExpr *assign_expr)
     {
-        if (!this->environment->contains(assign_stmt->identifier.lexeme))
-            throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not initialized.");
+        if (!this->environment->contains(assign_expr->identifier.lexeme))
+            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
 
-        auto previous_value = this->environment->get(assign_stmt->identifier.lexeme);
+        auto previous_value = this->environment->get(assign_expr->identifier.lexeme);
         if (!previous_value.is_mutable)
-            throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not mutable.");
+            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.");
 
-        assign_stmt->value->accept(this);
+        assign_expr->value->accept(this);
         auto value = std::move(this->stack.back());
         this->stack.pop_back();
 
-        switch (assign_stmt->assign_operator.token_type)
+        switch (assign_expr->assign_operator.token_type)
         {
         case Token::Type::EQUAL:
         {
@@ -232,7 +233,7 @@ public:
             else
                 throw BirdException("The assigment value type does not match the identifer type.");
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::PLUS_EQUAL:
@@ -249,7 +250,7 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(+);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::MINUS_EQUAL:
@@ -263,7 +264,7 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(-);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::STAR_EQUAL:
@@ -277,7 +278,7 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(*);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::SLASH_EQUAL:
@@ -291,7 +292,7 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(/);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::PERCENT_EQUAL:
@@ -302,11 +303,11 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(%);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         default:
-            throw BirdException("Unidentified assignment operator " + assign_stmt->assign_operator.lexeme);
+            throw BirdException("Unidentified assignment operator " + assign_expr->assign_operator.lexeme);
         }
     }
 

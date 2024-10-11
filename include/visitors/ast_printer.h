@@ -12,7 +12,7 @@
 #include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
-#include "../ast_node/stmt/assign_stmt.h"
+#include "../ast_node/expr/assign_expr.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
@@ -41,9 +41,9 @@ public:
                 continue;
             }
 
-            if (auto assign_stmt = dynamic_cast<AssignStmt *>(stmt.get()))
+            if (auto assign_expr = dynamic_cast<AssignExpr *>(stmt.get()))
             {
-                assign_stmt->accept(this);
+                assign_expr->accept(this);
                 continue;
             }
 
@@ -115,10 +115,11 @@ public:
         decl_stmt->value->accept(this);
     }
 
-    void visit_assign_stmt(AssignStmt *assign_stmt)
+    void visit_assign_expr(AssignExpr *assign_expr)
     {
-        std::cout << assign_stmt->identifier.lexeme << " " << assign_stmt->assign_operator.lexeme << " ";
-        assign_stmt->value->accept(this);
+        std::cout << assign_expr->identifier.lexeme << " " << assign_expr->assign_operator.lexeme << " ";
+        assign_expr->value->accept(this);
+        std::cout << std::endl;
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)

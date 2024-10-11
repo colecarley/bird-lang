@@ -55,7 +55,7 @@ void Token::print_token()
     std::cout << "{ "
               << "token_type: " << token_strings.at(this->token_type)
               << ",  lexeme: " << this->lexeme
-              << "}"
+              << " }"
               << std::endl;
 }
 

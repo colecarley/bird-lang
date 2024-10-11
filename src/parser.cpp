@@ -7,7 +7,7 @@
 #include "../include/ast_node/expr/call.h"
 
 #include "../include/ast_node/stmt/decl_stmt.h"
-#include "../include/ast_node/stmt/assign_stmt.h"
+#include "../include/ast_node/expr/assign_expr.h"
 #include "../include/ast_node/stmt/print_stmt.h"
 #include "../include/ast_node/stmt/if_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
@@ -56,19 +56,6 @@ std::unique_ptr<Stmt> Parser::stmt()
     case Token::Type::IDENTIFIER:
         if (this->is_at_end())
         {
-            break;
-        }
-
-        switch (this->peek_next().token_type)
-        {
-        case Token::Type::EQUAL:
-        case Token::Type::PLUS_EQUAL:
-        case Token::Type::MINUS_EQUAL:
-        case Token::Type::STAR_EQUAL:
-        case Token::Type::SLASH_EQUAL:
-        case Token::Type::PERCENT_EQUAL:
-            return this->assign_stmt();
-        default:
             break;
         }
         break;
@@ -314,10 +301,10 @@ std::unique_ptr<Stmt> Parser::for_stmt()
         this->advance();
     }
 
-    std::optional<std::unique_ptr<Stmt>> increment;
+    std::optional<std::unique_ptr<Expr>> increment;
     if (this->peek().token_type != Token::Type::DO)
     {
-        increment = this->stmt();
+        increment = this->expr();
     }
 
     if (this->advance().token_type != Token::Type::DO)
@@ -382,7 +369,11 @@ std::unique_ptr<Stmt> Parser::var_decl()
     return result;
 }
 
-std::unique_ptr<Stmt> Parser::assign_stmt()
+/*
+ * might not be needed with the refactor since expr() handles precedence?
+ * could be wrong though!
+ */
+std::unique_ptr<Expr> Parser::assign_expr()
 {
     if (this->peek().token_type != Token::Type::IDENTIFIER)
     {
@@ -410,7 +401,7 @@ std::unique_ptr<Stmt> Parser::assign_stmt()
 
     auto assign_operator = this->advance();
 
-    auto assign_stmt = std::make_unique<AssignStmt>(AssignStmt(identifier, assign_operator, this->expr()));
+    auto assign_expr = std::make_unique<AssignExpr>(AssignExpr(identifier, assign_operator, this->expr()));
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
@@ -419,12 +410,47 @@ std::unique_ptr<Stmt> Parser::assign_stmt()
         throw UserException();
     }
 
-    return assign_stmt;
+    return assign_expr;
 }
 
 std::unique_ptr<Expr> Parser::expr()
 {
-    return this->ternary();
+    // ternary still has highest precedence? since it can recurce to a Primary
+    auto left = this->ternary();
+
+    // if next token is an assignment operator
+    if (this->peek().token_type == Token::Type::EQUAL ||
+        this->peek().token_type == Token::Type::PLUS_EQUAL ||
+        this->peek().token_type == Token::Type::MINUS_EQUAL ||
+        this->peek().token_type == Token::Type::STAR_EQUAL ||
+        this->peek().token_type == Token::Type::SLASH_EQUAL ||
+        this->peek().token_type == Token::Type::PERCENT_EQUAL)
+    {
+        // save token
+        Token assign_operator = this->advance();
+
+        // check that left is an identifier, if not throw BirdException
+        if (auto *identifier = dynamic_cast<Primary *>(left.get()))
+        {
+            // despite knowing its Primary, still need to verify identifier
+            if (identifier->value.token_type != Token::Type::IDENTIFIER)
+            {
+                throw BirdException("can not assign value to non-identifier");
+            }
+
+            auto right = this->expr(); // parse expression
+
+            // create assignment expression with identifier, operator and expression
+            return std::make_unique<AssignExpr>(identifier->value, assign_operator, std::move(right));
+        }
+        else
+        {
+            // wasnt primary, something must have gone terribly wrong if we get here
+            throw BirdException("can not assign value to non-identifier");
+        }
+    }
+
+    return left;
 }
 
 std::unique_ptr<Expr> Parser::ternary()

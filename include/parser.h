@@ -37,7 +37,7 @@ public:
 
     std::unique_ptr<Stmt> const_decl();
 
-    std::unique_ptr<Stmt> assign_stmt();
+    std::unique_ptr<Expr> assign_expr();
 
     std::unique_ptr<Stmt> block();
 
