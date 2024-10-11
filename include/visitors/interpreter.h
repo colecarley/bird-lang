@@ -19,12 +19,14 @@
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/const_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/return_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
 #include "../ast_node/stmt/func.h"
 
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
+#include "../exceptions/return_exception.h"
 #include "../value.h"
 #include "../callable.h"
 
@@ -131,6 +133,12 @@ public:
             if (auto func = dynamic_cast<Func *>(stmt.get()))
             {
                 func->accept(this);
+                continue;
+            }
+
+            if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
+            {
+                return_stmt->accept(this);
                 continue;
             }
         }
@@ -509,7 +517,11 @@ public:
 
     void visit_func(Func *func)
     {
-        Callable callable = Callable(func->param_list, std::shared_ptr<Stmt>(std::move(func->block)), func->return_type);
+        Callable callable = Callable(func->param_list,
+                                     std::shared_ptr<Stmt>(
+                                         std::move(func->block)),
+                                     func->return_type);
+
         this->call_table->insert(func->identifier.lexeme, std::move(callable));
     }
 
@@ -538,5 +550,15 @@ public:
 
         auto callable = this->call_table->get(call->identifier.lexeme);
         callable.call(this, std::move(call->args));
+    }
+
+    void visit_return_stmt(ReturnStmt *return_stmt)
+    {
+        if (return_stmt->expr.has_value())
+        {
+            return_stmt->expr.value()->accept(this);
+        }
+
+        throw ReturnException();
     }
 };

@@ -13,6 +13,7 @@
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
 #include "../include/ast_node/stmt/while_stmt.h"
+#include "../include/ast_node/stmt/return_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 #include "../include/ast_node/stmt/func.h"
 
@@ -82,11 +83,38 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->func();
     case Token::Type::WHILE:
         return this->while_stmt();
+    case Token::Type::RETURN:
+        return this->return_stmt();
     default:
         break;
     }
 
     return this->expr_stmt();
+}
+
+std::unique_ptr<Stmt> Parser::return_stmt()
+{
+    if (this->advance().token_type != Token::Type::RETURN)
+    {
+        throw BirdException("Expected 'return' at the beginning of return stmt");
+    }
+
+    if (this->peek().token_type == Token::Type::SEMICOLON)
+    {
+        this->advance();
+        return std::make_unique<ReturnStmt>(ReturnStmt());
+    }
+
+    auto expr = this->expr();
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "after const statement", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return std::make_unique<ReturnStmt>(ReturnStmt(std::move(expr)));
 }
 
 std::unique_ptr<Stmt> Parser::const_decl()

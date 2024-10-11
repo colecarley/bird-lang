@@ -42,6 +42,18 @@ void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>>
         interpreter->environment->insert(param_list[i].first.lexeme, evaluated_args[i]);
     }
 
-    interpreter->visit_block(dynamic_cast<Block *>(this->block.get()));
+    for (auto &stmt : dynamic_cast<Block *>(this->block.get())->stmts)
+    {
+        try
+        {
+            stmt->accept(interpreter);
+        }
+        catch (ReturnException e)
+        {
+            interpreter->environment = interpreter->environment->get_enclosing();
+            return;
+        }
+    }
+
     interpreter->environment = interpreter->environment->get_enclosing();
 }

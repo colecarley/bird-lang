@@ -17,6 +17,7 @@
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/return_stmt.h"
 #include "../ast_node/stmt/block.h"
 #include "../ast_node/stmt/func.h"
 #include "../ast_node/stmt/const_stmt.h"
@@ -78,6 +79,12 @@ public:
             if (auto func = dynamic_cast<Func *>(stmt.get()))
             {
                 func->accept(this);
+                continue;
+            }
+
+            if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
+            {
+                return_stmt->accept(this);
                 continue;
             }
 
@@ -201,6 +208,16 @@ public:
         while_stmt->condition->accept(this);
         std::cout << ") ";
         while_stmt->stmt->accept(this);
+    }
+
+    void visit_return_stmt(ReturnStmt *return_stmt)
+    {
+        std::cout << "return ";
+        if (return_stmt->expr.has_value())
+        {
+            return_stmt->expr.value()->accept(this);
+        }
+        std::cout << std::endl;
     }
 
     void visit_call(Call *call)
