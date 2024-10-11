@@ -53,12 +53,6 @@ std::unique_ptr<Stmt> Parser::stmt()
     {
     case Token::Type::VAR:
         return this->var_decl();
-    case Token::Type::IDENTIFIER:
-        if (this->is_at_end())
-        {
-            break;
-        }
-        break;
     case Token::Type::IF:
         return this->if_stmt();
     case Token::Type::CONST:
