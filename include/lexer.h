@@ -20,6 +20,7 @@ public:
         ELSE,
         WHILE,
         FOR,
+        DO,
         FN,
         RETURN,
         CONST,

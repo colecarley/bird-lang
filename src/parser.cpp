@@ -283,7 +283,16 @@ std::unique_ptr<Stmt> Parser::for_stmt()
         this->advance();
     }
 
-    std::optional<std::unique_ptr<Stmt>> increment = this->stmt();
+    std::optional<std::unique_ptr<Stmt>> increment;
+    if (this->peek().token_type != Token::Type::DO)
+    {
+        increment = this->stmt();
+    }
+
+    if (this->advance().token_type != Token::Type::DO)
+    {
+        throw BirdException("expected 'do' at the end of for statement clauses");
+    }
 
     auto body = this->stmt();
 

@@ -460,6 +460,7 @@ public:
                 for_stmt->increment.value()->accept(this);
             }
         }
+
         this->environment = this->environment->get_enclosing();
     }
 
