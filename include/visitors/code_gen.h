@@ -10,6 +10,7 @@
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
 #include "../ast_node/expr/ternary.h"
+#include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/assign_stmt.h"
@@ -17,6 +18,7 @@
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
 #include "../ast_node/stmt/for_stmt.h"
+#include "../ast_node/stmt/return_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
 
@@ -136,6 +138,11 @@ public:
             if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
             {
                 while_stmt->accept(this);
+            }
+
+            if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
+            {
+                return_stmt->accept(this);
             }
         }
 
@@ -274,6 +281,11 @@ public:
     void visit_while_stmt(WhileStmt *while_stmt)
     {
         throw BirdException("Implement while statement code gen");
+    }
+
+    void visit_for_stmt(ForStmt *for_stmt)
+    {
+        throw BirdException("implement for statement visit");
     }
 
     void visit_binary(Binary *binary)
@@ -524,8 +536,13 @@ public:
         }
     }
 
-    void visit_for_stmt(ForStmt *for_stmt)
+    void visit_call(Call *call)
     {
-        throw BirdException("implement for statement visit");
+        throw BirdException("implement call");
+    }
+
+    void visit_return_stmt(ReturnStmt *return_stmt)
+    {
+        throw BirdException("implement return stmt");
     }
 };

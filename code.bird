@@ -41,3 +41,37 @@ print 1 == 2 ? 1 : 2;
 
 print "print 1 != 2 ? 1 : 2;";
 print 1 != 2 ? 1 : 2;
+
+fn printDoubleI(x: int) -> void {
+    print x * 2;
+}
+
+fn printDoubleF(x: float) -> void {
+    print x * 2;
+}
+
+printDoubleF(2.0);
+printDoubleF(1.2);
+
+fn double(x: int) -> int {
+    return x * 2;
+}
+
+fn quadruple(x: int) -> int {
+    return double(x) * 2;
+}
+
+print "the double of 2 is ", double(2);
+print "the quadruple of 2 is ", quadruple(2);
+
+
+var x = double(2);
+print double(x);
+
+print "hello " + "world";
+
+fn concat(first: str, second: str) -> int {
+    return first + second;
+}
+
+print concat("foo", "bar");
