@@ -248,12 +248,7 @@ std::unique_ptr<Stmt> Parser::assign_stmt()
 
     auto assign_stmt = std::make_unique<AssignStmt>(AssignStmt(identifier, assign_operator, this->expr()));
 
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected("expected ';' at the end of expression", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("expected ';' at the end of expression");
 
     return assign_stmt;
 }
@@ -267,9 +262,9 @@ std::unique_ptr<Expr> Parser::ternary()
 {
     auto condition = this->equality();
 
-    if (this->peek().token_type == Token::Type::QUESTION)
+    if (this->expect_token(Token::Type::QUESTION).is_valid())
     {
-        this->advance();
+        this->expect_token(Token::Type::QUESTION).adv_or_bird_error("Expected '?' in ternary statment");
 
         auto true_expr = this->expr();
 
@@ -292,8 +287,7 @@ std::unique_ptr<Expr> Parser::equality()
 
     std::unique_ptr<Binary> equality_expr;
 
-    while (this->expect_token(Token::Type::EQUAL_EQUAL).is_valid() ||
-           this->expect_token(Token::Type::BANG_EQUAL).is_valid())
+    while (this->expect_one_of({Token::Type::EQUAL_EQUAL, Token::Type::BANG_EQUAL}).is_valid())
     {
         Token op = this->advance();
         std::unique_ptr<Expr> right = this->comparison();
@@ -307,10 +301,11 @@ std::unique_ptr<Expr> Parser::comparison()
 {
     auto left = this->term();
 
-    while (this->peek().token_type == Token::Type::GREATER ||
-           this->peek().token_type == Token::Type::GREATER_EQUAL ||
-           this->peek().token_type == Token::Type::LESS ||
-           this->peek().token_type == Token::Type::LESS_EQUAL)
+    while (this->expect_one_of({Token::Type::GREATER,
+                                Token::Type::GREATER_EQUAL,
+                                Token::Type::LESS,
+                                Token::Type::LESS_EQUAL})
+               .is_valid())
     {
         Token op = this->advance();
         std::unique_ptr<Expr> right = this->term();
@@ -324,7 +319,7 @@ std::unique_ptr<Expr> Parser::term()
 {
     std::unique_ptr<Expr> left = this->factor();
 
-    while (this->peek().token_type == Token::Type::PLUS || this->peek().token_type == Token::Type::MINUS)
+    while (this->expect_one_of({Token::Type::PLUS, Token::Type::MINUS}).is_valid())
     {
         Token op = this->advance();
         std::unique_ptr<Expr> right = this->factor();
@@ -338,9 +333,10 @@ std::unique_ptr<Expr> Parser::factor()
 {
     auto left = this->unary();
 
-    while (this->peek().token_type == Token::Type::STAR ||
-           this->peek().token_type == Token::Type::SLASH ||
-           this->peek().token_type == Token::Type::PERCENT)
+    while (this->expect_one_of({Token::Type::STAR,
+                                Token::Type::SLASH,
+                                Token::Type::PERCENT})
+               .is_valid())
     {
         Token op = this->advance();
         auto right = this->unary();
@@ -352,7 +348,7 @@ std::unique_ptr<Expr> Parser::factor()
 
 std::unique_ptr<Expr> Parser::unary()
 {
-    if (this->peek().token_type == Token::Type::MINUS)
+    if (this->expect_token(Token::Type::MINUS).is_valid())
     {
         Token op = this->advance();
         std::unique_ptr<Expr> expr = this->unary();
@@ -364,42 +360,28 @@ std::unique_ptr<Expr> Parser::unary()
 
 std::unique_ptr<Expr> Parser::primary()
 {
-    Token::Type token_type = this->peek().token_type;
-
-    switch (token_type)
+    if (this->expect_token(Token::Type::LPAREN).is_valid())
     {
-    case Token::Type::IDENTIFIER:
-    case Token::Type::INT_LITERAL:
-    case Token::Type::FLOAT_LITERAL:
-    case Token::Type::STR_LITERAL:
-    case Token::Type::BOOL_LITERAL:
-        return std::make_unique<Primary>(Primary(this->advance()));
-    case Token::Type::LPAREN:
         return this->grouping();
-    default:
-    {
-        this->user_error_tracker->expected("expected identifier or i32", this->peek());
-        this->synchronize();
-        throw UserException();
     }
-    }
+
+    auto primary = this->expect_one_of({Token::Type::IDENTIFIER,
+                                        Token::Type::INT_LITERAL,
+                                        Token::Type::FLOAT_LITERAL,
+                                        Token::Type::BOOL_LITERAL,
+                                        Token::Type::STR_LITERAL})
+                       .adv_or_user_error("expected identifier or literal value");
+
+    return std::make_unique<Primary>(primary);
 }
 
 std::unique_ptr<Expr> Parser::grouping()
 {
-    if (this->advance().token_type != Token::Type::LPAREN)
-    {
-        throw BirdException("Expected '(' before grouping");
-    }
+    this->expect_token(Token::Type::LPAREN).adv_or_bird_error("Expected '(' before grouping");
 
     auto expr = this->expr();
 
-    if (this->advance().token_type != Token::Type::RPAREN)
-    {
-        this->user_error_tracker->expected("expected ')' after grouping", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->expect_token(Token::Type::RPAREN).adv_or_user_error("expected ')' after grouping expression");
 
     return expr;
 }
