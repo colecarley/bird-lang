@@ -375,47 +375,6 @@ std::unique_ptr<Stmt> Parser::var_decl()
  */
 std::unique_ptr<Expr> Parser::assign_expr()
 {
-    if (this->peek().token_type != Token::Type::IDENTIFIER)
-    {
-        throw BirdException("Expected variable identifier");
-    }
-
-    auto identifier = this->advance();
-
-    switch (this->peek().token_type)
-    {
-    case Token::Type::EQUAL:
-    case Token::Type::PLUS_EQUAL:
-    case Token::Type::MINUS_EQUAL:
-    case Token::Type::STAR_EQUAL:
-    case Token::Type::SLASH_EQUAL:
-    case Token::Type::PERCENT_EQUAL:
-        break;
-    default:
-    {
-        this->user_error_tracker->expected("assignment operator", "in assignment", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
-    }
-
-    auto assign_operator = this->advance();
-
-    auto assign_expr = std::make_unique<AssignExpr>(AssignExpr(identifier, assign_operator, this->expr()));
-
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
-
-    return assign_expr;
-}
-
-std::unique_ptr<Expr> Parser::expr()
-{
-    // ternary still has highest precedence? since it can recurce to a Primary
     auto left = this->ternary();
 
     // if next token is an assignment operator
@@ -432,7 +391,6 @@ std::unique_ptr<Expr> Parser::expr()
         // check that left is an identifier, if not throw BirdException
         if (auto *identifier = dynamic_cast<Primary *>(left.get()))
         {
-            // despite knowing its Primary, still need to verify identifier
             if (identifier->value.token_type != Token::Type::IDENTIFIER)
             {
                 throw BirdException("can not assign value to non-identifier");
@@ -445,12 +403,16 @@ std::unique_ptr<Expr> Parser::expr()
         }
         else
         {
-            // wasnt primary, something must have gone terribly wrong if we get here
             throw BirdException("can not assign value to non-identifier");
         }
     }
 
     return left;
+}
+
+std::unique_ptr<Expr> Parser::expr()
+{
+    return this->assign_expr();
 }
 
 std::unique_ptr<Expr> Parser::ternary()
