@@ -34,25 +34,25 @@
     if (is_type<data_type>(left) &&                                \
         is_type<data_type>(right))                                 \
     {                                                              \
-        this->stack.push_back(Value(                               \
+        this->stack.push(Value(                                    \
             variant(as_type<data_type>(left)                       \
                         op as_type<data_type>(right))));           \
         break;                                                     \
     }
 
-#define HANDLE_NUMERIC_BINARY_OPERATOR(left, right, op)            \
-    if (is_numeric(left) && is_numeric(right))                     \
-    {                                                              \
-        float left_float = is_type<int>(left)                      \
-                               ? as_type<int>(left)                \
-                               : as_type<float>(left);             \
-        float right_float = is_type<int>(right)                    \
-                                ? as_type<int>(right)              \
-                                : as_type<float>(right);           \
-                                                                   \
-        this->stack.push_back(Value(variant(left_float             \
-                                                op right_float))); \
-        break;                                                     \
+#define HANDLE_NUMERIC_BINARY_OPERATOR(left, right, op)       \
+    if (is_numeric(left) && is_numeric(right))                \
+    {                                                         \
+        float left_float = is_type<int>(left)                 \
+                               ? as_type<int>(left)           \
+                               : as_type<float>(left);        \
+        float right_float = is_type<int>(right)               \
+                                ? as_type<int>(right)         \
+                                : as_type<float>(right);      \
+                                                              \
+        this->stack.push(Value(variant(left_float             \
+                                           op right_float))); \
+        break;                                                \
     }
 
 #define THROW_UNKNWOWN_BINARY_OPERATOR(op) \
@@ -70,7 +70,7 @@ class Interpreter : public Visitor
 public:
     std::unique_ptr<SymbolTable<Value>> environment;
     std::unique_ptr<SymbolTable<Callable>> call_table;
-    std::vector<Value> stack;
+    std::stack<Value> stack;
 
     Interpreter()
     {
@@ -143,7 +143,10 @@ public:
             }
         }
 
-        this->stack.clear();
+        while (!this->stack.empty())
+        {
+            this->stack.pop();
+        }
     }
 
     void visit_block(Block *block)
@@ -164,8 +167,8 @@ public:
     {
         decl_stmt->value->accept(this);
 
-        auto result = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto result = std::move(this->stack.top());
+        this->stack.pop();
         result.is_mutable = true;
 
         if (decl_stmt->type_identifier.has_value())
@@ -206,8 +209,8 @@ public:
             throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not mutable.");
 
         assign_stmt->value->accept(this);
-        auto value = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto value = std::move(this->stack.top());
+        this->stack.pop();
 
         switch (assign_stmt->assign_operator.token_type)
         {
@@ -314,8 +317,8 @@ public:
         for (auto &arg : print_stmt->args)
         {
             arg->accept(this);
-            auto result = std::move(this->stack.back());
-            this->stack.pop_back();
+            auto result = std::move(this->stack.top());
+            this->stack.pop();
 
             if (is_type<int>(result))
                 std::cout << as_type<int>(result);
@@ -338,8 +341,8 @@ public:
     {
         const_stmt->value->accept(this);
 
-        auto result = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto result = std::move(this->stack.top());
+        this->stack.pop();
 
         if (const_stmt->type_identifier.has_value())
         {
@@ -365,8 +368,8 @@ public:
     void visit_while_stmt(WhileStmt *while_stmt)
     {
         while_stmt->condition->accept(this);
-        auto condition_result = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto condition_result = std::move(this->stack.top());
+        this->stack.pop();
 
         if (!is_type<bool>(condition_result))
             throw BirdException("expected bool in while statement condition");
@@ -376,8 +379,8 @@ public:
             while_stmt->stmt->accept(this);
 
             while_stmt->condition->accept(this);
-            condition_result = std::move(this->stack.back());
-            this->stack.pop_back();
+            condition_result = std::move(this->stack.top());
+            this->stack.pop();
         }
     }
 
@@ -386,11 +389,11 @@ public:
         binary->left->accept(this);
         binary->right->accept(this);
 
-        auto right = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto right = std::move(this->stack.top());
+        this->stack.pop();
 
-        auto left = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto left = std::move(this->stack.top());
+        this->stack.pop();
 
         switch (binary->op.token_type)
         {
@@ -467,13 +470,13 @@ public:
     void visit_unary(Unary *unary)
     {
         unary->expr->accept(this);
-        auto expr = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto expr = std::move(this->stack.top());
+        this->stack.pop();
 
         if (is_type<int>(expr))
-            this->stack.push_back(Value((-as_type<int>(expr))));
+            this->stack.push(Value((-as_type<int>(expr))));
         else if (is_type<float>(expr))
-            this->stack.push_back(Value(
+            this->stack.push(Value(
                 variant(-as_type<float>(expr))));
         else
             throw BirdException("Unknown type used with unary value.");
@@ -484,23 +487,23 @@ public:
         switch (primary->value.token_type)
         {
         case Token::Type::FLOAT_LITERAL:
-            this->stack.push_back(Value(
+            this->stack.push(Value(
                 variant(std::stof(primary->value.lexeme))));
             break;
         case Token::Type::BOOL_LITERAL:
-            this->stack.push_back(Value(
+            this->stack.push(Value(
                 variant(primary->value.lexeme == "true" ? true : false)));
             break;
         case Token::Type::STR_LITERAL:
-            this->stack.push_back(Value(
+            this->stack.push(Value(
                 variant(primary->value.lexeme)));
             break;
         case Token::Type::INT_LITERAL:
-            this->stack.push_back(Value(
+            this->stack.push(Value(
                 variant(std::stoi(primary->value.lexeme))));
             break;
         case Token::Type::IDENTIFIER:
-            this->stack.push_back(
+            this->stack.push(
                 this->environment->get(primary->value.lexeme));
             break;
         default:
@@ -512,8 +515,8 @@ public:
     {
         ternary->condition->accept(this);
 
-        auto result = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto result = std::move(this->stack.top());
+        this->stack.pop();
 
         if (!is_type<bool>(result))
             throw BirdException("expected bool result for ternary condition");
@@ -538,8 +541,8 @@ public:
     {
         if_stmt->condition->accept(this);
 
-        auto result = std::move(this->stack.back());
-        this->stack.pop_back();
+        auto result = std::move(this->stack.top());
+        this->stack.pop();
 
         if (!is_type<bool>(result))
             throw BirdException("expected bool result for if-statement condition");
