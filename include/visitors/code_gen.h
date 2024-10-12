@@ -299,21 +299,17 @@ public:
         auto left = this->stack.top();
         this->stack.pop();
 
-        bool float_flag = false;
+        bool float_flag = (left->getType()->isFloatTy() || right->getType()->isFloatTy())
+                              ? true
+                              : false;
 
-        if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
-        {
-            float_flag = true;
-        }
-        else if (left->getType()->isIntegerTy() && right->getType()->isFloatTy())
+        if (left->getType()->isIntegerTy() && right->getType()->isFloatTy())
         {
             left = this->builder.CreateSIToFP(left, right->getType(), "inttofloat");
-            float_flag = true;
         }
         else if (left->getType()->isFloatTy() && right->getType()->isIntegerTy())
         {
             right = this->builder.CreateSIToFP(right, left->getType(), "inttofloat");
-            float_flag = true;
         }
 
         switch (binary->op.token_type)
