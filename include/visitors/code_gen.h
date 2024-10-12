@@ -379,8 +379,7 @@ public:
         this->stack.pop();
 
         auto llvm_value = this->builder.CreateNeg(expr);
-        this->stack.push(
-            llvm_value);
+        this->stack.push(llvm_value);
     }
 
     void visit_primary(Primary *primary)
