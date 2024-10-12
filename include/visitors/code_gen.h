@@ -299,70 +299,139 @@ public:
         auto left = this->stack.top();
         this->stack.pop();
 
+        /*
+         * due to ordered cmp, may need to add NaN checks
+         */
+
+        if (left->getType()->isIntegerTy() && right->getType()->isFloatTy())
+        {
+            left = this->builder.CreateSIToFP(left, right->getType(), "inttofloat");
+        }
+        else if (left->getType()->isFloatTy() && right->getType()->isIntegerTy())
+        {
+            right = this->builder.CreateSIToFP(right, left->getType(), "inttofloat");
+        }
+
         switch (binary->op.token_type)
         {
         case Token::Type::PLUS:
         {
-            auto value = this->builder.CreateAdd(left, right, "addtmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFAdd(left, right, "faddftmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateAdd(left, right, "addtmp"));
+            }
             break;
         }
         case Token::Type::MINUS:
         {
-            auto value = this->builder.CreateSub(left, right, "subtmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFSub(left, right, "fsubtmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateSub(left, right, "subtmp"));
+            }
             break;
         }
         case Token::Type::SLASH:
         {
-            auto value = this->builder.CreateSDiv(left, right, "sdivtmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFDiv(left, right, "fdivtmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateSDiv(left, right, "sdivtmp"));
+            }
             break;
         }
         case Token::Type::STAR:
         {
-            auto value = this->builder.CreateMul(left, right, "multmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFMul(left, right, "fmultmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateMul(left, right, "smultmp"));
+            }
             break;
         }
-        /*
-         * TODO: comparison operators currently only compare integers, needs type checking
-         * 2 < 2.3 would cause it to fail.
-         */
         case Token::Type::GREATER:
         {
-            auto value = this->builder.CreateICmpSGT(left, right, "sgttmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFCmpOGT(left, right, "fogttmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateICmpSGT(left, right, "sgttmp"));
+            }
             break;
         }
         case Token::Type::GREATER_EQUAL:
         {
-            auto value = this->builder.CreateICmpSGE(left, right, "sgetmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFCmpOGE(left, right, "fogetmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateICmpSGE(left, right, "sgetmp"));
+            }
             break;
         }
         case Token::Type::LESS:
         {
-            auto value = this->builder.CreateICmpSLT(left, right, "slttmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFCmpOLT(left, right, "folttmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateICmpSLT(left, right, "slttmp"));
+            }
             break;
         }
         case Token::Type::LESS_EQUAL:
         {
-            auto value = this->builder.CreateICmpSLE(left, right, "sletmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFCmpOLE(left, right, "foletmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateICmpSLE(left, right, "sletmp"));
+            }
             break;
         }
         case Token::Type::EQUAL_EQUAL:
         {
-            auto value = this->builder.CreateICmpEQ(left, right, "eqtmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFCmpOEQ(left, right, "foeqtmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateICmpEQ(left, right, "eqtmp"));
+            }
             break;
         }
         case Token::Type::BANG_EQUAL:
         {
-            auto value = this->builder.CreateICmpNE(left, right, "netmp");
-            this->stack.push(value);
+            if (left->getType()->isFloatTy() && right->getType()->isFloatTy())
+            {
+                this->stack.push(this->builder.CreateFCmpONE(left, right, "fonetmp"));
+            }
+            else
+            {
+                this->stack.push(this->builder.CreateICmpNE(left, right, "netmp"));
+            }
             break;
         }
         default:
