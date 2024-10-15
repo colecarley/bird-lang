@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <stack>
 #include <memory>
 
 // forward declarations

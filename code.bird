@@ -24,23 +24,23 @@ print false;
 print "hello", " ", "world";
 print "world";
 
-print "print 1 > 2 ? 1 : 2;";
-print 1 > 2 ? 1 : 2;
+print "print 1.3 > 2.1 ? 1 : 2;";
+print 1.3 > 2.1 ? 1 : 2;
 
-print "print 1 >= 2 ? 1 : 2;";
-print 1 >= 2 ? 1 : 2;
+print "print 1.4 >= 3.5 ? 1 : 2;";
+print 1.4 >= 3.5 ? 1 : 2;
 
 print "print 1 < 2 ? 1 : 2;";
 print 1 < 2 ? 1 : 2;
 
-print "print 1 <= 2 ? 1 : 2;";
-print 1 <= 2 ? 1 : 2;
+print "print 6.1 <= 4.2 ? 1 : 2;";
+print 6.1 <= 4.2 ? 1 : 2;
 
-print "print 1 == 2 ? 1 : 2;";
-print 1 == 2 ? 1 : 2;
+print "print 1.4 == 5.7 ? 1 : 2;";
+print 1.4 == 5.7 ? 1 : 2;
 
-print "print 1 != 2 ? 1 : 2;";
-print 1 != 2 ? 1 : 2;
+print "print 6.3 != 8.7 ? 1 : 2;";
+print 6.3 != 8.7 ? 1 : 2;
 
 fn printDoubleI(x: int) -> void {
     print x * 2;
