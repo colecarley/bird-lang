@@ -17,5 +17,5 @@ TEST(ForLoopTest, ForLoopIncrement)
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
     ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 5);
+    EXPECT_EQ(as_type<int>(interpreter.environment->get("x").data), 5);
 }
