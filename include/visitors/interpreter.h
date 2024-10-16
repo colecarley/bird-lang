@@ -169,18 +169,7 @@ public:
 
         for (auto &stmt : block->stmts)
         {
-            try
-            {
-                stmt->accept(this);
-            }
-            catch (BreakException e)
-            {
-                break;
-            }
-            catch (ContinueException e)
-            {
-                break;
-            }
+            stmt->accept(this);
         }
 
         this->environment = this->environment->get_enclosing();
@@ -399,7 +388,18 @@ public:
 
         while (as_type<bool>(condition_result))
         {
-            while_stmt->stmt->accept(this);
+            try
+            {
+                while_stmt->stmt->accept(this);
+            }
+            catch (BreakException e)
+            {
+                break;
+            }
+            catch (ContinueException e)
+            {
+                continue;
+            }
 
             while_stmt->condition->accept(this);
             condition_result = std::move(this->stack.back());
@@ -599,11 +599,11 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        throw BreakException(); 
+        throw BreakException();
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
-        throw ContinueException(); 
+        throw ContinueException();
     }
 };

@@ -1,3 +1,10 @@
+while true {
+    print "first";
+    break;
+    print "second";
+}
+
+
 if (false) {
     print "if";
 } 
