@@ -17,6 +17,8 @@
 #include "../include/ast_node/stmt/return_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 #include "../include/ast_node/stmt/func.h"
+#include "../include/ast_node/stmt/break_stmt.h"
+#include "../include/ast_node/stmt/continue_stmt.h"
 
 #include "../include/exceptions/bird_exception.h"
 #include "../include/exceptions/user_exception.h"
@@ -69,6 +71,10 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->for_stmt();
     case Token::Type::RETURN:
         return this->return_stmt();
+    case Token::Type::BREAK:
+        return this->break_stmt();
+    case Token::Type::CONTINUE:
+        return this->continue_stmt();
     default:
         break;
     }
@@ -369,6 +375,81 @@ std::unique_ptr<Stmt> Parser::var_decl()
  */
 std::unique_ptr<Expr> Parser::assign_expr()
 {
+    if (this->peek().token_type != Token::Type::IDENTIFIER)
+    {
+        throw BirdException("Expected variable identifier");
+    }
+
+    auto identifier = this->advance();
+
+    switch (this->peek().token_type)
+    {
+    case Token::Type::EQUAL:
+    case Token::Type::PLUS_EQUAL:
+    case Token::Type::MINUS_EQUAL:
+    case Token::Type::STAR_EQUAL:
+    case Token::Type::SLASH_EQUAL:
+    case Token::Type::PERCENT_EQUAL:
+        break;
+    default:
+    {
+        this->user_error_tracker->expected("assignment operator", "in assignment", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+    }
+
+    auto assign_operator = this->advance();
+
+    auto assign_expr = std::make_unique<AssignExpr>(AssignExpr(identifier, assign_operator, this->expr()));
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return assign_expr;
+}
+
+std::unique_ptr<Stmt> Parser::break_stmt()
+{
+    if (this->advance().token_type != Token::Type::BREAK)
+    {
+        throw BirdException("Expected 'break' at the beginning of break stmt");
+    }
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return std::make_unique<BreakStmt>();
+}
+
+std::unique_ptr<Stmt> Parser::continue_stmt()
+{
+    if (this->advance().token_type != Token::Type::CONTINUE)
+    {
+        throw BirdException("Expected 'continue' at the beginning of continue stmt");
+    }
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return std::make_unique<ContinueStmt>();
+}
+
+std::unique_ptr<Expr> Parser::expr()
+{
+    // ternary still has highest precedence? since it can recurce to a Primary
     auto left = this->ternary();
 
     // if next token is an assignment operator

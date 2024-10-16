@@ -43,6 +43,10 @@ public:
 
     std::unique_ptr<Stmt> return_stmt();
 
+    std::unique_ptr<Stmt> break_stmt();
+
+    std::unique_ptr<Stmt> continue_stmt();
+
     std::unique_ptr<Stmt> if_stmt();
 
     std::unique_ptr<Stmt> print_stmt();

@@ -23,6 +23,8 @@ public:
         DO,
         FN,
         RETURN,
+        BREAK,
+        CONTINUE,
         CONST,
 
         // types
