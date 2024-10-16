@@ -210,6 +210,93 @@ TEST(ParserTest, ParseFuncStmt)
     EXPECT_EQ(rhs_primary->value.lexeme, "second");
 }
 
+TEST(ParserTest, ParseFunctionNoArgsNoReturnType)
+{
+    std::string code = "fn function() {}";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+
+    Func *func_stmt = dynamic_cast<Func *>(stmts[0].get());
+    ASSERT_NE(func_stmt, nullptr);
+
+    EXPECT_EQ(func_stmt->identifier.lexeme, "function");
+    ASSERT_FALSE(func_stmt->return_type.has_value());
+
+    ASSERT_EQ(func_stmt->param_list.size(), 0);
+
+    // get Block and check for not nullptr
+    Block *block_stmt = dynamic_cast<Block *>(func_stmt->block.get());
+    ASSERT_NE(block_stmt, nullptr);
+    ASSERT_EQ(block_stmt->stmts.size(), 0);
+}
+
+TEST(ParserTest, ParseFunctionNoArgs)
+{
+    std::string code = "fn function() -> int {}";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+
+    Func *func_stmt = dynamic_cast<Func *>(stmts[0].get());
+    ASSERT_NE(func_stmt, nullptr);
+
+    EXPECT_EQ(func_stmt->identifier.lexeme, "function");
+    ASSERT_TRUE(func_stmt->return_type.has_value());
+    EXPECT_EQ(func_stmt->return_type->lexeme, "int");
+
+    ASSERT_EQ(func_stmt->param_list.size(), 0);
+
+    // get Block and check for not nullptr
+    Block *block_stmt = dynamic_cast<Block *>(func_stmt->block.get());
+    ASSERT_NE(block_stmt, nullptr);
+    ASSERT_EQ(block_stmt->stmts.size(), 0);
+}
+
+TEST(ParserTest, ParseFunctionNoReturnType)
+{
+    std::string code = "fn function(i: int, j: string) {}";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+
+    Func *func_stmt = dynamic_cast<Func *>(stmts[0].get());
+    ASSERT_NE(func_stmt, nullptr);
+
+    EXPECT_EQ(func_stmt->identifier.lexeme, "function");
+    ASSERT_FALSE(func_stmt->return_type.has_value());
+
+    ASSERT_EQ(func_stmt->param_list.size(), 2);
+    EXPECT_EQ(func_stmt->param_list[0].first.lexeme, "i");
+    EXPECT_EQ(func_stmt->param_list[0].second.lexeme, "int");
+    EXPECT_EQ(func_stmt->param_list[1].first.lexeme, "j");
+    EXPECT_EQ(func_stmt->param_list[1].second.lexeme, "string");
+
+    // get Block and check for not nullptr
+    Block *block_stmt = dynamic_cast<Block *>(func_stmt->block.get());
+    ASSERT_NE(block_stmt, nullptr);
+    ASSERT_EQ(block_stmt->stmts.size(), 0);
+}
+
+TEST(ParserTest, FunctionFailsArrowNoReturnType)
+{
+    std::string code = "fn function() -> {}";
+
+    UserErrorTracker error_tracker(code);
+
+    ASSERT_THROW(auto stmts = parse_code_with_error_tracker(code, error_tracker), UserException);
+
+    ASSERT_TRUE(error_tracker.has_errors());
+
+    auto errors = error_tracker.get_errors();
+
+    ASSERT_EQ(errors.size(), 1);
+    EXPECT_EQ(errors[0], "expected return type after arrow operator");
+}
+
 TEST(ParserTest, ParseIfStmt)
 {
     /*
