@@ -14,11 +14,12 @@
 #include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
-#include "../ast_node/stmt/assign_stmt.h"
+#include "../ast_node/expr/assign_expr.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/const_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/for_stmt.h"
 #include "../ast_node/stmt/return_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
@@ -98,9 +99,9 @@ public:
                 continue;
             }
 
-            if (auto assign_stmt = dynamic_cast<AssignStmt *>(stmt.get()))
+            if (auto assign_expr = dynamic_cast<AssignExpr *>(stmt.get()))
             {
-                assign_stmt->accept(this);
+                assign_expr->accept(this);
                 continue;
             }
 
@@ -125,6 +126,12 @@ public:
             if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
             {
                 while_stmt->accept(this);
+                continue;
+            }
+
+            if (auto for_stmt = dynamic_cast<ForStmt *>(stmt.get()))
+            {
+                for_stmt->accept(this);
                 continue;
             }
 
@@ -214,20 +221,20 @@ public:
         this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
     }
 
-    void visit_assign_stmt(AssignStmt *assign_stmt)
+    void visit_assign_expr(AssignExpr *assign_expr)
     {
-        if (!this->environment->contains(assign_stmt->identifier.lexeme))
-            throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not initialized.");
+        if (!this->environment->contains(assign_expr->identifier.lexeme))
+            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
 
-        auto previous_value = this->environment->get(assign_stmt->identifier.lexeme);
+        auto previous_value = this->environment->get(assign_expr->identifier.lexeme);
         if (!previous_value.is_mutable)
-            throw BirdException("Identifier '" + assign_stmt->identifier.lexeme + "' is not mutable.");
+            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.");
 
-        assign_stmt->value->accept(this);
+        assign_expr->value->accept(this);
         auto value = std::move(this->stack.top());
         this->stack.pop();
 
-        switch (assign_stmt->assign_operator.token_type)
+        switch (assign_expr->assign_operator.token_type)
         {
         case Token::Type::EQUAL:
         {
@@ -244,7 +251,7 @@ public:
             else
                 throw BirdException("The assigment value type does not match the identifer type.");
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::PLUS_EQUAL:
@@ -261,7 +268,7 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(+);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::MINUS_EQUAL:
@@ -275,7 +282,7 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(-);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::STAR_EQUAL:
@@ -289,7 +296,7 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(*);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::SLASH_EQUAL:
@@ -303,7 +310,7 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(/);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::PERCENT_EQUAL:
@@ -314,11 +321,11 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(%);
 
-            this->environment->insert(assign_stmt->identifier.lexeme, previous_value);
+            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         default:
-            throw BirdException("Unidentified assignment operator " + assign_stmt->assign_operator.lexeme);
+            throw BirdException("Unidentified assignment operator " + assign_expr->assign_operator.lexeme);
         }
     }
 
@@ -408,6 +415,47 @@ public:
             condition_result = std::move(this->stack.top());
             this->stack.pop();
         }
+    }
+
+    void visit_for_stmt(ForStmt *for_stmt)
+    {
+        auto new_environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
+        new_environment->set_enclosing(std::move(this->environment));
+        this->environment = std::move(new_environment);
+
+        if (for_stmt->initializer.has_value())
+        {
+            for_stmt->initializer.value()->accept(this);
+        }
+
+        while (true)
+        {
+            if (for_stmt->condition.has_value())
+            {
+                for_stmt->condition.value()->accept(this);
+                auto condition_result = std::move(this->stack.top());
+                this->stack.pop();
+
+                if (!is_type<bool>(condition_result.data))
+                {
+                    throw BirdException("expected bool in for statement condition");
+                }
+
+                if (!as_type<bool>(condition_result.data))
+                {
+                    break;
+                }
+            }
+
+            for_stmt->body->accept(this);
+
+            if (for_stmt->increment.has_value())
+            {
+                for_stmt->increment.value()->accept(this);
+            }
+        }
+
+        this->environment = this->environment->get_enclosing();
     }
 
     void visit_binary(Binary *binary)

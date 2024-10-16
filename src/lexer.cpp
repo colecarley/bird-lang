@@ -30,6 +30,8 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::IF, "IF"},
     {Token::Type::ELSE, "ELSE"},
     {Token::Type::WHILE, "WHILE"},
+    {Token::Type::FOR, "FOR"},
+    {Token::Type::DO, "DO"},
     {Token::Type::GREATER, "GREATER"},
     {Token::Type::LESS, "LESS"},
     {Token::Type::BANG, "BANG"},
@@ -55,7 +57,7 @@ void Token::print_token()
     std::cout << "{ "
               << "token_type: " << token_strings.at(this->token_type)
               << ",  lexeme: " << this->lexeme
-              << "}"
+              << " }"
               << std::endl;
 }
 
@@ -88,6 +90,8 @@ const std::map<std::string, Token::Type> Lexer::keywords = {
     {"if", Token::Type::IF},
     {"else", Token::Type::ELSE},
     {"while", Token::Type::WHILE},
+    {"for", Token::Type::FOR},
+    {"do", Token::Type::DO},
     {"int", Token::Type::TYPE_IDENTIFIER},
     {"float", Token::Type::TYPE_IDENTIFIER},
     {"str", Token::Type::TYPE_IDENTIFIER},

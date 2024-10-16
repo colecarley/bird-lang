@@ -13,10 +13,11 @@
 #include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
-#include "../ast_node/stmt/assign_stmt.h"
+#include "../ast_node/expr/assign_expr.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/for_stmt.h"
 #include "../ast_node/stmt/return_stmt.h"
 #include "../ast_node/stmt/break_stmt.h"
 #include "../ast_node/stmt/continue_stmt.h"
@@ -253,7 +254,7 @@ public:
         this->environment->insert(decl_stmt->identifier.lexeme, result);
     }
 
-    void visit_assign_stmt(AssignStmt *assign_stmt)
+    void visit_assign_expr(AssignExpr *assign_expr)
     {
         throw BirdException("Implement assign statement code gen.");
     }
@@ -298,6 +299,11 @@ public:
     void visit_while_stmt(WhileStmt *while_stmt)
     {
         throw BirdException("Implement while statement code gen");
+    }
+
+    void visit_for_stmt(ForStmt *for_stmt)
+    {
+        throw BirdException("implement for statement visit");
     }
 
     void visit_binary(Binary *binary)

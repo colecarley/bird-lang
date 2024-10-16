@@ -12,11 +12,12 @@
 #include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
-#include "../ast_node/stmt/assign_stmt.h"
+#include "../ast_node/expr/assign_expr.h"
 #include "../ast_node/stmt/print_stmt.h"
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/for_stmt.h"
 #include "../ast_node/stmt/return_stmt.h"
 #include "../ast_node/stmt/block.h"
 #include "../ast_node/stmt/func.h"
@@ -39,77 +40,103 @@ public:
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
             {
                 decl_stmt->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
-            if (auto assign_stmt = dynamic_cast<AssignStmt *>(stmt.get()))
+            if (auto assign_expr = dynamic_cast<AssignExpr *>(stmt.get()))
             {
-                assign_stmt->accept(this);
+                assign_expr->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
                 print_stmt->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
             if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
             {
                 if_stmt->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
             if (auto block = dynamic_cast<Block *>(stmt.get()))
             {
                 block->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
             if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
             {
                 while_stmt->accept(this);
+                std::cout << std::endl;
+                continue;
+            }
+
+            if (auto for_stmt = dynamic_cast<ForStmt *>(stmt.get()))
+            {
+                for_stmt->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
             if (auto func = dynamic_cast<Func *>(stmt.get()))
             {
                 func->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
             if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
             {
                 return_stmt->accept(this);
+                std::cout << std::endl;
+                continue;
+            }
+
+            if (auto const_stmt = dynamic_cast<ConstStmt *>(stmt.get()))
+            {
+                const_stmt->accept(this);
+                std::cout << std::endl;
                 continue;
             }
 
             if (auto break_stmt = dynamic_cast<BreakStmt *>(stmt.get()))
             {
                 break_stmt->accept(this);
+                std::cout << std::endl;
+                continue;
             }
 
             if (auto continue_stmt = dynamic_cast<ContinueStmt *>(stmt.get()))
             {
                 continue_stmt->accept(this);
+                std::cout << std::endl;
+                continue;
             }
-
-            std::cout << std::endl;
         }
     }
 
     void visit_block(Block *block)
     {
-        std::cout << "{";
+        std::cout << "{ ";
         for (auto &stmt : block->stmts)
         {
             stmt->accept(this);
+            std::cout << "; ";
         }
         std::cout << "}";
     }
@@ -121,10 +148,10 @@ public:
         decl_stmt->value->accept(this);
     }
 
-    void visit_assign_stmt(AssignStmt *assign_stmt)
+    void visit_assign_expr(AssignExpr *assign_expr)
     {
-        std::cout << assign_stmt->identifier.lexeme << " " << assign_stmt->assign_operator.lexeme << " ";
-        assign_stmt->value->accept(this);
+        std::cout << assign_expr->identifier.lexeme << " " << assign_expr->assign_operator.lexeme << " ";
+        assign_expr->value->accept(this);
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)
@@ -182,21 +209,25 @@ public:
 
     void visit_func(Func *func)
     {
-        std::cout << "fn";
+        std::cout << "fn ";
         std::cout << func->identifier.lexeme;
         std::cout << "(";
-        for (auto pair : func->param_list)
+
+        for (int i = 0; i < func->param_list.size(); ++i)
         {
-            std::cout << pair.first.lexeme << ": ";
-            std::cout << pair.second.lexeme << ", ";
+            auto pair = func->param_list[i];
+            std::cout << pair.first.lexeme << ": " << pair.second.lexeme;
+
+            if (i < func->param_list.size() - 1)
+            {
+                std::cout << ", ";
+            }
         }
         std::cout << ")";
 
-        std::cout << "->" << (func->return_type.has_value() ? func->return_type.value().lexeme : "void");
+        std::cout << " -> " << (func->return_type.has_value() ? func->return_type.value().lexeme : "void") << " ";
 
         func->block->accept(this);
-
-        std::cout << std::endl;
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -222,6 +253,28 @@ public:
         while_stmt->stmt->accept(this);
     }
 
+    void visit_for_stmt(ForStmt *for_stmt)
+    {
+        std::cout << "for (";
+        if (for_stmt->initializer.has_value())
+        {
+            for_stmt->initializer.value()->accept(this);
+        }
+        std::cout << "; ";
+        if (for_stmt->condition.has_value())
+        {
+            for_stmt->condition.value()->accept(this);
+        }
+        std::cout << "; ";
+
+        if (for_stmt->increment.has_value())
+        {
+            for_stmt->increment.value()->accept(this);
+        }
+        std::cout << ") do ";
+        for_stmt->body->accept(this);
+    }
+
     void visit_return_stmt(ReturnStmt *return_stmt)
     {
         std::cout << "return ";
@@ -229,7 +282,6 @@ public:
         {
             return_stmt->expr.value()->accept(this);
         }
-        std::cout << std::endl;
     }
 
     void visit_call(Call *call)
@@ -241,7 +293,7 @@ public:
         {
             arg->accept(this);
         }
-        std::cout << ")" << std::endl;
+        std::cout << ")";
     }
 
     void visit_break_stmt(BreakStmt *break_stmt)

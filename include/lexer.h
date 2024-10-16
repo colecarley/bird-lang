@@ -19,6 +19,8 @@ public:
         IF,
         ELSE,
         WHILE,
+        FOR,
+        DO,
         FN,
         RETURN,
         BREAK,
