@@ -23,10 +23,14 @@
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/block.h"
 #include "../ast_node/stmt/func.h"
+#include "../ast_node/stmt/break_stmt.h"
+#include "../ast_node/stmt/continue_stmt.h"
 
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
 #include "../exceptions/return_exception.h"
+#include "../exceptions/break_exception.h"
+#include "../exceptions/continue_exception.h"
 #include "../value.h"
 #include "../callable.h"
 
@@ -139,6 +143,17 @@ public:
             if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
             {
                 return_stmt->accept(this);
+            }
+
+            if (auto break_stmt = dynamic_cast<BreakStmt *>(stmt.get()))
+            {
+                break_stmt->accept(this);
+                continue;
+            }
+
+            if (auto continue_stmt = dynamic_cast<ContinueStmt *>(stmt.get()))
+            {
+                continue_stmt->accept(this);
                 continue;
             }
         }
@@ -376,7 +391,18 @@ public:
 
         while (as_type<bool>(condition_result))
         {
-            while_stmt->stmt->accept(this);
+            try
+            {
+                while_stmt->stmt->accept(this);
+            }
+            catch (BreakException e)
+            {
+                break;
+            }
+            catch (ContinueException e)
+            {
+                continue;
+            }
 
             while_stmt->condition->accept(this);
             condition_result = std::move(this->stack.top());
@@ -572,5 +598,15 @@ public:
         }
 
         throw ReturnException();
+    }
+
+    void visit_break_stmt(BreakStmt *break_stmt)
+    {
+        throw BreakException();
+    }
+
+    void visit_continue_stmt(ContinueStmt *continue_stmt)
+    {
+        throw ContinueException();
     }
 };

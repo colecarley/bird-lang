@@ -209,3 +209,29 @@ TEST(LexerTest, TokenizeWhileStmt)
     EXPECT_EQ(tokens[8].token_type, Token::Type::RBRACE);
     EXPECT_EQ(tokens[9].token_type, Token::Type::END);
 }
+
+// Should be incorporated into a comprehensive loop test when loops are implemented.
+TEST(LexerTest, TokenizeBreakStmt)
+{
+    std::string code = "break;";
+
+    auto tokens = lex_code(code);
+
+    EXPECT_EQ(tokens.size(), 3);
+    EXPECT_EQ(tokens[0].token_type, Token::Type::BREAK);
+    EXPECT_EQ(tokens[1].token_type, Token::Type::SEMICOLON);
+    EXPECT_EQ(tokens[2].token_type, Token::Type::END);
+}
+
+// Should be incorporated into a comprehensive loop test when loops are implemented.
+TEST(LexerTest, TokenizeContinueStmt)
+{
+    std::string code = "continue;";
+
+    auto tokens = lex_code(code);
+
+    EXPECT_EQ(tokens.size(), 3);
+    EXPECT_EQ(tokens[0].token_type, Token::Type::CONTINUE);
+    EXPECT_EQ(tokens[1].token_type, Token::Type::SEMICOLON);
+    EXPECT_EQ(tokens[2].token_type, Token::Type::END);
+}

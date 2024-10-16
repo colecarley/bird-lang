@@ -21,6 +21,8 @@ public:
         WHILE,
         FN,
         RETURN,
+        BREAK,
+        CONTINUE,
         CONST,
 
         // types
