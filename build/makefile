@@ -127,6 +127,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named while_test
+
+# Build rule for target.
+while_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 while_test
+.PHONY : while_test
+
+# fast build rule for target.
+while_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/build
+.PHONY : while_test/fast
+
+#=============================================================================
 # Target rules for targets named vars_without_type_test
 
 # Build rule for target.
@@ -164,6 +177,84 @@ var_redeclaration_test: cmake_check_build_system
 var_redeclaration_test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_test.dir/build.make CMakeFiles/var_redeclaration_test.dir/build
 .PHONY : var_redeclaration_test/fast
+
+#=============================================================================
+# Target rules for targets named mutability_test
+
+# Build rule for target.
+mutability_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mutability_test
+.PHONY : mutability_test
+
+# fast build rule for target.
+mutability_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_test.dir/build.make CMakeFiles/mutability_test.dir/build
+.PHONY : mutability_test/fast
+
+#=============================================================================
+# Target rules for targets named ternary_test
+
+# Build rule for target.
+ternary_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ternary_test
+.PHONY : ternary_test
+
+# fast build rule for target.
+ternary_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ternary_test.dir/build.make CMakeFiles/ternary_test.dir/build
+.PHONY : ternary_test/fast
+
+#=============================================================================
+# Target rules for targets named nested_ternary_test
+
+# Build rule for target.
+nested_ternary_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nested_ternary_test
+.PHONY : nested_ternary_test
+
+# fast build rule for target.
+nested_ternary_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/nested_ternary_test.dir/build.make CMakeFiles/nested_ternary_test.dir/build
+.PHONY : nested_ternary_test/fast
+
+#=============================================================================
+# Target rules for targets named assignment_with_ternary_test
+
+# Build rule for target.
+assignment_with_ternary_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 assignment_with_ternary_test
+.PHONY : assignment_with_ternary_test
+
+# fast build rule for target.
+assignment_with_ternary_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/assignment_with_ternary_test.dir/build.make CMakeFiles/assignment_with_ternary_test.dir/build
+.PHONY : assignment_with_ternary_test/fast
+
+#=============================================================================
+# Target rules for targets named vars_scope_test
+
+# Build rule for target.
+vars_scope_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vars_scope_test
+.PHONY : vars_scope_test
+
+# fast build rule for target.
+vars_scope_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_scope_test.dir/build.make CMakeFiles/vars_scope_test.dir/build
+.PHONY : vars_scope_test/fast
+
+#=============================================================================
+# Target rules for targets named var_redeclaration_scope_test
+
+# Build rule for target.
+var_redeclaration_scope_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 var_redeclaration_scope_test
+.PHONY : var_redeclaration_scope_test
+
+# fast build rule for target.
+var_redeclaration_scope_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_scope_test.dir/build.make CMakeFiles/var_redeclaration_scope_test.dir/build
+.PHONY : var_redeclaration_scope_test/fast
 
 #=============================================================================
 # Target rules for targets named RISCVTargetParserTableGen
@@ -205,6 +296,19 @@ const_with_type_test/fast:
 .PHONY : const_with_type_test/fast
 
 #=============================================================================
+# Target rules for targets named if_else_test
+
+# Build rule for target.
+if_else_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 if_else_test
+.PHONY : if_else_test
+
+# fast build rule for target.
+if_else_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_test.dir/build.make CMakeFiles/if_else_test.dir/build
+.PHONY : if_else_test/fast
+
+#=============================================================================
 # Target rules for targets named const_redeclaration_test
 
 # Build rule for target.
@@ -216,19 +320,6 @@ const_redeclaration_test: cmake_check_build_system
 const_redeclaration_test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_test.dir/build.make CMakeFiles/const_redeclaration_test.dir/build
 .PHONY : const_redeclaration_test/fast
-
-#=============================================================================
-# Target rules for targets named intrinsics_gen
-
-# Build rule for target.
-intrinsics_gen: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 intrinsics_gen
-.PHONY : intrinsics_gen
-
-# fast build rule for target.
-intrinsics_gen/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/intrinsics_gen.dir/build.make CMakeFiles/intrinsics_gen.dir/build
-.PHONY : intrinsics_gen/fast
 
 #=============================================================================
 # Target rules for targets named acc_gen
@@ -270,6 +361,32 @@ const_without_type_test/fast:
 .PHONY : const_without_type_test/fast
 
 #=============================================================================
+# Target rules for targets named intrinsics_gen
+
+# Build rule for target.
+intrinsics_gen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 intrinsics_gen
+.PHONY : intrinsics_gen
+
+# fast build rule for target.
+intrinsics_gen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/intrinsics_gen.dir/build.make CMakeFiles/intrinsics_gen.dir/build
+.PHONY : intrinsics_gen/fast
+
+#=============================================================================
+# Target rules for targets named if_test
+
+# Build rule for target.
+if_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 if_test
+.PHONY : if_test
+
+# fast build rule for target.
+if_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_test.dir/build.make CMakeFiles/if_test.dir/build
+.PHONY : if_test/fast
+
+#=============================================================================
 # Target rules for targets named immutability_test
 
 # Build rule for target.
@@ -309,6 +426,19 @@ parser_test/fast:
 .PHONY : parser_test/fast
 
 #=============================================================================
+# Target rules for targets named if_else_if_else_test
+
+# Build rule for target.
+if_else_if_else_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 if_else_if_else_test
+.PHONY : if_else_if_else_test
+
+# fast build rule for target.
+if_else_if_else_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_if_else_test.dir/build.make CMakeFiles/if_else_if_else_test.dir/build
+.PHONY : if_else_if_else_test/fast
+
+#=============================================================================
 # Target rules for targets named const_redeclaration_scope_test
 
 # Build rule for target.
@@ -333,45 +463,6 @@ const_scope_test: cmake_check_build_system
 const_scope_test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_scope_test.dir/build.make CMakeFiles/const_scope_test.dir/build
 .PHONY : const_scope_test/fast
-
-#=============================================================================
-# Target rules for targets named var_redeclaration_scope_test
-
-# Build rule for target.
-var_redeclaration_scope_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 var_redeclaration_scope_test
-.PHONY : var_redeclaration_scope_test
-
-# fast build rule for target.
-var_redeclaration_scope_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_scope_test.dir/build.make CMakeFiles/var_redeclaration_scope_test.dir/build
-.PHONY : var_redeclaration_scope_test/fast
-
-#=============================================================================
-# Target rules for targets named vars_scope_test
-
-# Build rule for target.
-vars_scope_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vars_scope_test
-.PHONY : vars_scope_test
-
-# fast build rule for target.
-vars_scope_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_scope_test.dir/build.make CMakeFiles/vars_scope_test.dir/build
-.PHONY : vars_scope_test/fast
-
-#=============================================================================
-# Target rules for targets named mutability_test
-
-# Build rule for target.
-mutability_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mutability_test
-.PHONY : mutability_test
-
-# fast build rule for target.
-mutability_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_test.dir/build.make CMakeFiles/mutability_test.dir/build
-.PHONY : mutability_test/fast
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -565,6 +656,78 @@ tests/const_test_suite/immutability_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/immutability_test.dir/build.make CMakeFiles/immutability_test.dir/tests/const_test_suite/immutability_test.cpp.s
 .PHONY : tests/const_test_suite/immutability_test.cpp.s
 
+tests/if_test_suite/if_else_if_else_test.o: tests/if_test_suite/if_else_if_else_test.cpp.o
+.PHONY : tests/if_test_suite/if_else_if_else_test.o
+
+# target to build an object file
+tests/if_test_suite/if_else_if_else_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_if_else_test.dir/build.make CMakeFiles/if_else_if_else_test.dir/tests/if_test_suite/if_else_if_else_test.cpp.o
+.PHONY : tests/if_test_suite/if_else_if_else_test.cpp.o
+
+tests/if_test_suite/if_else_if_else_test.i: tests/if_test_suite/if_else_if_else_test.cpp.i
+.PHONY : tests/if_test_suite/if_else_if_else_test.i
+
+# target to preprocess a source file
+tests/if_test_suite/if_else_if_else_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_if_else_test.dir/build.make CMakeFiles/if_else_if_else_test.dir/tests/if_test_suite/if_else_if_else_test.cpp.i
+.PHONY : tests/if_test_suite/if_else_if_else_test.cpp.i
+
+tests/if_test_suite/if_else_if_else_test.s: tests/if_test_suite/if_else_if_else_test.cpp.s
+.PHONY : tests/if_test_suite/if_else_if_else_test.s
+
+# target to generate assembly for a file
+tests/if_test_suite/if_else_if_else_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_if_else_test.dir/build.make CMakeFiles/if_else_if_else_test.dir/tests/if_test_suite/if_else_if_else_test.cpp.s
+.PHONY : tests/if_test_suite/if_else_if_else_test.cpp.s
+
+tests/if_test_suite/if_else_test.o: tests/if_test_suite/if_else_test.cpp.o
+.PHONY : tests/if_test_suite/if_else_test.o
+
+# target to build an object file
+tests/if_test_suite/if_else_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_test.dir/build.make CMakeFiles/if_else_test.dir/tests/if_test_suite/if_else_test.cpp.o
+.PHONY : tests/if_test_suite/if_else_test.cpp.o
+
+tests/if_test_suite/if_else_test.i: tests/if_test_suite/if_else_test.cpp.i
+.PHONY : tests/if_test_suite/if_else_test.i
+
+# target to preprocess a source file
+tests/if_test_suite/if_else_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_test.dir/build.make CMakeFiles/if_else_test.dir/tests/if_test_suite/if_else_test.cpp.i
+.PHONY : tests/if_test_suite/if_else_test.cpp.i
+
+tests/if_test_suite/if_else_test.s: tests/if_test_suite/if_else_test.cpp.s
+.PHONY : tests/if_test_suite/if_else_test.s
+
+# target to generate assembly for a file
+tests/if_test_suite/if_else_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_test.dir/build.make CMakeFiles/if_else_test.dir/tests/if_test_suite/if_else_test.cpp.s
+.PHONY : tests/if_test_suite/if_else_test.cpp.s
+
+tests/if_test_suite/if_test.o: tests/if_test_suite/if_test.cpp.o
+.PHONY : tests/if_test_suite/if_test.o
+
+# target to build an object file
+tests/if_test_suite/if_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_test.dir/build.make CMakeFiles/if_test.dir/tests/if_test_suite/if_test.cpp.o
+.PHONY : tests/if_test_suite/if_test.cpp.o
+
+tests/if_test_suite/if_test.i: tests/if_test_suite/if_test.cpp.i
+.PHONY : tests/if_test_suite/if_test.i
+
+# target to preprocess a source file
+tests/if_test_suite/if_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_test.dir/build.make CMakeFiles/if_test.dir/tests/if_test_suite/if_test.cpp.i
+.PHONY : tests/if_test_suite/if_test.cpp.i
+
+tests/if_test_suite/if_test.s: tests/if_test_suite/if_test.cpp.s
+.PHONY : tests/if_test_suite/if_test.s
+
+# target to generate assembly for a file
+tests/if_test_suite/if_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_test.dir/build.make CMakeFiles/if_test.dir/tests/if_test_suite/if_test.cpp.s
+.PHONY : tests/if_test_suite/if_test.cpp.s
+
 tests/lexer_test_suite/lexer_test.o: tests/lexer_test_suite/lexer_test.cpp.o
 .PHONY : tests/lexer_test_suite/lexer_test.o
 
@@ -709,6 +872,78 @@ tests/symbol_table_test_suite/vars_scope_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_scope_test.dir/build.make CMakeFiles/vars_scope_test.dir/tests/symbol_table_test_suite/vars_scope_test.cpp.s
 .PHONY : tests/symbol_table_test_suite/vars_scope_test.cpp.s
 
+tests/ternary_test_suite/assignment_with_ternary_test.o: tests/ternary_test_suite/assignment_with_ternary_test.cpp.o
+.PHONY : tests/ternary_test_suite/assignment_with_ternary_test.o
+
+# target to build an object file
+tests/ternary_test_suite/assignment_with_ternary_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/assignment_with_ternary_test.dir/build.make CMakeFiles/assignment_with_ternary_test.dir/tests/ternary_test_suite/assignment_with_ternary_test.cpp.o
+.PHONY : tests/ternary_test_suite/assignment_with_ternary_test.cpp.o
+
+tests/ternary_test_suite/assignment_with_ternary_test.i: tests/ternary_test_suite/assignment_with_ternary_test.cpp.i
+.PHONY : tests/ternary_test_suite/assignment_with_ternary_test.i
+
+# target to preprocess a source file
+tests/ternary_test_suite/assignment_with_ternary_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/assignment_with_ternary_test.dir/build.make CMakeFiles/assignment_with_ternary_test.dir/tests/ternary_test_suite/assignment_with_ternary_test.cpp.i
+.PHONY : tests/ternary_test_suite/assignment_with_ternary_test.cpp.i
+
+tests/ternary_test_suite/assignment_with_ternary_test.s: tests/ternary_test_suite/assignment_with_ternary_test.cpp.s
+.PHONY : tests/ternary_test_suite/assignment_with_ternary_test.s
+
+# target to generate assembly for a file
+tests/ternary_test_suite/assignment_with_ternary_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/assignment_with_ternary_test.dir/build.make CMakeFiles/assignment_with_ternary_test.dir/tests/ternary_test_suite/assignment_with_ternary_test.cpp.s
+.PHONY : tests/ternary_test_suite/assignment_with_ternary_test.cpp.s
+
+tests/ternary_test_suite/nested_ternary_test.o: tests/ternary_test_suite/nested_ternary_test.cpp.o
+.PHONY : tests/ternary_test_suite/nested_ternary_test.o
+
+# target to build an object file
+tests/ternary_test_suite/nested_ternary_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/nested_ternary_test.dir/build.make CMakeFiles/nested_ternary_test.dir/tests/ternary_test_suite/nested_ternary_test.cpp.o
+.PHONY : tests/ternary_test_suite/nested_ternary_test.cpp.o
+
+tests/ternary_test_suite/nested_ternary_test.i: tests/ternary_test_suite/nested_ternary_test.cpp.i
+.PHONY : tests/ternary_test_suite/nested_ternary_test.i
+
+# target to preprocess a source file
+tests/ternary_test_suite/nested_ternary_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/nested_ternary_test.dir/build.make CMakeFiles/nested_ternary_test.dir/tests/ternary_test_suite/nested_ternary_test.cpp.i
+.PHONY : tests/ternary_test_suite/nested_ternary_test.cpp.i
+
+tests/ternary_test_suite/nested_ternary_test.s: tests/ternary_test_suite/nested_ternary_test.cpp.s
+.PHONY : tests/ternary_test_suite/nested_ternary_test.s
+
+# target to generate assembly for a file
+tests/ternary_test_suite/nested_ternary_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/nested_ternary_test.dir/build.make CMakeFiles/nested_ternary_test.dir/tests/ternary_test_suite/nested_ternary_test.cpp.s
+.PHONY : tests/ternary_test_suite/nested_ternary_test.cpp.s
+
+tests/ternary_test_suite/ternary_test.o: tests/ternary_test_suite/ternary_test.cpp.o
+.PHONY : tests/ternary_test_suite/ternary_test.o
+
+# target to build an object file
+tests/ternary_test_suite/ternary_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ternary_test.dir/build.make CMakeFiles/ternary_test.dir/tests/ternary_test_suite/ternary_test.cpp.o
+.PHONY : tests/ternary_test_suite/ternary_test.cpp.o
+
+tests/ternary_test_suite/ternary_test.i: tests/ternary_test_suite/ternary_test.cpp.i
+.PHONY : tests/ternary_test_suite/ternary_test.i
+
+# target to preprocess a source file
+tests/ternary_test_suite/ternary_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ternary_test.dir/build.make CMakeFiles/ternary_test.dir/tests/ternary_test_suite/ternary_test.cpp.i
+.PHONY : tests/ternary_test_suite/ternary_test.cpp.i
+
+tests/ternary_test_suite/ternary_test.s: tests/ternary_test_suite/ternary_test.cpp.s
+.PHONY : tests/ternary_test_suite/ternary_test.s
+
+# target to generate assembly for a file
+tests/ternary_test_suite/ternary_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ternary_test.dir/build.make CMakeFiles/ternary_test.dir/tests/ternary_test_suite/ternary_test.cpp.s
+.PHONY : tests/ternary_test_suite/ternary_test.cpp.s
+
 tests/vars_test_suite/mutability_test.o: tests/vars_test_suite/mutability_test.cpp.o
 .PHONY : tests/vars_test_suite/mutability_test.o
 
@@ -805,6 +1040,30 @@ tests/vars_test_suite/vars_without_type_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_without_type_test.dir/build.make CMakeFiles/vars_without_type_test.dir/tests/vars_test_suite/vars_without_type_test.cpp.s
 .PHONY : tests/vars_test_suite/vars_without_type_test.cpp.s
 
+tests/while_test_suite/while_test.o: tests/while_test_suite/while_test.cpp.o
+.PHONY : tests/while_test_suite/while_test.o
+
+# target to build an object file
+tests/while_test_suite/while_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/tests/while_test_suite/while_test.cpp.o
+.PHONY : tests/while_test_suite/while_test.cpp.o
+
+tests/while_test_suite/while_test.i: tests/while_test_suite/while_test.cpp.i
+.PHONY : tests/while_test_suite/while_test.i
+
+# target to preprocess a source file
+tests/while_test_suite/while_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/tests/while_test_suite/while_test.cpp.i
+.PHONY : tests/while_test_suite/while_test.cpp.i
+
+tests/while_test_suite/while_test.s: tests/while_test_suite/while_test.cpp.s
+.PHONY : tests/while_test_suite/while_test.s
+
+# target to generate assembly for a file
+tests/while_test_suite/while_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/tests/while_test_suite/while_test.cpp.s
+.PHONY : tests/while_test_suite/while_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -818,21 +1077,28 @@ help:
 	@echo "... acc_gen"
 	@echo "... intrinsics_gen"
 	@echo "... omp_gen"
+	@echo "... assignment_with_ternary_test"
 	@echo "... compiler"
 	@echo "... const_redeclaration_scope_test"
 	@echo "... const_redeclaration_test"
 	@echo "... const_scope_test"
 	@echo "... const_with_type_test"
 	@echo "... const_without_type_test"
+	@echo "... if_else_if_else_test"
+	@echo "... if_else_test"
+	@echo "... if_test"
 	@echo "... immutability_test"
 	@echo "... lexer_test"
 	@echo "... mutability_test"
+	@echo "... nested_ternary_test"
 	@echo "... parser_test"
+	@echo "... ternary_test"
 	@echo "... var_redeclaration_scope_test"
 	@echo "... var_redeclaration_test"
 	@echo "... vars_scope_test"
 	@echo "... vars_with_type_test"
 	@echo "... vars_without_type_test"
+	@echo "... while_test"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
@@ -857,6 +1123,15 @@ help:
 	@echo "... tests/const_test_suite/immutability_test.o"
 	@echo "... tests/const_test_suite/immutability_test.i"
 	@echo "... tests/const_test_suite/immutability_test.s"
+	@echo "... tests/if_test_suite/if_else_if_else_test.o"
+	@echo "... tests/if_test_suite/if_else_if_else_test.i"
+	@echo "... tests/if_test_suite/if_else_if_else_test.s"
+	@echo "... tests/if_test_suite/if_else_test.o"
+	@echo "... tests/if_test_suite/if_else_test.i"
+	@echo "... tests/if_test_suite/if_else_test.s"
+	@echo "... tests/if_test_suite/if_test.o"
+	@echo "... tests/if_test_suite/if_test.i"
+	@echo "... tests/if_test_suite/if_test.s"
 	@echo "... tests/lexer_test_suite/lexer_test.o"
 	@echo "... tests/lexer_test_suite/lexer_test.i"
 	@echo "... tests/lexer_test_suite/lexer_test.s"
@@ -875,6 +1150,15 @@ help:
 	@echo "... tests/symbol_table_test_suite/vars_scope_test.o"
 	@echo "... tests/symbol_table_test_suite/vars_scope_test.i"
 	@echo "... tests/symbol_table_test_suite/vars_scope_test.s"
+	@echo "... tests/ternary_test_suite/assignment_with_ternary_test.o"
+	@echo "... tests/ternary_test_suite/assignment_with_ternary_test.i"
+	@echo "... tests/ternary_test_suite/assignment_with_ternary_test.s"
+	@echo "... tests/ternary_test_suite/nested_ternary_test.o"
+	@echo "... tests/ternary_test_suite/nested_ternary_test.i"
+	@echo "... tests/ternary_test_suite/nested_ternary_test.s"
+	@echo "... tests/ternary_test_suite/ternary_test.o"
+	@echo "... tests/ternary_test_suite/ternary_test.i"
+	@echo "... tests/ternary_test_suite/ternary_test.s"
 	@echo "... tests/vars_test_suite/mutability_test.o"
 	@echo "... tests/vars_test_suite/mutability_test.i"
 	@echo "... tests/vars_test_suite/mutability_test.s"
@@ -887,6 +1171,9 @@ help:
 	@echo "... tests/vars_test_suite/vars_without_type_test.o"
 	@echo "... tests/vars_test_suite/vars_without_type_test.i"
 	@echo "... tests/vars_test_suite/vars_without_type_test.s"
+	@echo "... tests/while_test_suite/while_test.o"
+	@echo "... tests/while_test_suite/while_test.i"
+	@echo "... tests/while_test_suite/while_test.s"
 .PHONY : help
 
 
