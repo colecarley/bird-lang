@@ -369,14 +369,10 @@ std::unique_ptr<Stmt> Parser::var_decl()
     return result;
 }
 
-/*
- * might not be needed with the refactor since expr() handles precedence?
- * could be wrong though!
- */
 std::unique_ptr<Expr> Parser::assign_expr()
 {
-    // ternary still has highest precedence? since it can recurce to a Primary
     auto left = this->ternary();
+    // TODO: check if left is an identifier, return if not;
 
     // if next token is an assignment operator
     if (this->peek().token_type == Token::Type::EQUAL ||
