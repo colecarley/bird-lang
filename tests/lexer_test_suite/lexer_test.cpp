@@ -235,3 +235,63 @@ TEST(LexerTest, TokenizeContinueStmt)
     EXPECT_EQ(tokens[1].token_type, Token::Type::SEMICOLON);
     EXPECT_EQ(tokens[2].token_type, Token::Type::END);
 }
+
+TEST(LexerTest, TokenizeTernary)
+{
+    std::string code = "print 2.3 > 2.1 ? 1 : 0;";
+
+    auto tokens = lex_code(code);
+
+    ASSERT_EQ(tokens.size(), 10);
+    EXPECT_EQ(tokens[0].token_type, Token::Type::PRINT);
+    EXPECT_EQ(tokens[1].token_type, Token::Type::FLOAT_LITERAL);
+    EXPECT_EQ(tokens[1].lexeme, "2.3");
+    EXPECT_EQ(tokens[2].token_type, Token::Type::GREATER);
+    EXPECT_EQ(tokens[3].token_type, Token::Type::FLOAT_LITERAL);
+    EXPECT_EQ(tokens[3].lexeme, "2.1");
+    EXPECT_EQ(tokens[4].token_type, Token::Type::QUESTION);
+    EXPECT_EQ(tokens[5].token_type, Token::Type::INT_LITERAL);
+    EXPECT_EQ(tokens[5].lexeme, "1");
+    EXPECT_EQ(tokens[5].token_type, Token::Type::INT_LITERAL);
+    EXPECT_EQ(tokens[6].token_type, Token::Type::COLON);
+    EXPECT_EQ(tokens[7].token_type, Token::Type::INT_LITERAL);
+    EXPECT_EQ(tokens[7].lexeme, "0");
+    EXPECT_EQ(tokens[8].token_type, Token::Type::SEMICOLON);
+    EXPECT_EQ(tokens[9].token_type, Token::Type::END);
+}
+
+TEST(LexerTest, TokenizeForLoop)
+{
+    std::string code = "for var x: int = 0; x <= 5; x += 1 do print 1;";
+
+    auto tokens = lex_code(code);
+
+    ASSERT_EQ(tokens.size(), 20);
+    EXPECT_EQ(tokens[0].token_type, Token::Type::FOR);
+    EXPECT_EQ(tokens[1].token_type, Token::Type::VAR);
+    EXPECT_EQ(tokens[2].token_type, Token::Type::IDENTIFIER);
+    EXPECT_EQ(tokens[2].lexeme, "x");
+    EXPECT_EQ(tokens[3].token_type, Token::Type::COLON);
+    EXPECT_EQ(tokens[4].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[5].token_type, Token::Type::EQUAL);
+    EXPECT_EQ(tokens[6].token_type, Token::Type::INT_LITERAL);
+    EXPECT_EQ(tokens[6].lexeme, "0");
+    EXPECT_EQ(tokens[7].token_type, Token::Type::SEMICOLON);
+    EXPECT_EQ(tokens[8].token_type, Token::Type::IDENTIFIER);
+    EXPECT_EQ(tokens[8].lexeme, "x");
+    EXPECT_EQ(tokens[9].token_type, Token::Type::LESS_EQUAL);
+    EXPECT_EQ(tokens[10].token_type, Token::Type::INT_LITERAL);
+    EXPECT_EQ(tokens[10].lexeme, "5");
+    EXPECT_EQ(tokens[11].token_type, Token::Type::SEMICOLON);
+    EXPECT_EQ(tokens[12].token_type, Token::Type::IDENTIFIER);
+    EXPECT_EQ(tokens[12].lexeme, "x");
+    EXPECT_EQ(tokens[13].token_type, Token::Type::PLUS_EQUAL);
+    EXPECT_EQ(tokens[14].token_type, Token::Type::INT_LITERAL);
+    EXPECT_EQ(tokens[14].lexeme, "1");
+    EXPECT_EQ(tokens[15].token_type, Token::Type::DO);
+    EXPECT_EQ(tokens[16].token_type, Token::Type::PRINT);
+    EXPECT_EQ(tokens[17].token_type, Token::Type::INT_LITERAL);
+    EXPECT_EQ(tokens[17].lexeme, "1");
+    EXPECT_EQ(tokens[18].token_type, Token::Type::SEMICOLON);
+    EXPECT_EQ(tokens[19].token_type, Token::Type::END);
+}

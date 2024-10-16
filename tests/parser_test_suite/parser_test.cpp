@@ -369,3 +369,58 @@ TEST(ParserTest, ParseContinueStmt)
     ContinueStmt *continue_stmt = dynamic_cast<ContinueStmt *>(stmts[0].get());
     ASSERT_NE(continue_stmt, nullptr);
 }
+
+TEST(ParserTest, ParseTernaryAccept)
+{
+    std::string code = "print 2.3 > 2.1 ? 1 : 0;";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+    PrintStmt *print_stmt = dynamic_cast<PrintStmt *>(stmts[0].get());
+    ASSERT_NE(print_stmt, nullptr);
+
+    ASSERT_EQ(print_stmt->args.size(), 1);
+    Ternary *ternary_expr = dynamic_cast<Ternary *>(print_stmt->args[0].get());
+    ASSERT_NE(ternary_expr, nullptr);
+
+    Binary *condition = dynamic_cast<Binary *>(ternary_expr->condition.get());
+    ASSERT_NE(condition, nullptr);
+
+    EXPECT_EQ(condition->op.lexeme, ">");
+
+    Primary *lhs_primary = dynamic_cast<Primary *>(condition->left.get());
+    ASSERT_NE(lhs_primary, nullptr);
+    EXPECT_EQ(lhs_primary->value.lexeme, "2.3");
+
+    Primary *rhs_primary = dynamic_cast<Primary *>(condition->right.get());
+    ASSERT_NE(rhs_primary, nullptr);
+    EXPECT_EQ(rhs_primary->value.lexeme, "2.1");
+
+    Primary *ternary_true = dynamic_cast<Primary *>(ternary_expr->true_expr.get());
+    ASSERT_NE(ternary_true, nullptr);
+    EXPECT_EQ(ternary_true->value.lexeme, "1");
+
+    Primary *ternary_false = dynamic_cast<Primary *>(ternary_expr->false_expr.get());
+    ASSERT_NE(ternary_true, nullptr);
+    EXPECT_EQ(ternary_false->value.lexeme, "0");
+}
+
+TEST(ParserTest, ParseTernaryReject)
+{
+    // shouldnt work
+    std::string code = "(1 > 2) print 1 : print 2;";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_NE(stmts.size(), 1);
+}
+
+TEST(ParserTest, ParserForLoop)
+{
+    std::string code = "for var x: int = 0; x <= 5; x += 1 do print x;";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+}
