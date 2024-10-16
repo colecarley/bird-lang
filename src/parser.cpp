@@ -370,7 +370,7 @@ std::unique_ptr<Expr> Parser::call()
 
     if (auto primary = dynamic_cast<Primary *>(identifier.get()))
     {
-        if (this->peek().token_type != Token::Type::LPAREN)
+        if (this->expect_token(Token::Type::LPAREN).is_valid())
             return identifier;
 
         auto args = this->args();
