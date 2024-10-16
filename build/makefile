@@ -65,6 +65,16 @@ CMAKE_BINARY_DIR = /workspaces/bird-lang/build
 #=============================================================================
 # Targets provided globally by CMake.
 
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/opt/cmake/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+.PHONY : rebuild_cache/fast
+
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
@@ -75,15 +85,15 @@ edit_cache:
 edit_cache/fast: edit_cache
 .PHONY : edit_cache/fast
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/opt/cmake/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
+# Special rule for the target test
+test:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
+	/opt/cmake/bin/ctest --force-new-ctest-process $(ARGS)
+.PHONY : test
 
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-.PHONY : rebuild_cache/fast
+# Special rule for the target test
+test/fast: test
+.PHONY : test/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -117,17 +127,95 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named omp_gen
+# Target rules for targets named vars_without_type_test
 
 # Build rule for target.
-omp_gen: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omp_gen
-.PHONY : omp_gen
+vars_without_type_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vars_without_type_test
+.PHONY : vars_without_type_test
 
 # fast build rule for target.
-omp_gen/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omp_gen.dir/build.make CMakeFiles/omp_gen.dir/build
-.PHONY : omp_gen/fast
+vars_without_type_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_without_type_test.dir/build.make CMakeFiles/vars_without_type_test.dir/build
+.PHONY : vars_without_type_test/fast
+
+#=============================================================================
+# Target rules for targets named vars_with_type_test
+
+# Build rule for target.
+vars_with_type_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vars_with_type_test
+.PHONY : vars_with_type_test
+
+# fast build rule for target.
+vars_with_type_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_with_type_test.dir/build.make CMakeFiles/vars_with_type_test.dir/build
+.PHONY : vars_with_type_test/fast
+
+#=============================================================================
+# Target rules for targets named var_redeclaration_test
+
+# Build rule for target.
+var_redeclaration_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 var_redeclaration_test
+.PHONY : var_redeclaration_test
+
+# fast build rule for target.
+var_redeclaration_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_test.dir/build.make CMakeFiles/var_redeclaration_test.dir/build
+.PHONY : var_redeclaration_test/fast
+
+#=============================================================================
+# Target rules for targets named RISCVTargetParserTableGen
+
+# Build rule for target.
+RISCVTargetParserTableGen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 RISCVTargetParserTableGen
+.PHONY : RISCVTargetParserTableGen
+
+# fast build rule for target.
+RISCVTargetParserTableGen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/RISCVTargetParserTableGen.dir/build.make CMakeFiles/RISCVTargetParserTableGen.dir/build
+.PHONY : RISCVTargetParserTableGen/fast
+
+#=============================================================================
+# Target rules for targets named compiler
+
+# Build rule for target.
+compiler: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 compiler
+.PHONY : compiler
+
+# fast build rule for target.
+compiler/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/build
+.PHONY : compiler/fast
+
+#=============================================================================
+# Target rules for targets named const_with_type_test
+
+# Build rule for target.
+const_with_type_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_with_type_test
+.PHONY : const_with_type_test
+
+# fast build rule for target.
+const_with_type_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_with_type_test.dir/build.make CMakeFiles/const_with_type_test.dir/build
+.PHONY : const_with_type_test/fast
+
+#=============================================================================
+# Target rules for targets named const_redeclaration_test
+
+# Build rule for target.
+const_redeclaration_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_redeclaration_test
+.PHONY : const_redeclaration_test
+
+# fast build rule for target.
+const_redeclaration_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_test.dir/build.make CMakeFiles/const_redeclaration_test.dir/build
+.PHONY : const_redeclaration_test/fast
 
 #=============================================================================
 # Target rules for targets named intrinsics_gen
@@ -156,30 +244,134 @@ acc_gen/fast:
 .PHONY : acc_gen/fast
 
 #=============================================================================
-# Target rules for targets named compiler
+# Target rules for targets named omp_gen
 
 # Build rule for target.
-compiler: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 compiler
-.PHONY : compiler
+omp_gen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omp_gen
+.PHONY : omp_gen
 
 # fast build rule for target.
-compiler/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/build
-.PHONY : compiler/fast
+omp_gen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omp_gen.dir/build.make CMakeFiles/omp_gen.dir/build
+.PHONY : omp_gen/fast
 
 #=============================================================================
-# Target rules for targets named RISCVTargetParserTableGen
+# Target rules for targets named const_without_type_test
 
 # Build rule for target.
-RISCVTargetParserTableGen: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 RISCVTargetParserTableGen
-.PHONY : RISCVTargetParserTableGen
+const_without_type_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_without_type_test
+.PHONY : const_without_type_test
 
 # fast build rule for target.
-RISCVTargetParserTableGen/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/RISCVTargetParserTableGen.dir/build.make CMakeFiles/RISCVTargetParserTableGen.dir/build
-.PHONY : RISCVTargetParserTableGen/fast
+const_without_type_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_without_type_test.dir/build.make CMakeFiles/const_without_type_test.dir/build
+.PHONY : const_without_type_test/fast
+
+#=============================================================================
+# Target rules for targets named immutability_test
+
+# Build rule for target.
+immutability_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 immutability_test
+.PHONY : immutability_test
+
+# fast build rule for target.
+immutability_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/immutability_test.dir/build.make CMakeFiles/immutability_test.dir/build
+.PHONY : immutability_test/fast
+
+#=============================================================================
+# Target rules for targets named lexer_test
+
+# Build rule for target.
+lexer_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lexer_test
+.PHONY : lexer_test
+
+# fast build rule for target.
+lexer_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_test.dir/build.make CMakeFiles/lexer_test.dir/build
+.PHONY : lexer_test/fast
+
+#=============================================================================
+# Target rules for targets named parser_test
+
+# Build rule for target.
+parser_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 parser_test
+.PHONY : parser_test
+
+# fast build rule for target.
+parser_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_test.dir/build.make CMakeFiles/parser_test.dir/build
+.PHONY : parser_test/fast
+
+#=============================================================================
+# Target rules for targets named const_redeclaration_scope_test
+
+# Build rule for target.
+const_redeclaration_scope_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_redeclaration_scope_test
+.PHONY : const_redeclaration_scope_test
+
+# fast build rule for target.
+const_redeclaration_scope_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_scope_test.dir/build.make CMakeFiles/const_redeclaration_scope_test.dir/build
+.PHONY : const_redeclaration_scope_test/fast
+
+#=============================================================================
+# Target rules for targets named const_scope_test
+
+# Build rule for target.
+const_scope_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_scope_test
+.PHONY : const_scope_test
+
+# fast build rule for target.
+const_scope_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_scope_test.dir/build.make CMakeFiles/const_scope_test.dir/build
+.PHONY : const_scope_test/fast
+
+#=============================================================================
+# Target rules for targets named var_redeclaration_scope_test
+
+# Build rule for target.
+var_redeclaration_scope_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 var_redeclaration_scope_test
+.PHONY : var_redeclaration_scope_test
+
+# fast build rule for target.
+var_redeclaration_scope_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_scope_test.dir/build.make CMakeFiles/var_redeclaration_scope_test.dir/build
+.PHONY : var_redeclaration_scope_test/fast
+
+#=============================================================================
+# Target rules for targets named vars_scope_test
+
+# Build rule for target.
+vars_scope_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vars_scope_test
+.PHONY : vars_scope_test
+
+# fast build rule for target.
+vars_scope_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_scope_test.dir/build.make CMakeFiles/vars_scope_test.dir/build
+.PHONY : vars_scope_test/fast
+
+#=============================================================================
+# Target rules for targets named mutability_test
+
+# Build rule for target.
+mutability_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mutability_test
+.PHONY : mutability_test
+
+# fast build rule for target.
+mutability_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_test.dir/build.make CMakeFiles/mutability_test.dir/build
+.PHONY : mutability_test/fast
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -277,6 +469,342 @@ src/parser.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/parser.cpp.s
 .PHONY : src/parser.cpp.s
 
+tests/const_test_suite/const_redeclaration_test.o: tests/const_test_suite/const_redeclaration_test.cpp.o
+.PHONY : tests/const_test_suite/const_redeclaration_test.o
+
+# target to build an object file
+tests/const_test_suite/const_redeclaration_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_test.dir/build.make CMakeFiles/const_redeclaration_test.dir/tests/const_test_suite/const_redeclaration_test.cpp.o
+.PHONY : tests/const_test_suite/const_redeclaration_test.cpp.o
+
+tests/const_test_suite/const_redeclaration_test.i: tests/const_test_suite/const_redeclaration_test.cpp.i
+.PHONY : tests/const_test_suite/const_redeclaration_test.i
+
+# target to preprocess a source file
+tests/const_test_suite/const_redeclaration_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_test.dir/build.make CMakeFiles/const_redeclaration_test.dir/tests/const_test_suite/const_redeclaration_test.cpp.i
+.PHONY : tests/const_test_suite/const_redeclaration_test.cpp.i
+
+tests/const_test_suite/const_redeclaration_test.s: tests/const_test_suite/const_redeclaration_test.cpp.s
+.PHONY : tests/const_test_suite/const_redeclaration_test.s
+
+# target to generate assembly for a file
+tests/const_test_suite/const_redeclaration_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_test.dir/build.make CMakeFiles/const_redeclaration_test.dir/tests/const_test_suite/const_redeclaration_test.cpp.s
+.PHONY : tests/const_test_suite/const_redeclaration_test.cpp.s
+
+tests/const_test_suite/const_with_type_test.o: tests/const_test_suite/const_with_type_test.cpp.o
+.PHONY : tests/const_test_suite/const_with_type_test.o
+
+# target to build an object file
+tests/const_test_suite/const_with_type_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_with_type_test.dir/build.make CMakeFiles/const_with_type_test.dir/tests/const_test_suite/const_with_type_test.cpp.o
+.PHONY : tests/const_test_suite/const_with_type_test.cpp.o
+
+tests/const_test_suite/const_with_type_test.i: tests/const_test_suite/const_with_type_test.cpp.i
+.PHONY : tests/const_test_suite/const_with_type_test.i
+
+# target to preprocess a source file
+tests/const_test_suite/const_with_type_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_with_type_test.dir/build.make CMakeFiles/const_with_type_test.dir/tests/const_test_suite/const_with_type_test.cpp.i
+.PHONY : tests/const_test_suite/const_with_type_test.cpp.i
+
+tests/const_test_suite/const_with_type_test.s: tests/const_test_suite/const_with_type_test.cpp.s
+.PHONY : tests/const_test_suite/const_with_type_test.s
+
+# target to generate assembly for a file
+tests/const_test_suite/const_with_type_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_with_type_test.dir/build.make CMakeFiles/const_with_type_test.dir/tests/const_test_suite/const_with_type_test.cpp.s
+.PHONY : tests/const_test_suite/const_with_type_test.cpp.s
+
+tests/const_test_suite/const_without_type_test.o: tests/const_test_suite/const_without_type_test.cpp.o
+.PHONY : tests/const_test_suite/const_without_type_test.o
+
+# target to build an object file
+tests/const_test_suite/const_without_type_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_without_type_test.dir/build.make CMakeFiles/const_without_type_test.dir/tests/const_test_suite/const_without_type_test.cpp.o
+.PHONY : tests/const_test_suite/const_without_type_test.cpp.o
+
+tests/const_test_suite/const_without_type_test.i: tests/const_test_suite/const_without_type_test.cpp.i
+.PHONY : tests/const_test_suite/const_without_type_test.i
+
+# target to preprocess a source file
+tests/const_test_suite/const_without_type_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_without_type_test.dir/build.make CMakeFiles/const_without_type_test.dir/tests/const_test_suite/const_without_type_test.cpp.i
+.PHONY : tests/const_test_suite/const_without_type_test.cpp.i
+
+tests/const_test_suite/const_without_type_test.s: tests/const_test_suite/const_without_type_test.cpp.s
+.PHONY : tests/const_test_suite/const_without_type_test.s
+
+# target to generate assembly for a file
+tests/const_test_suite/const_without_type_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_without_type_test.dir/build.make CMakeFiles/const_without_type_test.dir/tests/const_test_suite/const_without_type_test.cpp.s
+.PHONY : tests/const_test_suite/const_without_type_test.cpp.s
+
+tests/const_test_suite/immutability_test.o: tests/const_test_suite/immutability_test.cpp.o
+.PHONY : tests/const_test_suite/immutability_test.o
+
+# target to build an object file
+tests/const_test_suite/immutability_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/immutability_test.dir/build.make CMakeFiles/immutability_test.dir/tests/const_test_suite/immutability_test.cpp.o
+.PHONY : tests/const_test_suite/immutability_test.cpp.o
+
+tests/const_test_suite/immutability_test.i: tests/const_test_suite/immutability_test.cpp.i
+.PHONY : tests/const_test_suite/immutability_test.i
+
+# target to preprocess a source file
+tests/const_test_suite/immutability_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/immutability_test.dir/build.make CMakeFiles/immutability_test.dir/tests/const_test_suite/immutability_test.cpp.i
+.PHONY : tests/const_test_suite/immutability_test.cpp.i
+
+tests/const_test_suite/immutability_test.s: tests/const_test_suite/immutability_test.cpp.s
+.PHONY : tests/const_test_suite/immutability_test.s
+
+# target to generate assembly for a file
+tests/const_test_suite/immutability_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/immutability_test.dir/build.make CMakeFiles/immutability_test.dir/tests/const_test_suite/immutability_test.cpp.s
+.PHONY : tests/const_test_suite/immutability_test.cpp.s
+
+tests/lexer_test_suite/lexer_test.o: tests/lexer_test_suite/lexer_test.cpp.o
+.PHONY : tests/lexer_test_suite/lexer_test.o
+
+# target to build an object file
+tests/lexer_test_suite/lexer_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_test.dir/build.make CMakeFiles/lexer_test.dir/tests/lexer_test_suite/lexer_test.cpp.o
+.PHONY : tests/lexer_test_suite/lexer_test.cpp.o
+
+tests/lexer_test_suite/lexer_test.i: tests/lexer_test_suite/lexer_test.cpp.i
+.PHONY : tests/lexer_test_suite/lexer_test.i
+
+# target to preprocess a source file
+tests/lexer_test_suite/lexer_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_test.dir/build.make CMakeFiles/lexer_test.dir/tests/lexer_test_suite/lexer_test.cpp.i
+.PHONY : tests/lexer_test_suite/lexer_test.cpp.i
+
+tests/lexer_test_suite/lexer_test.s: tests/lexer_test_suite/lexer_test.cpp.s
+.PHONY : tests/lexer_test_suite/lexer_test.s
+
+# target to generate assembly for a file
+tests/lexer_test_suite/lexer_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_test.dir/build.make CMakeFiles/lexer_test.dir/tests/lexer_test_suite/lexer_test.cpp.s
+.PHONY : tests/lexer_test_suite/lexer_test.cpp.s
+
+tests/parser_test_suite/parser_test.o: tests/parser_test_suite/parser_test.cpp.o
+.PHONY : tests/parser_test_suite/parser_test.o
+
+# target to build an object file
+tests/parser_test_suite/parser_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_test.dir/build.make CMakeFiles/parser_test.dir/tests/parser_test_suite/parser_test.cpp.o
+.PHONY : tests/parser_test_suite/parser_test.cpp.o
+
+tests/parser_test_suite/parser_test.i: tests/parser_test_suite/parser_test.cpp.i
+.PHONY : tests/parser_test_suite/parser_test.i
+
+# target to preprocess a source file
+tests/parser_test_suite/parser_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_test.dir/build.make CMakeFiles/parser_test.dir/tests/parser_test_suite/parser_test.cpp.i
+.PHONY : tests/parser_test_suite/parser_test.cpp.i
+
+tests/parser_test_suite/parser_test.s: tests/parser_test_suite/parser_test.cpp.s
+.PHONY : tests/parser_test_suite/parser_test.s
+
+# target to generate assembly for a file
+tests/parser_test_suite/parser_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_test.dir/build.make CMakeFiles/parser_test.dir/tests/parser_test_suite/parser_test.cpp.s
+.PHONY : tests/parser_test_suite/parser_test.cpp.s
+
+tests/symbol_table_test_suite/const_redeclaration_scope_test.o: tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.o
+.PHONY : tests/symbol_table_test_suite/const_redeclaration_scope_test.o
+
+# target to build an object file
+tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_scope_test.dir/build.make CMakeFiles/const_redeclaration_scope_test.dir/tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.o
+.PHONY : tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.o
+
+tests/symbol_table_test_suite/const_redeclaration_scope_test.i: tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.i
+.PHONY : tests/symbol_table_test_suite/const_redeclaration_scope_test.i
+
+# target to preprocess a source file
+tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_scope_test.dir/build.make CMakeFiles/const_redeclaration_scope_test.dir/tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.i
+.PHONY : tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.i
+
+tests/symbol_table_test_suite/const_redeclaration_scope_test.s: tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.s
+.PHONY : tests/symbol_table_test_suite/const_redeclaration_scope_test.s
+
+# target to generate assembly for a file
+tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_redeclaration_scope_test.dir/build.make CMakeFiles/const_redeclaration_scope_test.dir/tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.s
+.PHONY : tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.s
+
+tests/symbol_table_test_suite/const_scope_test.o: tests/symbol_table_test_suite/const_scope_test.cpp.o
+.PHONY : tests/symbol_table_test_suite/const_scope_test.o
+
+# target to build an object file
+tests/symbol_table_test_suite/const_scope_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_scope_test.dir/build.make CMakeFiles/const_scope_test.dir/tests/symbol_table_test_suite/const_scope_test.cpp.o
+.PHONY : tests/symbol_table_test_suite/const_scope_test.cpp.o
+
+tests/symbol_table_test_suite/const_scope_test.i: tests/symbol_table_test_suite/const_scope_test.cpp.i
+.PHONY : tests/symbol_table_test_suite/const_scope_test.i
+
+# target to preprocess a source file
+tests/symbol_table_test_suite/const_scope_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_scope_test.dir/build.make CMakeFiles/const_scope_test.dir/tests/symbol_table_test_suite/const_scope_test.cpp.i
+.PHONY : tests/symbol_table_test_suite/const_scope_test.cpp.i
+
+tests/symbol_table_test_suite/const_scope_test.s: tests/symbol_table_test_suite/const_scope_test.cpp.s
+.PHONY : tests/symbol_table_test_suite/const_scope_test.s
+
+# target to generate assembly for a file
+tests/symbol_table_test_suite/const_scope_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_scope_test.dir/build.make CMakeFiles/const_scope_test.dir/tests/symbol_table_test_suite/const_scope_test.cpp.s
+.PHONY : tests/symbol_table_test_suite/const_scope_test.cpp.s
+
+tests/symbol_table_test_suite/var_redeclaration_scope_test.o: tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.o
+.PHONY : tests/symbol_table_test_suite/var_redeclaration_scope_test.o
+
+# target to build an object file
+tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_scope_test.dir/build.make CMakeFiles/var_redeclaration_scope_test.dir/tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.o
+.PHONY : tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.o
+
+tests/symbol_table_test_suite/var_redeclaration_scope_test.i: tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.i
+.PHONY : tests/symbol_table_test_suite/var_redeclaration_scope_test.i
+
+# target to preprocess a source file
+tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_scope_test.dir/build.make CMakeFiles/var_redeclaration_scope_test.dir/tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.i
+.PHONY : tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.i
+
+tests/symbol_table_test_suite/var_redeclaration_scope_test.s: tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.s
+.PHONY : tests/symbol_table_test_suite/var_redeclaration_scope_test.s
+
+# target to generate assembly for a file
+tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_scope_test.dir/build.make CMakeFiles/var_redeclaration_scope_test.dir/tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.s
+.PHONY : tests/symbol_table_test_suite/var_redeclaration_scope_test.cpp.s
+
+tests/symbol_table_test_suite/vars_scope_test.o: tests/symbol_table_test_suite/vars_scope_test.cpp.o
+.PHONY : tests/symbol_table_test_suite/vars_scope_test.o
+
+# target to build an object file
+tests/symbol_table_test_suite/vars_scope_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_scope_test.dir/build.make CMakeFiles/vars_scope_test.dir/tests/symbol_table_test_suite/vars_scope_test.cpp.o
+.PHONY : tests/symbol_table_test_suite/vars_scope_test.cpp.o
+
+tests/symbol_table_test_suite/vars_scope_test.i: tests/symbol_table_test_suite/vars_scope_test.cpp.i
+.PHONY : tests/symbol_table_test_suite/vars_scope_test.i
+
+# target to preprocess a source file
+tests/symbol_table_test_suite/vars_scope_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_scope_test.dir/build.make CMakeFiles/vars_scope_test.dir/tests/symbol_table_test_suite/vars_scope_test.cpp.i
+.PHONY : tests/symbol_table_test_suite/vars_scope_test.cpp.i
+
+tests/symbol_table_test_suite/vars_scope_test.s: tests/symbol_table_test_suite/vars_scope_test.cpp.s
+.PHONY : tests/symbol_table_test_suite/vars_scope_test.s
+
+# target to generate assembly for a file
+tests/symbol_table_test_suite/vars_scope_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_scope_test.dir/build.make CMakeFiles/vars_scope_test.dir/tests/symbol_table_test_suite/vars_scope_test.cpp.s
+.PHONY : tests/symbol_table_test_suite/vars_scope_test.cpp.s
+
+tests/vars_test_suite/mutability_test.o: tests/vars_test_suite/mutability_test.cpp.o
+.PHONY : tests/vars_test_suite/mutability_test.o
+
+# target to build an object file
+tests/vars_test_suite/mutability_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_test.dir/build.make CMakeFiles/mutability_test.dir/tests/vars_test_suite/mutability_test.cpp.o
+.PHONY : tests/vars_test_suite/mutability_test.cpp.o
+
+tests/vars_test_suite/mutability_test.i: tests/vars_test_suite/mutability_test.cpp.i
+.PHONY : tests/vars_test_suite/mutability_test.i
+
+# target to preprocess a source file
+tests/vars_test_suite/mutability_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_test.dir/build.make CMakeFiles/mutability_test.dir/tests/vars_test_suite/mutability_test.cpp.i
+.PHONY : tests/vars_test_suite/mutability_test.cpp.i
+
+tests/vars_test_suite/mutability_test.s: tests/vars_test_suite/mutability_test.cpp.s
+.PHONY : tests/vars_test_suite/mutability_test.s
+
+# target to generate assembly for a file
+tests/vars_test_suite/mutability_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_test.dir/build.make CMakeFiles/mutability_test.dir/tests/vars_test_suite/mutability_test.cpp.s
+.PHONY : tests/vars_test_suite/mutability_test.cpp.s
+
+tests/vars_test_suite/var_redeclaration_test.o: tests/vars_test_suite/var_redeclaration_test.cpp.o
+.PHONY : tests/vars_test_suite/var_redeclaration_test.o
+
+# target to build an object file
+tests/vars_test_suite/var_redeclaration_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_test.dir/build.make CMakeFiles/var_redeclaration_test.dir/tests/vars_test_suite/var_redeclaration_test.cpp.o
+.PHONY : tests/vars_test_suite/var_redeclaration_test.cpp.o
+
+tests/vars_test_suite/var_redeclaration_test.i: tests/vars_test_suite/var_redeclaration_test.cpp.i
+.PHONY : tests/vars_test_suite/var_redeclaration_test.i
+
+# target to preprocess a source file
+tests/vars_test_suite/var_redeclaration_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_test.dir/build.make CMakeFiles/var_redeclaration_test.dir/tests/vars_test_suite/var_redeclaration_test.cpp.i
+.PHONY : tests/vars_test_suite/var_redeclaration_test.cpp.i
+
+tests/vars_test_suite/var_redeclaration_test.s: tests/vars_test_suite/var_redeclaration_test.cpp.s
+.PHONY : tests/vars_test_suite/var_redeclaration_test.s
+
+# target to generate assembly for a file
+tests/vars_test_suite/var_redeclaration_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_test.dir/build.make CMakeFiles/var_redeclaration_test.dir/tests/vars_test_suite/var_redeclaration_test.cpp.s
+.PHONY : tests/vars_test_suite/var_redeclaration_test.cpp.s
+
+tests/vars_test_suite/vars_with_type_test.o: tests/vars_test_suite/vars_with_type_test.cpp.o
+.PHONY : tests/vars_test_suite/vars_with_type_test.o
+
+# target to build an object file
+tests/vars_test_suite/vars_with_type_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_with_type_test.dir/build.make CMakeFiles/vars_with_type_test.dir/tests/vars_test_suite/vars_with_type_test.cpp.o
+.PHONY : tests/vars_test_suite/vars_with_type_test.cpp.o
+
+tests/vars_test_suite/vars_with_type_test.i: tests/vars_test_suite/vars_with_type_test.cpp.i
+.PHONY : tests/vars_test_suite/vars_with_type_test.i
+
+# target to preprocess a source file
+tests/vars_test_suite/vars_with_type_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_with_type_test.dir/build.make CMakeFiles/vars_with_type_test.dir/tests/vars_test_suite/vars_with_type_test.cpp.i
+.PHONY : tests/vars_test_suite/vars_with_type_test.cpp.i
+
+tests/vars_test_suite/vars_with_type_test.s: tests/vars_test_suite/vars_with_type_test.cpp.s
+.PHONY : tests/vars_test_suite/vars_with_type_test.s
+
+# target to generate assembly for a file
+tests/vars_test_suite/vars_with_type_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_with_type_test.dir/build.make CMakeFiles/vars_with_type_test.dir/tests/vars_test_suite/vars_with_type_test.cpp.s
+.PHONY : tests/vars_test_suite/vars_with_type_test.cpp.s
+
+tests/vars_test_suite/vars_without_type_test.o: tests/vars_test_suite/vars_without_type_test.cpp.o
+.PHONY : tests/vars_test_suite/vars_without_type_test.o
+
+# target to build an object file
+tests/vars_test_suite/vars_without_type_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_without_type_test.dir/build.make CMakeFiles/vars_without_type_test.dir/tests/vars_test_suite/vars_without_type_test.cpp.o
+.PHONY : tests/vars_test_suite/vars_without_type_test.cpp.o
+
+tests/vars_test_suite/vars_without_type_test.i: tests/vars_test_suite/vars_without_type_test.cpp.i
+.PHONY : tests/vars_test_suite/vars_without_type_test.i
+
+# target to preprocess a source file
+tests/vars_test_suite/vars_without_type_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_without_type_test.dir/build.make CMakeFiles/vars_without_type_test.dir/tests/vars_test_suite/vars_without_type_test.cpp.i
+.PHONY : tests/vars_test_suite/vars_without_type_test.cpp.i
+
+tests/vars_test_suite/vars_without_type_test.s: tests/vars_test_suite/vars_without_type_test.cpp.s
+.PHONY : tests/vars_test_suite/vars_without_type_test.s
+
+# target to generate assembly for a file
+tests/vars_test_suite/vars_without_type_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_without_type_test.dir/build.make CMakeFiles/vars_without_type_test.dir/tests/vars_test_suite/vars_without_type_test.cpp.s
+.PHONY : tests/vars_test_suite/vars_without_type_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -285,11 +813,26 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... test"
 	@echo "... RISCVTargetParserTableGen"
 	@echo "... acc_gen"
 	@echo "... intrinsics_gen"
 	@echo "... omp_gen"
 	@echo "... compiler"
+	@echo "... const_redeclaration_scope_test"
+	@echo "... const_redeclaration_test"
+	@echo "... const_scope_test"
+	@echo "... const_with_type_test"
+	@echo "... const_without_type_test"
+	@echo "... immutability_test"
+	@echo "... lexer_test"
+	@echo "... mutability_test"
+	@echo "... parser_test"
+	@echo "... var_redeclaration_scope_test"
+	@echo "... var_redeclaration_test"
+	@echo "... vars_scope_test"
+	@echo "... vars_with_type_test"
+	@echo "... vars_without_type_test"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
@@ -302,6 +845,48 @@ help:
 	@echo "... src/parser.o"
 	@echo "... src/parser.i"
 	@echo "... src/parser.s"
+	@echo "... tests/const_test_suite/const_redeclaration_test.o"
+	@echo "... tests/const_test_suite/const_redeclaration_test.i"
+	@echo "... tests/const_test_suite/const_redeclaration_test.s"
+	@echo "... tests/const_test_suite/const_with_type_test.o"
+	@echo "... tests/const_test_suite/const_with_type_test.i"
+	@echo "... tests/const_test_suite/const_with_type_test.s"
+	@echo "... tests/const_test_suite/const_without_type_test.o"
+	@echo "... tests/const_test_suite/const_without_type_test.i"
+	@echo "... tests/const_test_suite/const_without_type_test.s"
+	@echo "... tests/const_test_suite/immutability_test.o"
+	@echo "... tests/const_test_suite/immutability_test.i"
+	@echo "... tests/const_test_suite/immutability_test.s"
+	@echo "... tests/lexer_test_suite/lexer_test.o"
+	@echo "... tests/lexer_test_suite/lexer_test.i"
+	@echo "... tests/lexer_test_suite/lexer_test.s"
+	@echo "... tests/parser_test_suite/parser_test.o"
+	@echo "... tests/parser_test_suite/parser_test.i"
+	@echo "... tests/parser_test_suite/parser_test.s"
+	@echo "... tests/symbol_table_test_suite/const_redeclaration_scope_test.o"
+	@echo "... tests/symbol_table_test_suite/const_redeclaration_scope_test.i"
+	@echo "... tests/symbol_table_test_suite/const_redeclaration_scope_test.s"
+	@echo "... tests/symbol_table_test_suite/const_scope_test.o"
+	@echo "... tests/symbol_table_test_suite/const_scope_test.i"
+	@echo "... tests/symbol_table_test_suite/const_scope_test.s"
+	@echo "... tests/symbol_table_test_suite/var_redeclaration_scope_test.o"
+	@echo "... tests/symbol_table_test_suite/var_redeclaration_scope_test.i"
+	@echo "... tests/symbol_table_test_suite/var_redeclaration_scope_test.s"
+	@echo "... tests/symbol_table_test_suite/vars_scope_test.o"
+	@echo "... tests/symbol_table_test_suite/vars_scope_test.i"
+	@echo "... tests/symbol_table_test_suite/vars_scope_test.s"
+	@echo "... tests/vars_test_suite/mutability_test.o"
+	@echo "... tests/vars_test_suite/mutability_test.i"
+	@echo "... tests/vars_test_suite/mutability_test.s"
+	@echo "... tests/vars_test_suite/var_redeclaration_test.o"
+	@echo "... tests/vars_test_suite/var_redeclaration_test.i"
+	@echo "... tests/vars_test_suite/var_redeclaration_test.s"
+	@echo "... tests/vars_test_suite/vars_with_type_test.o"
+	@echo "... tests/vars_test_suite/vars_with_type_test.i"
+	@echo "... tests/vars_test_suite/vars_with_type_test.s"
+	@echo "... tests/vars_test_suite/vars_without_type_test.o"
+	@echo "... tests/vars_test_suite/vars_without_type_test.i"
+	@echo "... tests/vars_test_suite/vars_without_type_test.s"
 .PHONY : help
 
 
