@@ -4,6 +4,7 @@
 #include "../include/ast_node/expr/unary.h"
 #include "../include/ast_node/expr/primary.h"
 #include "../include/ast_node/expr/ternary.h"
+#include "../include/ast_node/expr/call.h"
 
 #include "../include/ast_node/stmt/decl_stmt.h"
 #include "../include/ast_node/stmt/assign_stmt.h"
@@ -12,6 +13,7 @@
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
 #include "../include/ast_node/stmt/while_stmt.h"
+#include "../include/ast_node/stmt/return_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 #include "../include/ast_node/stmt/func.h"
 
@@ -68,6 +70,7 @@ std::unique_ptr<Stmt> Parser::stmt()
         default:
             break;
         }
+        break;
     case Token::Type::IF:
         return this->if_stmt();
     case Token::Type::CONST:
@@ -80,9 +83,12 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->func();
     case Token::Type::WHILE:
         return this->while_stmt();
+    case Token::Type::RETURN:
+        return this->return_stmt();
     default:
         break;
     }
+
     return this->expr_stmt();
 }
 
@@ -355,7 +361,41 @@ std::unique_ptr<Expr> Parser::unary()
         return std::make_unique<Unary>(Unary(op, std::move(expr)));
     }
 
-    return this->primary();
+    return this->call();
+}
+
+std::unique_ptr<Expr> Parser::call()
+{
+    auto identifier = this->primary();
+
+    if (auto primary = dynamic_cast<Primary *>(identifier.get()))
+    {
+        if (this->peek().token_type != Token::Type::LPAREN)
+            return identifier;
+
+        auto args = this->args();
+
+        return std::make_unique<Call>(Call(primary->value, std::move(args)));
+    }
+    else
+        return identifier;
+}
+
+std::vector<std::unique_ptr<Expr>> Parser::args()
+{
+    this->expect_token(Token::Type::LPAREN).adv_or_bird_error("Expected '(' at start of args list");
+    std::vector<std::unique_ptr<Expr>> args;
+
+    while (this->expect_token(Token::Type::RPAREN).is_invalid())
+    {
+        args.push_back(this->expr());
+
+        this->expect_token(Token::Type::COMMA).adv_or_user_error("expected ',' after argument in argument list");
+    }
+
+    this->expect_token(Token::Type::RPAREN).adv_or_user_error("expected '(' after function call");
+
+    return args;
 }
 
 std::unique_ptr<Expr> Parser::primary()

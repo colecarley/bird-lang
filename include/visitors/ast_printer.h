@@ -9,6 +9,7 @@
 #include "../ast_node/expr/unary.h"
 #include "../ast_node/expr/primary.h"
 #include "../ast_node/expr/ternary.h"
+#include "../ast_node/expr/call.h"
 
 #include "../ast_node/stmt/decl_stmt.h"
 #include "../ast_node/stmt/assign_stmt.h"
@@ -16,9 +17,10 @@
 #include "../ast_node/stmt/if_stmt.h"
 #include "../ast_node/stmt/expr_stmt.h"
 #include "../ast_node/stmt/while_stmt.h"
+#include "../ast_node/stmt/return_stmt.h"
 #include "../ast_node/stmt/block.h"
-
-#include "../exceptions/bird_exception.h"
+#include "../ast_node/stmt/func.h"
+#include "../ast_node/stmt/const_stmt.h"
 
 /*
  * Visitor that prints the Abstract Syntax Tree
@@ -35,37 +37,57 @@ public:
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
             {
                 decl_stmt->accept(this);
+                continue;
             }
 
             if (auto assign_stmt = dynamic_cast<AssignStmt *>(stmt.get()))
             {
                 assign_stmt->accept(this);
+                continue;
             }
 
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
                 print_stmt->accept(this);
+                continue;
             }
 
             if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
             {
                 if_stmt->accept(this);
+                continue;
             }
 
             if (auto block = dynamic_cast<Block *>(stmt.get()))
             {
                 block->accept(this);
+                continue;
             }
 
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
+                continue;
             }
 
             if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
             {
                 while_stmt->accept(this);
+                continue;
             }
+
+            if (auto func = dynamic_cast<Func *>(stmt.get()))
+            {
+                func->accept(this);
+                continue;
+            }
+
+            if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
+            {
+                return_stmt->accept(this);
+                continue;
+            }
+
             std::cout << std::endl;
         }
     }
@@ -141,12 +163,28 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        throw BirdException("implement const statment visit");
+        std::cout << "const ";
+        std::cout << const_stmt->identifier.lexeme << " = ";
+        const_stmt->value->accept(this);
     }
 
     void visit_func(Func *func)
     {
-        throw BirdException("implement func visit");
+        std::cout << "fn";
+        std::cout << func->identifier.lexeme;
+        std::cout << "(";
+        for (auto pair : func->param_list)
+        {
+            std::cout << pair.first.lexeme << ": ";
+            std::cout << pair.second.lexeme << ", ";
+        }
+        std::cout << ")";
+
+        std::cout << "->" << (func->return_type.has_value() ? func->return_type.value().lexeme : "void");
+
+        func->block->accept(this);
+
+        std::cout << std::endl;
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -170,5 +208,27 @@ public:
         while_stmt->condition->accept(this);
         std::cout << ") ";
         while_stmt->stmt->accept(this);
+    }
+
+    void visit_return_stmt(ReturnStmt *return_stmt)
+    {
+        std::cout << "return ";
+        if (return_stmt->expr.has_value())
+        {
+            return_stmt->expr.value()->accept(this);
+        }
+        std::cout << std::endl;
+    }
+
+    void visit_call(Call *call)
+    {
+        std::cout << call->identifier.lexeme;
+        std::cout << "(";
+
+        for (auto &arg : call->args)
+        {
+            arg->accept(this);
+        }
+        std::cout << ")" << std::endl;
     }
 };

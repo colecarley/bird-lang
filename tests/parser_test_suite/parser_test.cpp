@@ -1,12 +1,8 @@
 #include <gtest/gtest.h>
-#include "../src/lexer.cpp"
-#include "../src/parser.cpp"
+// #include "../src/lexer.cpp"
+// #include "../src/parser.cpp"
 #include "../include/exceptions/user_error_tracker.h"
-
-// function prototypes
-std::vector<Token> lex_code(const std::string &code);
-std::vector<std::unique_ptr<Stmt>> parse_code(const std::string &code);
-void print_expr(Expr *expr);
+#include "../helpers/parse_test_helper.hpp"
 
 TEST(ParserTest, ParseBlockStmt)
 {
@@ -346,40 +342,4 @@ TEST(ParserTest, ParseWhileStmt)
     Primary *print_arg = dynamic_cast<Primary *>(print_stmt->args[0].get());
     ASSERT_NE(print_arg, nullptr);
     EXPECT_EQ(print_arg->value.lexeme, "1");
-}
-
-// helper function which returns a vector of tokens
-std::vector<Token> lex_code(const std::string &code)
-{
-    UserErrorTracker error_tracker(code);
-    Lexer lexer(code, &error_tracker);
-    return lexer.lex();
-}
-
-// helper function which returns a vector of statement pointers
-std::vector<std::unique_ptr<Stmt>> parse_code(const std::string &code)
-{
-    UserErrorTracker error_tracker(code);
-    Lexer lexer(code, &error_tracker);
-    std::vector<Token> tokens = lexer.lex();
-
-    Parser parser(tokens, &error_tracker);
-    return parser.parse();
-}
-
-// verify expression parsing visually
-void print_expr(Expr *expr)
-{
-    if (auto binary = dynamic_cast<Binary *>(expr))
-    {
-        std::cout << "(";
-        print_expr(binary->left.get());
-        std::cout << " " << binary->op.lexeme << " ";
-        print_expr(binary->right.get());
-        std::cout << ")";
-    }
-    else if (auto primary = dynamic_cast<Primary *>(expr))
-    {
-        std::cout << primary->value.lexeme;
-    }
 }
