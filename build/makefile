@@ -127,6 +127,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named while_test
+
+# Build rule for target.
+while_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 while_test
+.PHONY : while_test
+
+# fast build rule for target.
+while_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/build
+.PHONY : while_test/fast
+
+#=============================================================================
 # Target rules for targets named if_else_if_else_test
 
 # Build rule for target.
@@ -694,6 +707,30 @@ tests/vars_test_suite/vars_without_type_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_without_type_test.dir/build.make CMakeFiles/vars_without_type_test.dir/tests/vars_test_suite/vars_without_type_test.cpp.s
 .PHONY : tests/vars_test_suite/vars_without_type_test.cpp.s
 
+tests/while_test_suite/while_test.o: tests/while_test_suite/while_test.cpp.o
+.PHONY : tests/while_test_suite/while_test.o
+
+# target to build an object file
+tests/while_test_suite/while_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/tests/while_test_suite/while_test.cpp.o
+.PHONY : tests/while_test_suite/while_test.cpp.o
+
+tests/while_test_suite/while_test.i: tests/while_test_suite/while_test.cpp.i
+.PHONY : tests/while_test_suite/while_test.i
+
+# target to preprocess a source file
+tests/while_test_suite/while_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/tests/while_test_suite/while_test.cpp.i
+.PHONY : tests/while_test_suite/while_test.cpp.i
+
+tests/while_test_suite/while_test.s: tests/while_test_suite/while_test.cpp.s
+.PHONY : tests/while_test_suite/while_test.s
+
+# target to generate assembly for a file
+tests/while_test_suite/while_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/tests/while_test_suite/while_test.cpp.s
+.PHONY : tests/while_test_suite/while_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -719,6 +756,7 @@ help:
 	@echo "... ternary_test"
 	@echo "... vars_with_type_test"
 	@echo "... vars_without_type_test"
+	@echo "... while_test"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
@@ -764,6 +802,9 @@ help:
 	@echo "... tests/vars_test_suite/vars_without_type_test.o"
 	@echo "... tests/vars_test_suite/vars_without_type_test.i"
 	@echo "... tests/vars_test_suite/vars_without_type_test.s"
+	@echo "... tests/while_test_suite/while_test.o"
+	@echo "... tests/while_test_suite/while_test.i"
+	@echo "... tests/while_test_suite/while_test.s"
 .PHONY : help
 
 
