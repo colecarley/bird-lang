@@ -19,15 +19,16 @@ jobs:
         restore-keys: |
           ${{runner.os }}-buildx-
     
-    - name: Build and push
+    - name: Build and push docker image
       uses: docker/build-push-action@v6
       with:
         file: ../.devcontainer/Dockerfile
         platforms: linux/amd64,linux/arm64
+        pull: true
         push: true
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache
         tags: ci:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
     
     - name: Run tests
       run: echo "Running tests"
