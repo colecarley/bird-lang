@@ -54,7 +54,7 @@
 class CodeGen : public Visitor
 {
     std::stack<llvm::Value *> stack;
-    std::unique_ptr<SymbolTable<llvm::Value *>> environment;
+    std::shared_ptr<SymbolTable<llvm::Value *>> environment;
     std::map<std::string, llvm::FunctionCallee> std_lib;
 
     llvm::LLVMContext context;

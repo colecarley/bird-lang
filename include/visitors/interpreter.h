@@ -73,14 +73,14 @@ class Interpreter : public Visitor
 {
 
 public:
-    std::unique_ptr<SymbolTable<Value>> environment;
-    std::unique_ptr<SymbolTable<Callable>> call_table;
+    std::shared_ptr<SymbolTable<Value>> environment;
+    std::shared_ptr<SymbolTable<Callable>> call_table;
     std::stack<Value> stack;
 
     Interpreter()
     {
-        this->environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
-        this->call_table = std::make_unique<SymbolTable<Callable>>(SymbolTable<Callable>());
+        this->environment = std::make_shared<SymbolTable<Value>>();
+        this->call_table = std::make_shared<SymbolTable<Callable>>();
     }
 
     void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
@@ -113,6 +113,7 @@ public:
 
             if (auto block = dynamic_cast<Block *>(stmt.get()))
             {
+                std::cout << "initial env " << this->environment.get() << std::endl;
                 block->accept(this);
                 continue;
             }
@@ -173,15 +174,20 @@ public:
 
     void visit_block(Block *block)
     {
-        auto new_environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
-        new_environment->set_enclosing(std::move(this->environment));
-        this->environment = std::move(new_environment);
+        std::cout << "incoming block env " << this->environment.get() << std::endl;
+        std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
+        new_environment->set_enclosing(this->environment);
+
+        std::cout << "enclosing block env " << this->environment.get() << std::endl;
+        this->environment = new_environment;
+        std::cout << "new block env " << this->environment.get() << std::endl;
 
         for (auto &stmt : block->stmts)
         {
             stmt->accept(this);
         }
 
+        std::cout << "revert block env " << this->environment->get_enclosing().get() << std::endl;
         this->environment = this->environment->get_enclosing();
     }
 
@@ -223,10 +229,18 @@ public:
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
+        std::cout << "assign incomming env " << this->environment.get() << std::endl;
+        bool enclosing = false;
         if (!this->environment->contains(assign_expr->identifier.lexeme))
-            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
+        {
+            if (!this->environment->get_enclosing()->contains(assign_expr->identifier.lexeme))
+                throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
+            else
+                enclosing = true;
+        }
 
         auto previous_value = this->environment->get(assign_expr->identifier.lexeme);
+
         if (!previous_value.is_mutable)
             throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.");
 
@@ -251,7 +265,9 @@ public:
             else
                 throw BirdException("The assigment value type does not match the identifer type.");
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, value);
+
             break;
         }
         case Token::Type::PLUS_EQUAL:
@@ -268,7 +284,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(+);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, value);
             break;
         }
         case Token::Type::MINUS_EQUAL:
@@ -282,7 +299,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(-);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, value);
             break;
         }
         case Token::Type::STAR_EQUAL:
@@ -296,7 +314,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(*);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, value);
             break;
         }
         case Token::Type::SLASH_EQUAL:
@@ -310,7 +329,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(/);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, value);
             break;
         }
         case Token::Type::PERCENT_EQUAL:
@@ -321,7 +341,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(%);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, value);
             break;
         }
         default:
@@ -419,9 +440,9 @@ public:
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
-        auto new_environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
-        new_environment->set_enclosing(std::move(this->environment));
-        this->environment = std::move(new_environment);
+        std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
 
         if (for_stmt->initializer.has_value())
         {
