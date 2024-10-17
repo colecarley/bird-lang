@@ -14,7 +14,7 @@ jobs:
     - name: Cache docker layers
       uses: actions/cache@v4
       with:
-        path: /tmp2/.buildx-cache
+        path: /tmp/.buildx-cache
         key: ${{ runner.os}}-buildx-${{ github.sha }}
         restore-keys: |
           ${{runner.os }}-buildx-
@@ -27,8 +27,8 @@ jobs:
         pull: true
         push: true
         tags: ci:latest
-        cache-to: type=local,dest=/tmp2/.buildx-cache,mode=max
-        cache-from: type=local,src=/tmp2/.buildx-cache
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
     
     - name: Run tests
       run: echo "Running tests"
