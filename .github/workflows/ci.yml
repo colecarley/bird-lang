@@ -21,7 +21,7 @@ jobs:
 
     - name: Build docker image
       run: |
-        docker build --cache-from type=local,src=/tmp/.buildx-cache --cache-to type=local,dest=/tmp/.buildx-cache -t compiler .
+        docker buildx build --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache -t compiler .
 
     - name: Build tests in docker
       run: |
