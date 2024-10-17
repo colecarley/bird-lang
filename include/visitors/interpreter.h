@@ -284,8 +284,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(+);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::MINUS_EQUAL:
@@ -299,8 +299,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(-);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::STAR_EQUAL:
@@ -314,8 +314,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(*);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::SLASH_EQUAL:
@@ -329,8 +329,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(/);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::PERCENT_EQUAL:
@@ -341,8 +341,8 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(%);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, value);
+            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
+                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         default:
