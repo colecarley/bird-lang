@@ -27,7 +27,7 @@ jobs:
         push: true
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/github-actions-demo:latest
+        tags: ci:latest
     
     - name: Run tests
       run: echo "Running tests"
