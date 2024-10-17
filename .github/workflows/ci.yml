@@ -12,7 +12,7 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Build docker image 
-      run: docker build --platform linux/amd64 -t compiler-image -f ./.devcontainer/Dockerfile ../../.devcontainer
+      run: docker build --platform linux/amd64 -t compiler-image -f ./.devcontainer/Dockerfile ./.devcontainer
 
     - name: Run docker image
       run: docker run compiler-image /bin/sh -c "echo 'Hello, world!'"
