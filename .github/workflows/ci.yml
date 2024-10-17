@@ -27,8 +27,8 @@ jobs:
         pull: true
         push: true
         tags: ci:latest
-        cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+        cache-from: type=local,src=/tmp/.buildx-cache
     
     - name: Run tests
       run: echo "Running tests"
