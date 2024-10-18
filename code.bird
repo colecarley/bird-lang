@@ -1,4 +1,3 @@
-/*
 while true {
     print "first";
     break;
@@ -85,15 +84,10 @@ fn concat(first: str, second: str) -> int {
 print concat("foo", "bar");
 
 print "for loop";
-for var x: int = 1; x <= 5; x += 1 do 
-    print "x = ", x;
-*/
-
-print "for";
 var x = 0;
 
-for var y = x; x <= 5; x += 1 do
-    print x;
+for var y = x; y <= 5; y += 1 do
+    x = y;
 
 print x;
 
