@@ -174,20 +174,15 @@ public:
 
     void visit_block(Block *block)
     {
-        // std::cout << "incoming block env " << this->environment.get() << std::endl;
         std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
         new_environment->set_enclosing(this->environment);
-
-        // std::cout << "enclosing block env " << this->environment.get() << std::endl;
         this->environment = new_environment;
-        // std::cout << "new block env " << this->environment.get() << std::endl;
 
         for (auto &stmt : block->stmts)
         {
             stmt->accept(this);
         }
 
-        // std::cout << "revert block env " << this->environment->get_enclosing().get() << std::endl;
         this->environment = this->environment->get_enclosing();
     }
 
@@ -229,7 +224,6 @@ public:
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        // std::cout << "assign incomming env " << this->environment.get() << std::endl;
         bool enclosing = false;
         if (!this->environment->contains(assign_expr->identifier.lexeme))
         {
