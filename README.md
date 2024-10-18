@@ -78,7 +78,7 @@ cmake .. -DTESTS=OFF
 # Authors
 Cole Carley
 
-Aiden Kirk
+Aidan Kirk
 
 Nicholas Langley
 
