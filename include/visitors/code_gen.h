@@ -25,6 +25,9 @@
 #include "../ast_node/stmt/block.h"
 
 #include "../exceptions/bird_exception.h"
+#include "../exceptions/return_exception.h"
+#include "../exceptions/break_exception.h"
+#include "../exceptions/continue_exception.h"
 #include "../sym_table.h"
 
 #include "llvm/ADT/APFloat.h"
@@ -316,8 +319,14 @@ public:
 
         this->builder.SetInsertPoint(stmt_block);
         
-        while_stmt->stmt->accept(this);
-        this->builder.CreateBr(condition_block);
+        try {
+            while_stmt->stmt->accept(this);
+            this->builder.CreateBr(condition_block);
+        } catch (BreakException) {
+            this->builder.CreateBr(done_block);
+        } catch (ContinueException) {
+            this->builder.CreateBr(condition_block);
+        }
 
         this->builder.SetInsertPoint(done_block);
     }
@@ -605,11 +614,11 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        throw BirdException("implement break statement");
+        throw BreakException();
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
-        throw BirdException("implement continue statement");
+        throw ContinueException();
     }
 };
