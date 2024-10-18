@@ -298,7 +298,28 @@ public:
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
-        throw BirdException("Implement while statement code gen");
+        auto parent_fn = this->builder.GetInsertBlock()->getParent();
+
+        auto condition_block = llvm::BasicBlock::Create(this->context, "condition", parent_fn);
+        auto stmt_block = llvm::BasicBlock::Create(this->context, "stmt", parent_fn);
+        auto done_block = llvm::BasicBlock::Create(this->context, "done", parent_fn);
+
+        this->builder.CreateBr(condition_block);
+        
+        this->builder.SetInsertPoint(condition_block);
+
+        while_stmt->condition->accept(this);
+        auto condition = this->stack.top();
+        this->stack.pop();
+
+        this->builder.CreateCondBr(condition, stmt_block, done_block);
+
+        this->builder.SetInsertPoint(stmt_block);
+        
+        while_stmt->stmt->accept(this);
+        this->builder.CreateBr(condition_block);
+
+        this->builder.SetInsertPoint(done_block);
     }
 
     void visit_for_stmt(ForStmt *for_stmt)
@@ -481,11 +502,11 @@ public:
 
         // create blocks for true and false expressions in the ternary operation, and a done block to merge control flow
         auto true_block = llvm::BasicBlock::Create(this->context, "true", parent_fn);
-        auto flase_block = llvm::BasicBlock::Create(this->context, "false", parent_fn);
+        auto false_block = llvm::BasicBlock::Create(this->context, "false", parent_fn);
         auto done_block = llvm::BasicBlock::Create(this->context, "done", parent_fn);
 
         // create conditional branch for condition, if true -> true block, if false -> false block
-        this->builder.CreateCondBr(condition, true_block, flase_block);
+        this->builder.CreateCondBr(condition, true_block, false_block);
 
         this->builder.SetInsertPoint(true_block); // set insert point to true block for true expression instuctions
         ternary->true_expr->accept(this);
@@ -497,7 +518,7 @@ public:
         // update true block for phi node reference to predecessor
         true_block = this->builder.GetInsertBlock();
 
-        this->builder.SetInsertPoint(flase_block); // set insert point for false block for false expression instructions
+        this->builder.SetInsertPoint(false_block); // set insert point for false block for false expression instructions
         ternary->false_expr->accept(this);
         auto false_result = this->stack.top();
         this->stack.pop();
@@ -505,7 +526,7 @@ public:
         this->builder.CreateBr(done_block);
 
         // update false block for phi node reference to predecessor
-        flase_block = this->builder.GetInsertBlock();
+        false_block = this->builder.GetInsertBlock();
 
         // set insert point for done (merge) block
         this->builder.SetInsertPoint(done_block);
@@ -516,7 +537,7 @@ public:
          */
         auto phi_node = this->builder.CreatePHI(true_result->getType(), 2, "ternary result");
         phi_node->addIncoming(true_result, true_block);   // associates true result to true block
-        phi_node->addIncoming(false_result, flase_block); // associates false result to false block
+        phi_node->addIncoming(false_result, false_block); // associates false result to false block
 
         this->stack.push(phi_node); // push the phi node w branch result on to the stack
     }
