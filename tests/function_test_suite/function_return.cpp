@@ -20,11 +20,11 @@ TEST(FunctionTest, FunctionReturnTypeInt)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.call_table->contains("function"));
-    auto callable = interpreter.call_table->get("function");
 
     ASSERT_TRUE(interpreter.environment->contains("result"));
     auto result = interpreter.environment->get("result");
     ASSERT_TRUE(is_type<int>(result));
+    EXPECT_EQ(as_type<int>(result), 3);
 }
 
 TEST(FunctionTest, FunctionReturnTypeString)
@@ -45,4 +45,5 @@ TEST(FunctionTest, FunctionReturnTypeString)
     ASSERT_TRUE(interpreter.environment->contains("result"));
     auto result = interpreter.environment->get("result");
     ASSERT_TRUE(is_type<std::string>(result));
+    EXPECT_EQ(result, "string");
 }

@@ -294,7 +294,7 @@ TEST(ParserTest, FunctionFailsArrowNoReturnType)
     auto errors = error_tracker.get_errors();
 
     ASSERT_EQ(errors.size(), 1);
-    EXPECT_EQ(errors[0], "expected return type after arrow operator");
+    EXPECT_EQ(std::get<0>(errors[0]), "expected return type after arrow operator");
 }
 
 TEST(ParserTest, ParseIfStmt)
