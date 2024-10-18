@@ -91,20 +91,15 @@ for var y = x; y <= 5; y += 1 do
 
 print x;
 
-// increments 1 more time for some reason
-
 print "while";
 while x <= 10 
     x += 1;
 
 print x;
 
-// same here...
-
 print "scoped var assignment";
 var x = 1;
 {
-    // ternary true
     x += true ? 1 : 2;
 }
 print x;
