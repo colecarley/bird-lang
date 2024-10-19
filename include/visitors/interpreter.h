@@ -113,7 +113,6 @@ public:
 
             if (auto block = dynamic_cast<Block *>(stmt.get()))
             {
-                // std::cout << "initial env " << this->environment.get() << std::endl;
                 block->accept(this);
                 continue;
             }
@@ -188,6 +187,11 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
+        if (this->environment->contains(decl_stmt->identifier.lexeme))
+        {
+            throw BirdException("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
+        }
+
         decl_stmt->value->accept(this);
 
         auto result = std::move(this->stack.top());
@@ -370,6 +374,11 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
+        if (this->environment->contains(const_stmt->identifier.lexeme))
+        {
+            throw BirdException("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
+        }
+
         const_stmt->value->accept(this);
 
         auto result = std::move(this->stack.top());
@@ -380,17 +389,30 @@ public:
             std::string type_lexeme = const_stmt->type_identifier.value().lexeme;
 
             // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-            if (type_lexeme == "int" && !is_type<int>(result))
-                throw BirdException("mismatching type in assignment, expected int");
-
-            else if (type_lexeme == "float" && !is_type<float>(result))
-                throw BirdException("mismatching type in assignment, expected float");
-
+            if (type_lexeme == "int")
+            {
+                if (!is_type<int>(result))
+                {
+                    is_numeric(result) ? result.data = to_type<int, float>(result)
+                                       : throw BirdException("mismatching type in assignment, expected int");
+                }
+            }
+            else if (type_lexeme == "float")
+            {
+                if (!is_type<float>(result))
+                {
+                    is_numeric(result) ? result.data = to_type<float, int>(result)
+                                       : throw BirdException("mismatching type in assignment, expected float");
+                }
+            }
             else if (type_lexeme == "str" && !is_type<std::string>(result))
+            {
                 throw BirdException("mismatching type in assignment, expected str");
-
+            }
             else if (type_lexeme == "bool" && !is_type<bool>(result))
+            {
                 throw BirdException("mismatching type in assignment, expected bool");
+            }
         }
 
         this->environment->insert(const_stmt->identifier.lexeme, std::move(result));
