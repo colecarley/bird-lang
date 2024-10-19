@@ -224,19 +224,24 @@ public:
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        bool enclosing = false;
-        if (!this->environment->contains(assign_expr->identifier.lexeme))
+        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
+
+        while (current_env && !current_env->contains(assign_expr->identifier.lexeme))
         {
-            if (!this->environment->get_enclosing()->contains(assign_expr->identifier.lexeme))
-                throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
-            else
-                enclosing = true;
+            current_env = current_env->get_enclosing();
         }
 
-        auto previous_value = this->environment->get(assign_expr->identifier.lexeme);
+        if (!current_env)
+        {
+            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
+        }
+
+        auto previous_value = current_env->get(assign_expr->identifier.lexeme);
 
         if (!previous_value.is_mutable)
+        {
             throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.");
+        }
 
         assign_expr->value->accept(this);
         auto value = std::move(this->stack.top());
@@ -259,9 +264,6 @@ public:
             else
                 throw BirdException("The assigment value type does not match the identifer type.");
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, value);
-
             break;
         }
         case Token::Type::PLUS_EQUAL:
@@ -278,8 +280,6 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(+);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::MINUS_EQUAL:
@@ -293,8 +293,6 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(-);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::STAR_EQUAL:
@@ -308,8 +306,6 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(*);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::SLASH_EQUAL:
@@ -323,8 +319,6 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(/);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::PERCENT_EQUAL:
@@ -335,13 +329,13 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(%);
 
-            enclosing ? this->environment->get_enclosing()->insert(assign_expr->identifier.lexeme, previous_value)
-                      : this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         default:
             throw BirdException("Unidentified assignment operator " + assign_expr->assign_operator.lexeme);
         }
+
+        current_env->insert(assign_expr->identifier.lexeme, previous_value);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
