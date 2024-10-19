@@ -187,9 +187,16 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        if (this->environment->contains(decl_stmt->identifier.lexeme))
+        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
+
+        while (current_env)
         {
-            throw BirdException("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
+            if (this->environment->contains(decl_stmt->identifier.lexeme))
+            {
+                throw BirdException("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
+            }
+
+            current_env = current_env->get_enclosing();
         }
 
         decl_stmt->value->accept(this);
@@ -374,9 +381,16 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        if (this->environment->contains(const_stmt->identifier.lexeme))
+        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
+
+        while (current_env)
         {
-            throw BirdException("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
+            if (this->environment->contains(const_stmt->identifier.lexeme))
+            {
+                throw BirdException("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
+            }
+
+            current_env = current_env->get_enclosing();
         }
 
         const_stmt->value->accept(this);

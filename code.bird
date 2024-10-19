@@ -84,12 +84,12 @@ fn concat(first: str, second: str) -> int {
 print concat("foo", "bar");
 
 print "for loop";
-var x = 0;
+var z = 0;
 
-for var y = x; y <= 5; y += 1 do
-    x = y;
+for var y = z; y <= 5; y += 1 do
+    z = y;
 
-print x;
+print z;
 
 print "while";
 while x <= 10 
@@ -98,22 +98,22 @@ while x <= 10
 print x;
 
 print "scoped var assignment";
-var x = 1;
+var k = 1;
 {
-    x += true ? 1 : 2;
+    k += true ? 1 : 2;
 }
-print x;
+print k;
 
-var x = 0; 
+var l = 0; 
 while true { 
-    x += 1; 
-    if (x <= 2) { 
+    l += 1; 
+    if (l <= 2) { 
         continue; 
     } 
     break; 
 }
 
-print x;
+print l;
 
 
 var y = 0;
