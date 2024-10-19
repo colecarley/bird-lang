@@ -398,6 +398,8 @@ public:
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
+        auto original_environment = this->environment;
+
         while_stmt->condition->accept(this);
         auto condition_result = std::move(this->stack.top());
         this->stack.pop();
@@ -417,6 +419,12 @@ public:
             }
             catch (ContinueException e)
             {
+                while_stmt->condition->accept(this);
+                condition_result = std::move(this->stack.top());
+                this->stack.pop();
+
+                this->environment = original_environment;
+
                 continue;
             }
 
@@ -670,6 +678,7 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
+        this->environment = this->environment->get_enclosing();
         throw BreakException();
     }
 

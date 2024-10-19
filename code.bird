@@ -120,3 +120,15 @@ var y = 0;
 
 {{{{ y += 1; }}}}
 print y;
+
+var j = 0; 
+
+while true { 
+    j += 1; 
+    print j;
+    if (j <= 2) { 
+        continue; 
+    } 
+
+    break; 
+}
