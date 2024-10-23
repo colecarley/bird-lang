@@ -86,49 +86,61 @@ print concat("foo", "bar");
 print "for loop";
 var z = 0;
 
-for var y = z; y <= 5; y += 1 do
+for var y = z; y <= 5; y += 1 do {
     z = y;
+    print "z = ", z;
+}
 
-print z;
+print "result: z = ", z;
 
-print "while";
-while x <= 10 
+print "while loop";
+while x <= 10 {
+    print "x = ", x;
     x += 1;
+}
 
-print x;
+print "result: x = ", x;
 
 print "scoped var assignment";
 var k = 1;
 {
     k += true ? 1 : 2;
 }
-print k;
 
-var l = 0; 
-while true { 
-    l += 1; 
-    if (l <= 2) { 
-        continue; 
-    } 
-    break; 
-}
+print "result: k = ", k;
 
-print l;
-
-
+print "nested-nested scopes";
 var y = 0;
 
 {{{{ y += 1; }}}}
 print y;
 
+print "result: y = ", y;
+
 var j = 0; 
 
+print "while continue & break";
+print "j should equal 3";
 while true { 
     j += 1; 
-    print j;
     if (j <= 2) { 
         continue; 
     } 
 
     break; 
+}
+
+print "j = ", j;
+
+print "while test continue";
+print "shouldnt print when o = 2";
+
+var o = 0;
+
+while (o < 5) {
+    o += 1;
+    if o == 2 
+        continue;
+
+    print "o = ", o;
 }

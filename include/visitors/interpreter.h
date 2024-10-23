@@ -405,19 +405,13 @@ public:
             // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
             if (type_lexeme == "int")
             {
-                if (!is_type<int>(result))
-                {
-                    is_numeric(result) ? result.data = to_type<int, float>(result)
-                                       : throw BirdException("mismatching type in assignment, expected int");
-                }
+                is_numeric(result) ? result.data = to_type<int, float>(result)
+                                   : throw BirdException("mismatching type in assignment, expected int");
             }
             else if (type_lexeme == "float")
             {
-                if (!is_type<float>(result))
-                {
-                    is_numeric(result) ? result.data = to_type<float, int>(result)
-                                       : throw BirdException("mismatching type in assignment, expected float");
-                }
+                is_numeric(result) ? result.data = to_type<float, int>(result)
+                                   : throw BirdException("mismatching type in assignment, expected float");
             }
             else if (type_lexeme == "str" && !is_type<std::string>(result))
             {
