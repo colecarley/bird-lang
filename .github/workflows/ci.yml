@@ -14,6 +14,12 @@ jobs:
         compiler: llvm
         cmake: true
 
+    - name: install stuff
+      run: | 
+        sudo apt-get update
+        sudo apt-get clean 
+        sudo apt-get install -y build-essential libzstd-dev libgtest-dev libgmock-dev
+
     - name: Create a symlink to cmake
       run: |
         mkdir -p /opt/cmake/bin
