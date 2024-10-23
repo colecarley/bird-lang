@@ -127,6 +127,11 @@ public:
         this->errors.push_back(std::make_tuple(this->format_message("expected " + symbol + " " + where, token.line_num, token.char_num), token));
     }
 
+    const std::vector<std::tuple<std::string, Token>> get_errors() const
+    {
+        return this->errors;
+    }
+
     void print_errors()
     {
         for (auto error : this->errors)

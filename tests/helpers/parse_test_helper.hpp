@@ -22,6 +22,15 @@ std::vector<std::unique_ptr<Stmt>> parse_code(const std::string &code)
     return parser.parse();
 }
 
+std::vector<std::unique_ptr<Stmt>> parse_code_with_error_tracker(const std::string &code, UserErrorTracker &error_tracker)
+{
+    Lexer lexer(code, &error_tracker);
+    std::vector<Token> tokens = lexer.lex();
+
+    Parser parser(tokens, &error_tracker);
+    return parser.parse();
+}
+
 void print_expr(Expr *expr)
 {
     if (auto binary = dynamic_cast<Binary *>(expr))
