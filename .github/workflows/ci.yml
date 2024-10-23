@@ -12,7 +12,11 @@ jobs:
       uses: aminya/setup-cpp@v1
       with:
         compiler: llvm
-        # cmake: true
+        cmake: true
+
+    - name: WTF
+      run: |
+        which cmake
 
     - name: Build and Test
       run: |
