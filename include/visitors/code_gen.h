@@ -233,6 +233,20 @@ public:
         dest.flush();
     }
 
+    llvm::Type *from_bird_type(Token token)
+    {
+        if (token.lexeme == "bool")
+            return llvm::Type::getInt1Ty(context);
+        else if (token.lexeme == "int")
+            return llvm::Type::getInt64Ty(context);
+        else if (token.lexeme == "float")
+            return llvm::Type::getFloatTy(context);
+        else if (token.lexeme == "string")
+            throw BirdException("TODO: implement codegen for string type");
+        else
+            throw BirdException("invalid type");
+    }
+
     void visit_block(Block *block)
     {
         auto new_environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
@@ -308,7 +322,7 @@ public:
         auto done_block = llvm::BasicBlock::Create(this->context, "done", parent_fn);
 
         this->builder.CreateBr(condition_block);
-        
+
         this->builder.SetInsertPoint(condition_block);
 
         while_stmt->condition->accept(this);
@@ -318,13 +332,18 @@ public:
         this->builder.CreateCondBr(condition, stmt_block, done_block);
 
         this->builder.SetInsertPoint(stmt_block);
-        
-        try {
+
+        try
+        {
             while_stmt->stmt->accept(this);
             this->builder.CreateBr(condition_block);
-        } catch (BreakException) {
+        }
+        catch (BreakException)
+        {
             this->builder.CreateBr(done_block);
-        } catch (ContinueException) {
+        }
+        catch (ContinueException)
+        {
             this->builder.CreateBr(condition_block);
         }
 
@@ -451,6 +470,7 @@ public:
 
     void visit_primary(Primary *primary)
     {
+
         switch (primary->value.token_type)
         {
         case Token::Type::INT_LITERAL:
@@ -487,7 +507,7 @@ public:
             auto value = this->environment->get(primary->value.lexeme);
             if (value == nullptr)
             {
-                throw BirdException("undefined identifier");
+                throw BirdException("undefined type identifier");
             }
             this->stack.push(value);
             break;
@@ -558,7 +578,36 @@ public:
 
     void visit_func(Func *func)
     {
-        throw BirdException("implement func visit");
+        llvm::Function *function = module->getFunction(func->identifier.lexeme);
+
+        if (function)
+        {
+            throw BirdException("function " + func->identifier.lexeme + " is already defined");
+        }
+
+        std::vector<llvm::Type *> param_types;
+        for (const auto &param : func->param_list)
+            param_types.push_back(from_bird_type(param.second));
+
+        auto return_type = func->return_type ? from_bird_type(func->return_type.value()) : llvm::Type::getVoidTy(context);
+
+        auto function_type = llvm::FunctionType::get(return_type, param_types, false);
+
+        auto function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, func->identifier.lexeme, module.get());
+
+        unsigned i = 0;
+        for (auto &param : function->args())
+        {
+            param.setName(func->param_list[i++].first.lexeme);
+        }
+
+        this->visit_block(dynamic_cast<Block *>(func->block.get()));
+
+        auto block = llvm::BasicBlock::Create(context, "entry", function);
+        this->builder.SetInsertPoint(block);
+
+        // for (auto &param : function->args())
+        //     this->environment->insert()
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
