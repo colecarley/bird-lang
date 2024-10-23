@@ -90,19 +90,6 @@ test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
 	/opt/cmake/bin/ctest --force-new-ctest-process $(ARGS)
 .PHONY : test
-<<<<<<< HEAD
-
-# Special rule for the target test
-test/fast: test
-.PHONY : test/fast
-
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/opt/cmake/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-=======
->>>>>>> main
 
 # Special rule for the target test
 test/fast: test
@@ -140,50 +127,7 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-<<<<<<< HEAD
-# Target rules for targets named vars_without_type_test
-
-# Build rule for target.
-vars_without_type_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vars_without_type_test
-.PHONY : vars_without_type_test
-
-# fast build rule for target.
-vars_without_type_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_without_type_test.dir/build.make CMakeFiles/vars_without_type_test.dir/build
-.PHONY : vars_without_type_test/fast
-
-#=============================================================================
-# Target rules for targets named vars_with_type_test
-
-# Build rule for target.
-vars_with_type_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vars_with_type_test
-.PHONY : vars_with_type_test
-
-# fast build rule for target.
-vars_with_type_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_with_type_test.dir/build.make CMakeFiles/vars_with_type_test.dir/build
-.PHONY : vars_with_type_test/fast
-
-#=============================================================================
-# Target rules for targets named mutability_type_test
-
-# Build rule for target.
-mutability_type_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mutability_type_test
-.PHONY : mutability_type_test
-
-# fast build rule for target.
-mutability_type_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_type_test.dir/build.make CMakeFiles/mutability_type_test.dir/build
-.PHONY : mutability_type_test/fast
-
-#=============================================================================
-# Target rules for targets named omp_gen
-=======
 # Target rules for targets named while_test
->>>>>>> main
 
 # Build rule for target.
 while_test: cmake_check_build_system
@@ -313,17 +257,17 @@ var_redeclaration_scope_test/fast:
 .PHONY : var_redeclaration_scope_test/fast
 
 #=============================================================================
-# Target rules for targets named RISCVTargetParserTableGen
+# Target rules for targets named const_scope_test
 
 # Build rule for target.
-RISCVTargetParserTableGen: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 RISCVTargetParserTableGen
-.PHONY : RISCVTargetParserTableGen
+const_scope_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_scope_test
+.PHONY : const_scope_test
 
 # fast build rule for target.
-RISCVTargetParserTableGen/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/RISCVTargetParserTableGen.dir/build.make CMakeFiles/RISCVTargetParserTableGen.dir/build
-.PHONY : RISCVTargetParserTableGen/fast
+const_scope_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_scope_test.dir/build.make CMakeFiles/const_scope_test.dir/build
+.PHONY : const_scope_test/fast
 
 #=============================================================================
 # Target rules for targets named compiler
@@ -378,6 +322,19 @@ const_redeclaration_test/fast:
 .PHONY : const_redeclaration_test/fast
 
 #=============================================================================
+# Target rules for targets named const_without_type_test
+
+# Build rule for target.
+const_without_type_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_without_type_test
+.PHONY : const_without_type_test
+
+# fast build rule for target.
+const_without_type_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_without_type_test.dir/build.make CMakeFiles/const_without_type_test.dir/build
+.PHONY : const_without_type_test/fast
+
+#=============================================================================
 # Target rules for targets named acc_gen
 
 # Build rule for target.
@@ -404,43 +361,43 @@ omp_gen/fast:
 .PHONY : omp_gen/fast
 
 #=============================================================================
-# Target rules for targets named const_without_type_test
+# Target rules for targets named expr_test
 
 # Build rule for target.
-const_without_type_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_without_type_test
-.PHONY : const_without_type_test
+expr_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 expr_test
+.PHONY : expr_test
 
 # fast build rule for target.
-const_without_type_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_without_type_test.dir/build.make CMakeFiles/const_without_type_test.dir/build
-.PHONY : const_without_type_test/fast
+expr_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_test.dir/build.make CMakeFiles/expr_test.dir/build
+.PHONY : expr_test/fast
 
 #=============================================================================
-# Target rules for targets named intrinsics_gen
+# Target rules for targets named RISCVTargetParserTableGen
 
 # Build rule for target.
-intrinsics_gen: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 intrinsics_gen
-.PHONY : intrinsics_gen
+RISCVTargetParserTableGen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 RISCVTargetParserTableGen
+.PHONY : RISCVTargetParserTableGen
 
 # fast build rule for target.
-intrinsics_gen/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/intrinsics_gen.dir/build.make CMakeFiles/intrinsics_gen.dir/build
-.PHONY : intrinsics_gen/fast
+RISCVTargetParserTableGen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/RISCVTargetParserTableGen.dir/build.make CMakeFiles/RISCVTargetParserTableGen.dir/build
+.PHONY : RISCVTargetParserTableGen/fast
 
 #=============================================================================
-# Target rules for targets named if_test
+# Target rules for targets named for_loop_test
 
 # Build rule for target.
-if_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 if_test
-.PHONY : if_test
+for_loop_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 for_loop_test
+.PHONY : for_loop_test
 
 # fast build rule for target.
-if_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_test.dir/build.make CMakeFiles/if_test.dir/build
-.PHONY : if_test/fast
+for_loop_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/for_loop_test.dir/build.make CMakeFiles/for_loop_test.dir/build
+.PHONY : for_loop_test/fast
 
 #=============================================================================
 # Target rules for targets named immutability_test
@@ -482,19 +439,6 @@ parser_test/fast:
 .PHONY : parser_test/fast
 
 #=============================================================================
-# Target rules for targets named if_else_if_else_test
-
-# Build rule for target.
-if_else_if_else_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 if_else_if_else_test
-.PHONY : if_else_if_else_test
-
-# fast build rule for target.
-if_else_if_else_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_if_else_test.dir/build.make CMakeFiles/if_else_if_else_test.dir/build
-.PHONY : if_else_if_else_test/fast
-
-#=============================================================================
 # Target rules for targets named const_redeclaration_scope_test
 
 # Build rule for target.
@@ -508,56 +452,43 @@ const_redeclaration_scope_test/fast:
 .PHONY : const_redeclaration_scope_test/fast
 
 #=============================================================================
-# Target rules for targets named const_scope_test
+# Target rules for targets named if_else_if_else_test
 
 # Build rule for target.
-const_scope_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 const_scope_test
-.PHONY : const_scope_test
+if_else_if_else_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 if_else_if_else_test
+.PHONY : if_else_if_else_test
 
 # fast build rule for target.
-const_scope_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/const_scope_test.dir/build.make CMakeFiles/const_scope_test.dir/build
-.PHONY : const_scope_test/fast
+if_else_if_else_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_else_if_else_test.dir/build.make CMakeFiles/if_else_if_else_test.dir/build
+.PHONY : if_else_if_else_test/fast
 
 #=============================================================================
-# Target rules for targets named parser_test
+# Target rules for targets named intrinsics_gen
 
 # Build rule for target.
-parser_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 parser_test
-.PHONY : parser_test
+intrinsics_gen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 intrinsics_gen
+.PHONY : intrinsics_gen
 
 # fast build rule for target.
-parser_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_test.dir/build.make CMakeFiles/parser_test.dir/build
-.PHONY : parser_test/fast
+intrinsics_gen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/intrinsics_gen.dir/build.make CMakeFiles/intrinsics_gen.dir/build
+.PHONY : intrinsics_gen/fast
 
 #=============================================================================
-# Target rules for targets named lexer_test
+# Target rules for targets named if_test
 
 # Build rule for target.
-lexer_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lexer_test
-.PHONY : lexer_test
+if_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 if_test
+.PHONY : if_test
 
 # fast build rule for target.
-lexer_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/lexer_test.dir/build.make CMakeFiles/lexer_test.dir/build
-.PHONY : lexer_test/fast
-
-#=============================================================================
-# Target rules for targets named for_loop_test
-
-# Build rule for target.
-for_loop_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 for_loop_test
-.PHONY : for_loop_test
-
-# fast build rule for target.
-for_loop_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/for_loop_test.dir/build.make CMakeFiles/for_loop_test.dir/build
-.PHONY : for_loop_test/fast
+if_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_test.dir/build.make CMakeFiles/if_test.dir/build
+.PHONY : if_test/fast
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -655,31 +586,6 @@ src/parser.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/compiler.dir/build.make CMakeFiles/compiler.dir/src/parser.cpp.s
 .PHONY : src/parser.cpp.s
 
-<<<<<<< HEAD
-tests/for_loop_test_suite/for_loop_test.o: tests/for_loop_test_suite/for_loop_test.cpp.o
-.PHONY : tests/for_loop_test_suite/for_loop_test.o
-
-# target to build an object file
-tests/for_loop_test_suite/for_loop_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/for_loop_test.dir/build.make CMakeFiles/for_loop_test.dir/tests/for_loop_test_suite/for_loop_test.cpp.o
-.PHONY : tests/for_loop_test_suite/for_loop_test.cpp.o
-
-tests/for_loop_test_suite/for_loop_test.i: tests/for_loop_test_suite/for_loop_test.cpp.i
-.PHONY : tests/for_loop_test_suite/for_loop_test.i
-
-# target to preprocess a source file
-tests/for_loop_test_suite/for_loop_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/for_loop_test.dir/build.make CMakeFiles/for_loop_test.dir/tests/for_loop_test_suite/for_loop_test.cpp.i
-.PHONY : tests/for_loop_test_suite/for_loop_test.cpp.i
-
-tests/for_loop_test_suite/for_loop_test.s: tests/for_loop_test_suite/for_loop_test.cpp.s
-.PHONY : tests/for_loop_test_suite/for_loop_test.s
-
-# target to generate assembly for a file
-tests/for_loop_test_suite/for_loop_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/for_loop_test.dir/build.make CMakeFiles/for_loop_test.dir/tests/for_loop_test_suite/for_loop_test.cpp.s
-.PHONY : tests/for_loop_test_suite/for_loop_test.cpp.s
-=======
 tests/const_test_suite/const_redeclaration_test.o: tests/const_test_suite/const_redeclaration_test.cpp.o
 .PHONY : tests/const_test_suite/const_redeclaration_test.o
 
@@ -776,6 +682,54 @@ tests/const_test_suite/immutability_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/immutability_test.dir/build.make CMakeFiles/immutability_test.dir/tests/const_test_suite/immutability_test.cpp.s
 .PHONY : tests/const_test_suite/immutability_test.cpp.s
 
+tests/expr_test_suite/expr_test.o: tests/expr_test_suite/expr_test.cpp.o
+.PHONY : tests/expr_test_suite/expr_test.o
+
+# target to build an object file
+tests/expr_test_suite/expr_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_test.dir/build.make CMakeFiles/expr_test.dir/tests/expr_test_suite/expr_test.cpp.o
+.PHONY : tests/expr_test_suite/expr_test.cpp.o
+
+tests/expr_test_suite/expr_test.i: tests/expr_test_suite/expr_test.cpp.i
+.PHONY : tests/expr_test_suite/expr_test.i
+
+# target to preprocess a source file
+tests/expr_test_suite/expr_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_test.dir/build.make CMakeFiles/expr_test.dir/tests/expr_test_suite/expr_test.cpp.i
+.PHONY : tests/expr_test_suite/expr_test.cpp.i
+
+tests/expr_test_suite/expr_test.s: tests/expr_test_suite/expr_test.cpp.s
+.PHONY : tests/expr_test_suite/expr_test.s
+
+# target to generate assembly for a file
+tests/expr_test_suite/expr_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_test.dir/build.make CMakeFiles/expr_test.dir/tests/expr_test_suite/expr_test.cpp.s
+.PHONY : tests/expr_test_suite/expr_test.cpp.s
+
+tests/for_loop_test_suite/for_loop_test.o: tests/for_loop_test_suite/for_loop_test.cpp.o
+.PHONY : tests/for_loop_test_suite/for_loop_test.o
+
+# target to build an object file
+tests/for_loop_test_suite/for_loop_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/for_loop_test.dir/build.make CMakeFiles/for_loop_test.dir/tests/for_loop_test_suite/for_loop_test.cpp.o
+.PHONY : tests/for_loop_test_suite/for_loop_test.cpp.o
+
+tests/for_loop_test_suite/for_loop_test.i: tests/for_loop_test_suite/for_loop_test.cpp.i
+.PHONY : tests/for_loop_test_suite/for_loop_test.i
+
+# target to preprocess a source file
+tests/for_loop_test_suite/for_loop_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/for_loop_test.dir/build.make CMakeFiles/for_loop_test.dir/tests/for_loop_test_suite/for_loop_test.cpp.i
+.PHONY : tests/for_loop_test_suite/for_loop_test.cpp.i
+
+tests/for_loop_test_suite/for_loop_test.s: tests/for_loop_test_suite/for_loop_test.cpp.s
+.PHONY : tests/for_loop_test_suite/for_loop_test.s
+
+# target to generate assembly for a file
+tests/for_loop_test_suite/for_loop_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/for_loop_test.dir/build.make CMakeFiles/for_loop_test.dir/tests/for_loop_test_suite/for_loop_test.cpp.s
+.PHONY : tests/for_loop_test_suite/for_loop_test.cpp.s
+
 tests/if_test_suite/if_else_if_else_test.o: tests/if_test_suite/if_else_if_else_test.cpp.o
 .PHONY : tests/if_test_suite/if_else_if_else_test.o
 
@@ -847,7 +801,6 @@ tests/if_test_suite/if_test.s: tests/if_test_suite/if_test.cpp.s
 tests/if_test_suite/if_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/if_test.dir/build.make CMakeFiles/if_test.dir/tests/if_test_suite/if_test.cpp.s
 .PHONY : tests/if_test_suite/if_test.cpp.s
->>>>>>> main
 
 tests/lexer_test_suite/lexer_test.o: tests/lexer_test_suite/lexer_test.cpp.o
 .PHONY : tests/lexer_test_suite/lexer_test.o
@@ -897,31 +850,6 @@ tests/parser_test_suite/parser_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/parser_test.dir/build.make CMakeFiles/parser_test.dir/tests/parser_test_suite/parser_test.cpp.s
 .PHONY : tests/parser_test_suite/parser_test.cpp.s
 
-<<<<<<< HEAD
-tests/vars_test_suite/mutability_type_test.o: tests/vars_test_suite/mutability_type_test.cpp.o
-.PHONY : tests/vars_test_suite/mutability_type_test.o
-
-# target to build an object file
-tests/vars_test_suite/mutability_type_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_type_test.dir/build.make CMakeFiles/mutability_type_test.dir/tests/vars_test_suite/mutability_type_test.cpp.o
-.PHONY : tests/vars_test_suite/mutability_type_test.cpp.o
-
-tests/vars_test_suite/mutability_type_test.i: tests/vars_test_suite/mutability_type_test.cpp.i
-.PHONY : tests/vars_test_suite/mutability_type_test.i
-
-# target to preprocess a source file
-tests/vars_test_suite/mutability_type_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_type_test.dir/build.make CMakeFiles/mutability_type_test.dir/tests/vars_test_suite/mutability_type_test.cpp.i
-.PHONY : tests/vars_test_suite/mutability_type_test.cpp.i
-
-tests/vars_test_suite/mutability_type_test.s: tests/vars_test_suite/mutability_type_test.cpp.s
-.PHONY : tests/vars_test_suite/mutability_type_test.s
-
-# target to generate assembly for a file
-tests/vars_test_suite/mutability_type_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mutability_type_test.dir/build.make CMakeFiles/mutability_type_test.dir/tests/vars_test_suite/mutability_type_test.cpp.s
-.PHONY : tests/vars_test_suite/mutability_type_test.cpp.s
-=======
 tests/symbol_table_test_suite/const_redeclaration_scope_test.o: tests/symbol_table_test_suite/const_redeclaration_scope_test.cpp.o
 .PHONY : tests/symbol_table_test_suite/const_redeclaration_scope_test.o
 
@@ -1137,7 +1065,6 @@ tests/vars_test_suite/var_redeclaration_test.s: tests/vars_test_suite/var_redecl
 tests/vars_test_suite/var_redeclaration_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/var_redeclaration_test.dir/build.make CMakeFiles/var_redeclaration_test.dir/tests/vars_test_suite/var_redeclaration_test.cpp.s
 .PHONY : tests/vars_test_suite/var_redeclaration_test.cpp.s
->>>>>>> main
 
 tests/vars_test_suite/vars_with_type_test.o: tests/vars_test_suite/vars_with_type_test.cpp.o
 .PHONY : tests/vars_test_suite/vars_with_type_test.o
@@ -1187,8 +1114,6 @@ tests/vars_test_suite/vars_without_type_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/vars_without_type_test.dir/build.make CMakeFiles/vars_without_type_test.dir/tests/vars_test_suite/vars_without_type_test.cpp.s
 .PHONY : tests/vars_test_suite/vars_without_type_test.cpp.s
 
-<<<<<<< HEAD
-=======
 tests/while_test_suite/while_test.o: tests/while_test_suite/while_test.cpp.o
 .PHONY : tests/while_test_suite/while_test.o
 
@@ -1213,7 +1138,6 @@ tests/while_test_suite/while_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/while_test.dir/build.make CMakeFiles/while_test.dir/tests/while_test_suite/while_test.cpp.s
 .PHONY : tests/while_test_suite/while_test.cpp.s
 
->>>>>>> main
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1229,19 +1153,13 @@ help:
 	@echo "... omp_gen"
 	@echo "... assignment_with_ternary_test"
 	@echo "... compiler"
-<<<<<<< HEAD
-	@echo "... for_loop_test"
-	@echo "... lexer_test"
-	@echo "... mutability_type_test"
-	@echo "... parser_test"
-	@echo "... vars_with_type_test"
-	@echo "... vars_without_type_test"
-=======
 	@echo "... const_redeclaration_scope_test"
 	@echo "... const_redeclaration_test"
 	@echo "... const_scope_test"
 	@echo "... const_with_type_test"
 	@echo "... const_without_type_test"
+	@echo "... expr_test"
+	@echo "... for_loop_test"
 	@echo "... if_else_if_else_test"
 	@echo "... if_else_test"
 	@echo "... if_test"
@@ -1257,7 +1175,6 @@ help:
 	@echo "... vars_with_type_test"
 	@echo "... vars_without_type_test"
 	@echo "... while_test"
->>>>>>> main
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
@@ -1270,11 +1187,6 @@ help:
 	@echo "... src/parser.o"
 	@echo "... src/parser.i"
 	@echo "... src/parser.s"
-<<<<<<< HEAD
-	@echo "... tests/for_loop_test_suite/for_loop_test.o"
-	@echo "... tests/for_loop_test_suite/for_loop_test.i"
-	@echo "... tests/for_loop_test_suite/for_loop_test.s"
-=======
 	@echo "... tests/const_test_suite/const_redeclaration_test.o"
 	@echo "... tests/const_test_suite/const_redeclaration_test.i"
 	@echo "... tests/const_test_suite/const_redeclaration_test.s"
@@ -1287,6 +1199,12 @@ help:
 	@echo "... tests/const_test_suite/immutability_test.o"
 	@echo "... tests/const_test_suite/immutability_test.i"
 	@echo "... tests/const_test_suite/immutability_test.s"
+	@echo "... tests/expr_test_suite/expr_test.o"
+	@echo "... tests/expr_test_suite/expr_test.i"
+	@echo "... tests/expr_test_suite/expr_test.s"
+	@echo "... tests/for_loop_test_suite/for_loop_test.o"
+	@echo "... tests/for_loop_test_suite/for_loop_test.i"
+	@echo "... tests/for_loop_test_suite/for_loop_test.s"
 	@echo "... tests/if_test_suite/if_else_if_else_test.o"
 	@echo "... tests/if_test_suite/if_else_if_else_test.i"
 	@echo "... tests/if_test_suite/if_else_if_else_test.s"
@@ -1296,18 +1214,12 @@ help:
 	@echo "... tests/if_test_suite/if_test.o"
 	@echo "... tests/if_test_suite/if_test.i"
 	@echo "... tests/if_test_suite/if_test.s"
->>>>>>> main
 	@echo "... tests/lexer_test_suite/lexer_test.o"
 	@echo "... tests/lexer_test_suite/lexer_test.i"
 	@echo "... tests/lexer_test_suite/lexer_test.s"
 	@echo "... tests/parser_test_suite/parser_test.o"
 	@echo "... tests/parser_test_suite/parser_test.i"
 	@echo "... tests/parser_test_suite/parser_test.s"
-<<<<<<< HEAD
-	@echo "... tests/vars_test_suite/mutability_type_test.o"
-	@echo "... tests/vars_test_suite/mutability_type_test.i"
-	@echo "... tests/vars_test_suite/mutability_type_test.s"
-=======
 	@echo "... tests/symbol_table_test_suite/const_redeclaration_scope_test.o"
 	@echo "... tests/symbol_table_test_suite/const_redeclaration_scope_test.i"
 	@echo "... tests/symbol_table_test_suite/const_redeclaration_scope_test.s"
@@ -1335,19 +1247,15 @@ help:
 	@echo "... tests/vars_test_suite/var_redeclaration_test.o"
 	@echo "... tests/vars_test_suite/var_redeclaration_test.i"
 	@echo "... tests/vars_test_suite/var_redeclaration_test.s"
->>>>>>> main
 	@echo "... tests/vars_test_suite/vars_with_type_test.o"
 	@echo "... tests/vars_test_suite/vars_with_type_test.i"
 	@echo "... tests/vars_test_suite/vars_with_type_test.s"
 	@echo "... tests/vars_test_suite/vars_without_type_test.o"
 	@echo "... tests/vars_test_suite/vars_without_type_test.i"
 	@echo "... tests/vars_test_suite/vars_without_type_test.s"
-<<<<<<< HEAD
-=======
 	@echo "... tests/while_test_suite/while_test.o"
 	@echo "... tests/while_test_suite/while_test.i"
 	@echo "... tests/while_test_suite/while_test.s"
->>>>>>> main
 .PHONY : help
 
 
