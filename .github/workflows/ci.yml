@@ -23,7 +23,7 @@ jobs:
     - name: Create a symlink to cmake
       run: |
         mkdir -p /opt/cmake/bin
-        ln -s /home/runner/cmake/cmake-3.30.4-linux-x86_64/bin/cmake /opt/cmake/bin/cmake
+        ln -s $(which cmake) /opt/cmake/bin/cmake
 
     - name: Build and Test
       run: |
