@@ -5,16 +5,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Cpp
+    - name: Setup cpp
       uses: aminya/setup-cpp@v1
       with:
         compiler: llvm
         cmake: true
 
-    - name: install stuff
+    - name: Install dependencies
       run: | 
         sudo apt-get update
         sudo apt-get clean 
@@ -25,7 +25,7 @@ jobs:
         mkdir -p /opt/cmake/bin
         ln -s $(which cmake) /opt/cmake/bin/cmake
 
-    - name: Build and Test
+    - name: Build and test
       run: |
         cmake -Bbuild -DTESTS=ON
         make -C build
