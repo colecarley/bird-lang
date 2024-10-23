@@ -34,7 +34,6 @@ foreach(target ${LLVM_TARGETS_TO_BUILD})
   list(APPEND targets "LLVM${target}CodeGen")
 endforeach()
 
-
 target_link_libraries(compiler ${llvm_libs} ${targets})
 
 option(TESTS "Build the tests" OFF)
