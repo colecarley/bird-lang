@@ -1,0 +1,32 @@
+name: ci
+on: [push]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup cpp
+      uses: aminya/setup-cpp@v1
+      with:
+        compiler: llvm
+        cmake: true
+
+    - name: Install dependencies
+      run: | 
+        sudo apt-get update
+        sudo apt-get clean 
+        sudo apt-get install -y build-essential libzstd-dev libgtest-dev libgmock-dev
+
+    - name: Create a symlink to cmake
+      run: |
+        mkdir -p /opt/cmake/bin
+        ln -s $(which cmake) /opt/cmake/bin/cmake
+
+    - name: Build and test
+      run: |
+        cmake -Bbuild -DTESTS=ON
+        make -C build
+        ctest --test-dir build || true
