@@ -4,8 +4,7 @@
 #include <string>
 
 /*
- * Exceptions that should be thrown for errors in THIS code,
- * if there is a user error, that should be handled with the UserErrorTracker
+ * Exceptions that should be thrown runtime errors, during interpretation.
  */
 class RuntimeException : public std::exception
 {
