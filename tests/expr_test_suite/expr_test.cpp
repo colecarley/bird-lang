@@ -64,18 +64,6 @@ TEST(ExprTest, BinaryBoolInt)
     ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
 }
 
-/* I believe this should throw a BirdException rather than a floating point exception.
-TEST(ExprTest, BinaryDivideByZero)
-{
-    auto code = "var x = 10 / 0;";
-    auto ast = parse_code(code);
-
-    Interpreter interpreter;
-
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
-}
-*/
-
 TEST(ExprTest, CondExpr)
 {
     auto code = "var x = 1 == 1 != false;";
@@ -102,7 +90,6 @@ TEST(ExprTest, CondExprIntInt)
     ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
 }
 
-/* This test fails. I believe it should output true not false.
 TEST(ExprTest, CondExprFloatIntOverflow)
 {
     auto code = "var x = 0.9999999999 < 1;";
@@ -115,9 +102,7 @@ TEST(ExprTest, CondExprFloatIntOverflow)
     ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
     ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
 }
-*/
 
-/* This test fails. I believe it should output true not false.
 TEST(ExprTest, CondExprIntFloatOverflow)
 {
     auto code = "var x = 1 > 0.9999999999;";
@@ -130,7 +115,6 @@ TEST(ExprTest, CondExprIntFloatOverflow)
     ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
     ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
 }
-*/
 
 TEST(ExprTest, CondExprIntFloat)
 {
@@ -178,17 +162,12 @@ TEST(ExprTest, IdentifierInExpr)
     ASSERT_EQ(as_type<float>(interpreter.environment->get("x")), 56.2f);
 }
 
-/* This test creates a segmentation fault when I don't think it should.
-TEST(ExprTest, AssignInExpr)
+TEST(ExprTest, BinaryDivideByZero)
 {
-    auto code = "var z: int = 2; var x = (z += 3 + 3) + z - (z *= 4.0);";
+    auto code = "var x = 10 / 0;";
     auto ast = parse_code(code);
 
     Interpreter interpreter;
-    interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<float>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<float>(interpreter.environment->get("x")), -16.0f);
+    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
 }
-*/
