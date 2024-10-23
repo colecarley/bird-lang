@@ -12,7 +12,7 @@ jobs:
       uses: aminya/setup-cpp@v1
       with:
         compiler: llvm
-        cmake: true
+        # cmake: true
 
     - name: Build and Test
       run: |
