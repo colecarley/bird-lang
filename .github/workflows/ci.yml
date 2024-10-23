@@ -17,3 +17,4 @@ jobs:
     - name: Build and Test
       run: |
         cmake -Bbuild
+        make -C build
