@@ -8,8 +8,6 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-set(CMAKE_COMMAND "/home/runner/cmake/cmake-3.30.4-linux-x86_64/bin//cmake") 
-
 find_package(LLVM 18.1.8 REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
