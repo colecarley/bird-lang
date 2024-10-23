@@ -7,15 +7,18 @@
 #include "../include/ast_node/expr/call.h"
 
 #include "../include/ast_node/stmt/decl_stmt.h"
-#include "../include/ast_node/stmt/assign_stmt.h"
+#include "../include/ast_node/expr/assign_expr.h"
 #include "../include/ast_node/stmt/print_stmt.h"
 #include "../include/ast_node/stmt/if_stmt.h"
 #include "../include/ast_node/stmt/expr_stmt.h"
 #include "../include/ast_node/stmt/const_stmt.h"
 #include "../include/ast_node/stmt/while_stmt.h"
+#include "../include/ast_node/stmt/for_stmt.h"
 #include "../include/ast_node/stmt/return_stmt.h"
 #include "../include/ast_node/stmt/block.h"
 #include "../include/ast_node/stmt/func.h"
+#include "../include/ast_node/stmt/break_stmt.h"
+#include "../include/ast_node/stmt/continue_stmt.h"
 
 #include "../include/exceptions/bird_exception.h"
 #include "../include/exceptions/user_exception.h"
@@ -52,25 +55,6 @@ std::unique_ptr<Stmt> Parser::stmt()
     {
     case Token::Type::VAR:
         return this->var_decl();
-    case Token::Type::IDENTIFIER:
-        if (this->is_at_end())
-        {
-            break;
-        }
-
-        switch (this->peek_next().token_type)
-        {
-        case Token::Type::EQUAL:
-        case Token::Type::PLUS_EQUAL:
-        case Token::Type::MINUS_EQUAL:
-        case Token::Type::STAR_EQUAL:
-        case Token::Type::SLASH_EQUAL:
-        case Token::Type::PERCENT_EQUAL:
-            return this->assign_stmt();
-        default:
-            break;
-        }
-        break;
     case Token::Type::IF:
         return this->if_stmt();
     case Token::Type::CONST:
@@ -83,8 +67,14 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->func();
     case Token::Type::WHILE:
         return this->while_stmt();
+    case Token::Type::FOR:
+        return this->for_stmt();
     case Token::Type::RETURN:
         return this->return_stmt();
+    case Token::Type::BREAK:
+        return this->break_stmt();
+    case Token::Type::CONTINUE:
+        return this->continue_stmt();
     default:
         break;
     }
@@ -282,6 +272,55 @@ std::unique_ptr<Stmt> Parser::while_stmt()
     return std::make_unique<WhileStmt>(WhileStmt(std::move(condition), std::move(stmt)));
 }
 
+std::unique_ptr<Stmt> Parser::for_stmt()
+{
+    if (this->advance().token_type != Token::Type::FOR)
+    {
+        throw BirdException("expected 'for' at the beginning of for statement");
+    }
+
+    std::optional<std::unique_ptr<Stmt>> initializer;
+    if (this->peek().token_type != Token::Type::SEMICOLON)
+    {
+        initializer = this->stmt();
+    }
+
+    if (this->peek().token_type == Token::Type::SEMICOLON)
+    {
+        this->advance();
+    }
+
+    std::optional<std::unique_ptr<Expr>> condition;
+    if (this->peek().token_type != Token::Type::SEMICOLON)
+    {
+        condition = this->expr();
+    }
+
+    if (this->peek().token_type == Token::Type::SEMICOLON)
+    {
+        this->advance();
+    }
+
+    std::optional<std::unique_ptr<Expr>> increment;
+    if (this->peek().token_type != Token::Type::DO)
+    {
+        increment = this->expr();
+    }
+
+    if (this->advance().token_type != Token::Type::DO)
+    {
+        throw BirdException("expected 'do' at the end of for statement clauses");
+    }
+
+    auto body = this->stmt();
+
+    return std::make_unique<ForStmt>(
+        std::move(initializer),
+        std::move(condition),
+        std::move(increment),
+        std::move(body));
+}
+
 std::unique_ptr<Stmt> Parser::var_decl()
 {
     if (this->advance().token_type != Token::Type::VAR)
@@ -330,35 +369,50 @@ std::unique_ptr<Stmt> Parser::var_decl()
     return result;
 }
 
-std::unique_ptr<Stmt> Parser::assign_stmt()
+std::unique_ptr<Expr> Parser::assign_expr()
 {
-    if (this->peek().token_type != Token::Type::IDENTIFIER)
+    auto left = this->ternary();
+    // TODO: check if left is an identifier, return if not;
+
+    // if next token is an assignment operator
+    if (this->peek().token_type == Token::Type::EQUAL ||
+        this->peek().token_type == Token::Type::PLUS_EQUAL ||
+        this->peek().token_type == Token::Type::MINUS_EQUAL ||
+        this->peek().token_type == Token::Type::STAR_EQUAL ||
+        this->peek().token_type == Token::Type::SLASH_EQUAL ||
+        this->peek().token_type == Token::Type::PERCENT_EQUAL)
     {
-        throw BirdException("Expected variable identifier");
+        // save token
+        Token assign_operator = this->advance();
+
+        // check that left is an identifier, if not throw BirdException
+        if (auto *identifier = dynamic_cast<Primary *>(left.get()))
+        {
+            if (identifier->value.token_type != Token::Type::IDENTIFIER)
+            {
+                throw BirdException("can not assign value to non-identifier");
+            }
+
+            auto right = this->expr(); // parse expression
+
+            // create assignment expression with identifier, operator and expression
+            return std::make_unique<AssignExpr>(identifier->value, assign_operator, std::move(right));
+        }
+        else
+        {
+            throw BirdException("can not assign value to non-identifier");
+        }
     }
 
-    auto identifier = this->advance();
+    return left;
+}
 
-    switch (this->peek().token_type)
+std::unique_ptr<Stmt> Parser::break_stmt()
+{
+    if (this->advance().token_type != Token::Type::BREAK)
     {
-    case Token::Type::EQUAL:
-    case Token::Type::PLUS_EQUAL:
-    case Token::Type::MINUS_EQUAL:
-    case Token::Type::STAR_EQUAL:
-    case Token::Type::SLASH_EQUAL:
-    case Token::Type::PERCENT_EQUAL:
-        break;
-    default:
-    {
-        this->user_error_tracker->expected("assignment operator", "in assignment", this->peek_previous());
-        this->synchronize();
-        throw UserException();
+        throw BirdException("Expected 'break' at the beginning of break stmt");
     }
-    }
-
-    auto assign_operator = this->advance();
-
-    auto assign_stmt = std::make_unique<AssignStmt>(AssignStmt(identifier, assign_operator, this->expr()));
 
     if (this->advance().token_type != Token::Type::SEMICOLON)
     {
@@ -367,12 +421,29 @@ std::unique_ptr<Stmt> Parser::assign_stmt()
         throw UserException();
     }
 
-    return assign_stmt;
+    return std::make_unique<BreakStmt>();
+}
+
+std::unique_ptr<Stmt> Parser::continue_stmt()
+{
+    if (this->advance().token_type != Token::Type::CONTINUE)
+    {
+        throw BirdException("Expected 'continue' at the beginning of continue stmt");
+    }
+
+    if (this->advance().token_type != Token::Type::SEMICOLON)
+    {
+        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
+        this->synchronize();
+        throw UserException();
+    }
+
+    return std::make_unique<ContinueStmt>();
 }
 
 std::unique_ptr<Expr> Parser::expr()
 {
-    return this->ternary();
+    return this->assign_expr();
 }
 
 std::unique_ptr<Expr> Parser::ternary()

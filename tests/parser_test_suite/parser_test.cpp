@@ -210,6 +210,93 @@ TEST(ParserTest, ParseFuncStmt)
     EXPECT_EQ(rhs_primary->value.lexeme, "second");
 }
 
+TEST(ParserTest, ParseFunctionNoArgsNoReturnType)
+{
+    std::string code = "fn function() {}";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+
+    Func *func_stmt = dynamic_cast<Func *>(stmts[0].get());
+    ASSERT_NE(func_stmt, nullptr);
+
+    EXPECT_EQ(func_stmt->identifier.lexeme, "function");
+    ASSERT_FALSE(func_stmt->return_type.has_value());
+
+    ASSERT_EQ(func_stmt->param_list.size(), 0);
+
+    // get Block and check for not nullptr
+    Block *block_stmt = dynamic_cast<Block *>(func_stmt->block.get());
+    ASSERT_NE(block_stmt, nullptr);
+    ASSERT_EQ(block_stmt->stmts.size(), 0);
+}
+
+TEST(ParserTest, ParseFunctionNoArgs)
+{
+    std::string code = "fn function() -> int {}";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+
+    Func *func_stmt = dynamic_cast<Func *>(stmts[0].get());
+    ASSERT_NE(func_stmt, nullptr);
+
+    EXPECT_EQ(func_stmt->identifier.lexeme, "function");
+    ASSERT_TRUE(func_stmt->return_type.has_value());
+    EXPECT_EQ(func_stmt->return_type->lexeme, "int");
+
+    ASSERT_EQ(func_stmt->param_list.size(), 0);
+
+    // get Block and check for not nullptr
+    Block *block_stmt = dynamic_cast<Block *>(func_stmt->block.get());
+    ASSERT_NE(block_stmt, nullptr);
+    ASSERT_EQ(block_stmt->stmts.size(), 0);
+}
+
+TEST(ParserTest, ParseFunctionNoReturnType)
+{
+    std::string code = "fn function(i: int, j: string) {}";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+
+    Func *func_stmt = dynamic_cast<Func *>(stmts[0].get());
+    ASSERT_NE(func_stmt, nullptr);
+
+    EXPECT_EQ(func_stmt->identifier.lexeme, "function");
+    ASSERT_FALSE(func_stmt->return_type.has_value());
+
+    ASSERT_EQ(func_stmt->param_list.size(), 2);
+    EXPECT_EQ(func_stmt->param_list[0].first.lexeme, "i");
+    EXPECT_EQ(func_stmt->param_list[0].second.lexeme, "int");
+    EXPECT_EQ(func_stmt->param_list[1].first.lexeme, "j");
+    EXPECT_EQ(func_stmt->param_list[1].second.lexeme, "string");
+
+    // get Block and check for not nullptr
+    Block *block_stmt = dynamic_cast<Block *>(func_stmt->block.get());
+    ASSERT_NE(block_stmt, nullptr);
+    ASSERT_EQ(block_stmt->stmts.size(), 0);
+}
+
+TEST(ParserTest, FunctionFailsArrowNoReturnType)
+{
+    std::string code = "fn function() -> {}";
+
+    UserErrorTracker error_tracker(code);
+
+    ASSERT_THROW(auto stmts = parse_code_with_error_tracker(code, error_tracker), UserException);
+
+    ASSERT_TRUE(error_tracker.has_errors());
+
+    auto errors = error_tracker.get_errors();
+
+    ASSERT_EQ(errors.size(), 1);
+    EXPECT_EQ(std::get<0>(errors[0]), "expected return type after arrow operator");
+}
+
 TEST(ParserTest, ParseIfStmt)
 {
     /*
@@ -342,4 +429,85 @@ TEST(ParserTest, ParseWhileStmt)
     Primary *print_arg = dynamic_cast<Primary *>(print_stmt->args[0].get());
     ASSERT_NE(print_arg, nullptr);
     EXPECT_EQ(print_arg->value.lexeme, "1");
+}
+
+// Should be incorporated into a comprehensive loop test when loops are implemented.
+TEST(ParserTest, ParseBreakStmt)
+{
+    std::string code = "break;";
+
+    auto stmts = parse_code(code);
+
+    // check for break statement
+    ASSERT_EQ(stmts.size(), 1);
+    BreakStmt *break_stmt = dynamic_cast<BreakStmt *>(stmts[0].get());
+    ASSERT_NE(break_stmt, nullptr);
+}
+
+// Should be incorporated into a comprehensive loop test when loops are implemented.
+TEST(ParserTest, ParseContinueStmt)
+{
+    std::string code = "continue;";
+
+    auto stmts = parse_code(code);
+
+    // check for break statement
+    ASSERT_EQ(stmts.size(), 1);
+    ContinueStmt *continue_stmt = dynamic_cast<ContinueStmt *>(stmts[0].get());
+    ASSERT_NE(continue_stmt, nullptr);
+}
+
+TEST(ParserTest, ParseTernaryAccept)
+{
+    std::string code = "print 2.3 > 2.1 ? 1 : 0;";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
+    PrintStmt *print_stmt = dynamic_cast<PrintStmt *>(stmts[0].get());
+    ASSERT_NE(print_stmt, nullptr);
+
+    ASSERT_EQ(print_stmt->args.size(), 1);
+    Ternary *ternary_expr = dynamic_cast<Ternary *>(print_stmt->args[0].get());
+    ASSERT_NE(ternary_expr, nullptr);
+
+    Binary *condition = dynamic_cast<Binary *>(ternary_expr->condition.get());
+    ASSERT_NE(condition, nullptr);
+
+    EXPECT_EQ(condition->op.lexeme, ">");
+
+    Primary *lhs_primary = dynamic_cast<Primary *>(condition->left.get());
+    ASSERT_NE(lhs_primary, nullptr);
+    EXPECT_EQ(lhs_primary->value.lexeme, "2.3");
+
+    Primary *rhs_primary = dynamic_cast<Primary *>(condition->right.get());
+    ASSERT_NE(rhs_primary, nullptr);
+    EXPECT_EQ(rhs_primary->value.lexeme, "2.1");
+
+    Primary *ternary_true = dynamic_cast<Primary *>(ternary_expr->true_expr.get());
+    ASSERT_NE(ternary_true, nullptr);
+    EXPECT_EQ(ternary_true->value.lexeme, "1");
+
+    Primary *ternary_false = dynamic_cast<Primary *>(ternary_expr->false_expr.get());
+    ASSERT_NE(ternary_true, nullptr);
+    EXPECT_EQ(ternary_false->value.lexeme, "0");
+}
+
+TEST(ParserTest, ParseTernaryReject)
+{
+    // shouldnt work
+    std::string code = "(1 > 2) print 1 : print 2;";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_NE(stmts.size(), 1);
+}
+
+TEST(ParserTest, ParserForLoop)
+{
+    std::string code = "for var x: int = 0; x <= 5; x += 1 do print x;";
+
+    auto stmts = parse_code(code);
+
+    ASSERT_EQ(stmts.size(), 1);
 }
