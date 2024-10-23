@@ -73,14 +73,14 @@ class Interpreter : public Visitor
 {
 
 public:
-    std::unique_ptr<SymbolTable<Value>> environment;
-    std::unique_ptr<SymbolTable<Callable>> call_table;
+    std::shared_ptr<SymbolTable<Value>> environment;
+    std::shared_ptr<SymbolTable<Callable>> call_table;
     std::stack<Value> stack;
 
     Interpreter()
     {
-        this->environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
-        this->call_table = std::make_unique<SymbolTable<Callable>>(SymbolTable<Callable>());
+        this->environment = std::make_shared<SymbolTable<Value>>();
+        this->call_table = std::make_shared<SymbolTable<Callable>>();
     }
 
     void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
@@ -173,9 +173,9 @@ public:
 
     void visit_block(Block *block)
     {
-        auto new_environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
-        new_environment->set_enclosing(std::move(this->environment));
-        this->environment = std::move(new_environment);
+        std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
 
         for (auto &stmt : block->stmts)
         {
@@ -187,6 +187,18 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
+        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
+
+        while (current_env)
+        {
+            if (this->environment->contains(decl_stmt->identifier.lexeme))
+            {
+                throw BirdException("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
+            }
+
+            current_env = current_env->get_enclosing();
+        }
+
         decl_stmt->value->accept(this);
 
         auto result = std::move(this->stack.top());
@@ -223,12 +235,24 @@ public:
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        if (!this->environment->contains(assign_expr->identifier.lexeme))
-            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
+        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
 
-        auto previous_value = this->environment->get(assign_expr->identifier.lexeme);
+        while (current_env && !current_env->contains(assign_expr->identifier.lexeme))
+        {
+            current_env = current_env->get_enclosing();
+        }
+
+        if (!current_env)
+        {
+            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
+        }
+
+        auto previous_value = current_env->get(assign_expr->identifier.lexeme);
+
         if (!previous_value.is_mutable)
+        {
             throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.");
+        }
 
         assign_expr->value->accept(this);
         auto value = std::move(this->stack.top());
@@ -251,7 +275,6 @@ public:
             else
                 throw BirdException("The assigment value type does not match the identifer type.");
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::PLUS_EQUAL:
@@ -268,7 +291,6 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(+);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::MINUS_EQUAL:
@@ -282,7 +304,6 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(-);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::STAR_EQUAL:
@@ -296,7 +317,6 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(*);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::SLASH_EQUAL:
@@ -310,7 +330,6 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(/);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         case Token::Type::PERCENT_EQUAL:
@@ -321,12 +340,13 @@ public:
             else
                 THROW_UNKNWOWN_COMPASSIGN_OPERATOR(%);
 
-            this->environment->insert(assign_expr->identifier.lexeme, previous_value);
             break;
         }
         default:
             throw BirdException("Unidentified assignment operator " + assign_expr->assign_operator.lexeme);
         }
+
+        current_env->insert(assign_expr->identifier.lexeme, previous_value);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -361,6 +381,18 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
+        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
+
+        while (current_env)
+        {
+            if (this->environment->contains(const_stmt->identifier.lexeme))
+            {
+                throw BirdException("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
+            }
+
+            current_env = current_env->get_enclosing();
+        }
+
         const_stmt->value->accept(this);
 
         auto result = std::move(this->stack.top());
@@ -371,17 +403,24 @@ public:
             std::string type_lexeme = const_stmt->type_identifier.value().lexeme;
 
             // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
-            if (type_lexeme == "int" && !is_type<int>(result))
-                throw BirdException("mismatching type in assignment, expected int");
-
-            else if (type_lexeme == "float" && !is_type<float>(result))
-                throw BirdException("mismatching type in assignment, expected float");
-
+            if (type_lexeme == "int")
+            {
+                is_numeric(result) ? result.data = to_type<int, float>(result)
+                                   : throw BirdException("mismatching type in assignment, expected int");
+            }
+            else if (type_lexeme == "float")
+            {
+                is_numeric(result) ? result.data = to_type<float, int>(result)
+                                   : throw BirdException("mismatching type in assignment, expected float");
+            }
             else if (type_lexeme == "str" && !is_type<std::string>(result))
+            {
                 throw BirdException("mismatching type in assignment, expected str");
-
+            }
             else if (type_lexeme == "bool" && !is_type<bool>(result))
+            {
                 throw BirdException("mismatching type in assignment, expected bool");
+            }
         }
 
         this->environment->insert(const_stmt->identifier.lexeme, std::move(result));
@@ -389,6 +428,8 @@ public:
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
+        auto original_environment = this->environment;
+
         while_stmt->condition->accept(this);
         auto condition_result = std::move(this->stack.top());
         this->stack.pop();
@@ -408,6 +449,12 @@ public:
             }
             catch (ContinueException e)
             {
+                while_stmt->condition->accept(this);
+                condition_result = std::move(this->stack.top());
+                this->stack.pop();
+
+                this->environment = original_environment;
+
                 continue;
             }
 
@@ -419,9 +466,9 @@ public:
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
-        auto new_environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
-        new_environment->set_enclosing(std::move(this->environment));
-        this->environment = std::move(new_environment);
+        std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
 
         if (for_stmt->initializer.has_value())
         {
@@ -447,7 +494,18 @@ public:
                 }
             }
 
-            for_stmt->body->accept(this);
+            try
+            {
+                for_stmt->body->accept(this);
+            }
+            catch (BreakException e)
+            {
+                break;
+            }
+            catch (ContinueException e)
+            {
+                continue;
+            }
 
             if (for_stmt->increment.has_value())
             {
@@ -650,6 +708,7 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
+        this->environment = this->environment->get_enclosing();
         throw BreakException();
     }
 

@@ -13,7 +13,7 @@ template <typename T>
 class SymbolTable
 {
     std::map<std::string, T> vars;
-    std::unique_ptr<SymbolTable> enclosing;
+    std::shared_ptr<SymbolTable> enclosing;
 
 public:
     void insert(std::string identifier, T value)
@@ -37,14 +37,14 @@ public:
         }
     }
 
-    std::unique_ptr<SymbolTable> get_enclosing()
+    std::shared_ptr<SymbolTable> get_enclosing() const
     {
-        return std::move(this->enclosing);
+        return this->enclosing;
     }
 
-    void set_enclosing(std::unique_ptr<SymbolTable> enclosing)
+    void set_enclosing(std::shared_ptr<SymbolTable> enclosing)
     {
-        this->enclosing = std::move(enclosing);
+        this->enclosing = enclosing;
     }
 
     bool contains(std::string identifier)

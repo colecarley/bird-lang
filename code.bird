@@ -84,5 +84,63 @@ fn concat(first: str, second: str) -> int {
 print concat("foo", "bar");
 
 print "for loop";
-for var x: int = 1; x <= 5; x += 1 do 
+var z = 0;
+
+for var y = z; y <= 5; y += 1 do {
+    z = y;
+    print "z = ", z;
+}
+
+print "result: z = ", z;
+
+print "while loop";
+while x <= 10 {
     print "x = ", x;
+    x += 1;
+}
+
+print "result: x = ", x;
+
+print "scoped var assignment";
+var k = 1;
+{
+    k += true ? 1 : 2;
+}
+
+print "result: k = ", k;
+
+print "nested-nested scopes";
+var y = 0;
+
+{{{{ y += 1; }}}}
+print y;
+
+print "result: y = ", y;
+
+var j = 0; 
+
+print "while continue & break";
+print "j should equal 3";
+while true { 
+    j += 1; 
+    if (j <= 2) { 
+        continue; 
+    } 
+
+    break; 
+}
+
+print "j = ", j;
+
+print "while test continue";
+print "shouldnt print when o = 2";
+
+var o = 0;
+
+while (o < 5) {
+    o += 1;
+    if o == 2 
+        continue;
+
+    print "o = ", o;
+}
