@@ -64,7 +64,7 @@
     throw BirdException("The '" #op "' binary operator could not be used to interpret these values.");
 
 #define THROW_UNKNWOWN_COMPASSIGN_OPERATOR(op) \
-    throw BirdException("The '" #op "'= assignment operator could not be used to interpret these values.");
+    throw BirdException("The '" #op "=' assignment operator could not be used to interpret these values.");
 
 /*
  * Visitor that interprets and evaluates the AST
@@ -209,25 +209,14 @@ public:
         {
             std::string type_lexeme = decl_stmt->type_identifier.value().lexeme;
 
-            // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
             if (type_lexeme == "int")
             {
-                if (!is_numeric(result))
-                    throw BirdException("mismatching type in assignment, expected int");
-                else
-                    result.data = to_type<int, float>(result);
+                result.data = to_type<int, float>(result);
             }
             else if (type_lexeme == "float")
             {
-                if (!is_numeric(result))
-                    throw BirdException("mismatching type in assignment, expected float");
-                else
-                    result.data = to_type<float, int>(result);
+                result.data = to_type<float, int>(result);
             }
-            else if (type_lexeme == "str" && !is_type<std::string>(result))
-                throw BirdException("mismatching type in assignment, expected str");
-            else if (type_lexeme == "bool" && !is_type<bool>(result))
-                throw BirdException("mismatching type in assignment, expected bool");
         }
 
         this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
@@ -262,18 +251,11 @@ public:
         {
         case Token::Type::EQUAL:
         {
-            if (is_matching_type<bool>(previous_value, value) ||
-                is_matching_type<std::string>(previous_value, value))
-                previous_value.data = value.data;
-
-            else if (is_type<int>(previous_value) && is_numeric(value))
+            if (is_type<int>(previous_value) && is_numeric(value))
                 previous_value.data = to_type<int, float>(value);
 
-            else if (is_type<float>(previous_value) && is_numeric(value))
+            if (is_type<float>(previous_value) && is_numeric(value))
                 previous_value.data = to_type<float, int>(value);
-
-            else
-                throw BirdException("The assigment value type does not match the identifer type.");
 
             break;
         }
@@ -402,24 +384,13 @@ public:
         {
             std::string type_lexeme = const_stmt->type_identifier.value().lexeme;
 
-            // TODO: pass the UserErrorTracker into the interpreter so we can handle runtime errors
             if (type_lexeme == "int")
             {
-                is_numeric(result) ? result.data = to_type<int, float>(result)
-                                   : throw BirdException("mismatching type in assignment, expected int");
+                result.data = to_type<int, float>(result);
             }
             else if (type_lexeme == "float")
             {
-                is_numeric(result) ? result.data = to_type<float, int>(result)
-                                   : throw BirdException("mismatching type in assignment, expected float");
-            }
-            else if (type_lexeme == "str" && !is_type<std::string>(result))
-            {
-                throw BirdException("mismatching type in assignment, expected str");
-            }
-            else if (type_lexeme == "bool" && !is_type<bool>(result))
-            {
-                throw BirdException("mismatching type in assignment, expected bool");
+                result.data = to_type<float, int>(result);
             }
         }
 
@@ -433,9 +404,6 @@ public:
         while_stmt->condition->accept(this);
         auto condition_result = std::move(this->stack.top());
         this->stack.pop();
-
-        if (!is_type<bool>(condition_result))
-            throw BirdException("expected bool in while statement condition");
 
         while (as_type<bool>(condition_result))
         {
@@ -482,11 +450,6 @@ public:
                 for_stmt->condition.value()->accept(this);
                 auto condition_result = std::move(this->stack.top());
                 this->stack.pop();
-
-                if (!is_type<bool>(condition_result.data))
-                {
-                    throw BirdException("expected bool in for statement condition");
-                }
 
                 if (!as_type<bool>(condition_result.data))
                 {
@@ -607,11 +570,10 @@ public:
 
         if (is_type<int>(expr))
             this->stack.push(Value((-as_type<int>(expr))));
-        else if (is_type<float>(expr))
+
+        if (is_type<float>(expr))
             this->stack.push(Value(
                 variant(-as_type<float>(expr))));
-        else
-            throw BirdException("Unknown type used with unary value.");
     }
 
     void visit_primary(Primary *primary)
@@ -650,9 +612,6 @@ public:
         auto result = std::move(this->stack.top());
         this->stack.pop();
 
-        if (!is_type<bool>(result))
-            throw BirdException("expected bool result for ternary condition");
-
         if (as_type<bool>(result))
             ternary->true_expr->accept(this);
         else
@@ -675,9 +634,6 @@ public:
 
         auto result = std::move(this->stack.top());
         this->stack.pop();
-
-        if (!is_type<bool>(result))
-            throw BirdException("expected bool result for if-statement condition");
 
         if (as_type<bool>(result))
             if_stmt->then_branch->accept(this);
@@ -708,7 +664,7 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        this->environment = this->environment->get_enclosing();
+        this->environment = this->environment->get_enclosing(); // TODO: do this better
         throw BreakException();
     }
 

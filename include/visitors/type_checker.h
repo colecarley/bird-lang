@@ -45,6 +45,7 @@ public:
     std::shared_ptr<SymbolTable<BirdType>> environment;
     std::shared_ptr<SymbolTable<BirdFunction>> call_table;
     std::stack<BirdType> stack;
+    std::optional<BirdType> return_type;
 
     TypeChecker()
     {
@@ -279,7 +280,14 @@ public:
         auto previous = this->environment->get(assign_expr->identifier.lexeme);
 
         auto binary_operator = this->assign_to_binary_map[assign_expr->assign_operator.token_type];
-        auto new_type = this->binary_operations[binary_operator][{previous, result}];
+        auto type_map = this->binary_operations[binary_operator];
+
+        if (type_map.find({previous, result}) == type_map.end())
+        {
+            throw BirdException("mismatching type in assignment");
+        }
+
+        auto new_type = type_map[{previous, result}];
 
         this->environment->insert(assign_expr->identifier.lexeme, new_type);
     }
@@ -434,7 +442,6 @@ public:
         case Token::Type::INT_LITERAL:
         {
             this->stack.push(BirdType::INT);
-            std::cout << "found int" << std::endl;
             break;
         }
         case Token::Type::BOOL_LITERAL:
@@ -521,8 +528,9 @@ public:
         std::transform(func->param_list.begin(), func->param_list.end(), std::back_inserter(params), [&](auto param)
                        { return this->get_type_from_token(param.second); });
 
-        BirdType ret = func->return_type.has_value()                       ? [&]()
-        { return this->get_type_from_token(func->return_type.value()); }() : BirdType::VOID;
+        BirdType ret = func->return_type.has_value() ? this->get_type_from_token(func->return_type.value()) : BirdType::VOID;
+        auto previous_return_type = this->return_type;
+        this->return_type = ret;
 
         this->call_table->insert(func->identifier.lexeme, BirdFunction(params, ret));
 
@@ -536,26 +544,12 @@ public:
             this->environment->insert(param.first.lexeme, this->get_type_from_token(param.second));
         }
 
-        for (auto &stmt : dynamic_cast<Block *>(func->block.get())->stmts)
+        for (auto &stmt : dynamic_cast<Block *>(func->block.get())->stmts) // TODO: figure out how not to dynamic cast
         {
-            try
-            {
-                stmt->accept(this);
-            }
-            catch (ReturnException e)
-            {
-                auto result = std::move(this->stack.top());
-                this->stack.pop();
-
-                if (result != ret)
-                {
-                    std::cout << "result: " << int(result) << std::endl;
-                    std::cout << "ret: " << int(ret) << std::endl;
-                    throw BirdException("mismatching return type in function");
-                }
-            }
+            stmt->accept(this);
         }
 
+        this->return_type = previous_return_type;
         this->environment = this->environment->get_enclosing();
     }
 
@@ -610,14 +604,18 @@ public:
             auto result = std::move(this->stack.top());
             this->stack.pop();
 
-            this->stack.push(result);
+            if (result != this->return_type)
+            {
+                throw BirdException("mismatching types in return statement");
+            }
         }
         else
         {
-            this->stack.push(BirdType::VOID);
+            if (this->return_type != BirdType::VOID)
+            {
+                throw BirdException("expected return value in non-void function");
+            }
         }
-
-        throw ReturnException();
     }
 
     void visit_break_stmt(BreakStmt *break_stmt)
