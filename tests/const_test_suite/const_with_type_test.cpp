@@ -6,12 +6,18 @@
 #include "../../include/visitors/interpreter.h"
 #include "../../src/callable.cpp"
 #include "../helpers/parse_test_helper.hpp"
+#include "../../include/visitors/type_checker.h"
 
 // INT
 TEST(ConstTest, ConstWithTypeInt)
 {
     auto code = "const x: int = 4;";
     auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
     interpreter.evaluate(&ast);
@@ -26,6 +32,11 @@ TEST(ConstTest, ConstWithTypeFloat)
 {
     auto code = "const x: float = 4.0;";
     auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
     interpreter.evaluate(&ast);
@@ -50,6 +61,11 @@ TEST(ConstTest, ConstWithTypeString)
     auto code = "const x: str = \"hello\";";
     auto ast = parse_code(code);
 
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
@@ -63,6 +79,11 @@ TEST(ConstTest, ConstWithTypeBool)
 {
     auto code = "const x: bool = true;";
     auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
     interpreter.evaluate(&ast);

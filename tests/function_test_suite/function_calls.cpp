@@ -6,12 +6,18 @@
 #include "../../include/visitors/interpreter.h"
 #include "../../src/callable.cpp"
 #include "../helpers/parse_test_helper.hpp"
+#include "../../include/visitors/type_checker.h"
 
 TEST(FunctionTest, GoodFunctionCall)
 {
     auto code = "fn function(i: int) -> int {return i;} "
                 "var result: int = function(4);";
     auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
     interpreter.evaluate(&ast);
@@ -36,6 +42,11 @@ TEST(FunctionTest, CallWithIncorrectTypes)
                 "function(4, 6);";
     auto ast = parse_code(code);
 
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     Interpreter interpreter;
     ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
 }
@@ -45,6 +56,11 @@ TEST(FunctionTest, StoreReturnWithIncorrectVarType)
     auto code = "fn function() -> int {return 3;} "
                 "var:string = function();";
     auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
     ASSERT_THROW(interpreter.evaluate(&ast), BirdException);

@@ -19,7 +19,9 @@ std::vector<std::unique_ptr<Stmt>> parse_code(const std::string &code)
     std::vector<Token> tokens = lexer.lex();
 
     Parser parser(tokens, &error_tracker);
-    return parser.parse();
+    auto ast = parser.parse();
+
+    return ast;
 }
 
 std::vector<std::unique_ptr<Stmt>> parse_code_with_error_tracker(const std::string &code, UserErrorTracker &error_tracker)
