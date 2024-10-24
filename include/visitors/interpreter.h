@@ -321,6 +321,11 @@ public:
         }
         case Token::Type::SLASH_EQUAL:
         {
+            if ((is_type<int>(value) && as_type<int>(value) == 0) || (is_type<float>(value) && as_type<float>(value) == 0))
+            {
+                throw BirdException("Divide by 0 error.");
+            }
+
             if (is_type<int>(previous_value) && is_numeric(value))
                 previous_value.data = as_type<int>(previous_value) / to_type<int, float>(value);
 
@@ -544,8 +549,12 @@ public:
         }
         case Token::Type::SLASH:
         {
+            if ((is_type<int>(right) && as_type<int>(right) == 0) || (is_type<float>(right) && as_type<float>(right) == 0))
+            {
+                throw BirdException("Divide by 0 error.");
+            }
+
             HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, /);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, /);
             THROW_UNKNWOWN_BINARY_OPERATOR(/);
         }
         case Token::Type::STAR:
@@ -553,6 +562,11 @@ public:
             HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, *);
             HANDLE_NUMERIC_BINARY_OPERATOR(left, right, *);
             THROW_UNKNWOWN_BINARY_OPERATOR(*);
+        }
+        case Token::Type::PERCENT:
+        {
+            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, %);
+            THROW_UNKNWOWN_BINARY_OPERATOR(%);
         }
         case Token::Type::GREATER:
         {

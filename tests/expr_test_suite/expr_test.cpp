@@ -164,10 +164,46 @@ TEST(ExprTest, IdentifierInExpr)
 
 TEST(ExprTest, BinaryDivideByZero)
 {
-    auto code = "var x = 10 / 0;";
+    auto code = "var x: int = 10 / 0;";
     auto ast = parse_code(code);
 
     Interpreter interpreter;
 
     ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+}
+
+TEST(ExprTest, BinaryModulus)
+{
+    auto code = "var x: int = 10 % 0 + 5 % 2 + 6 % 2 + 4 % 6;";
+    auto ast = parse_code(code);
+
+    Interpreter interpreter;
+    interpreter.evaluate(&ast);
+
+    ASSERT_TRUE(interpreter.environment->contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 15);
+}
+
+TEST(ExprTest, BinaryModulusFail)
+{
+    auto code = "var x: int = 10 % 0.0;";
+    auto ast = parse_code(code);
+
+    Interpreter interpreter;
+
+    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+}
+
+TEST(ExprTest, AssignModulus)
+{
+    auto code = "var x: int = 5; x %= 2;";
+    auto ast = parse_code(code);
+
+    Interpreter interpreter;
+    interpreter.evaluate(&ast);
+
+    ASSERT_TRUE(interpreter.environment->contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 1);
 }
