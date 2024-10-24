@@ -555,6 +555,7 @@ public:
             }
 
             HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, /);
+            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, /);
             THROW_UNKNWOWN_BINARY_OPERATOR(/);
         }
         case Token::Type::STAR:
