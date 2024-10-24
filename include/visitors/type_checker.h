@@ -258,6 +258,16 @@ public:
 
             if (type != result)
             {
+                if (result == BirdType::INT && type == BirdType::FLOAT)
+                {
+                    this->environment->insert(decl_stmt->identifier.lexeme, BirdType::INT);
+                    return;
+                }
+                if (result == BirdType::FLOAT && type == BirdType::INT)
+                {
+                    this->environment->insert(decl_stmt->identifier.lexeme, BirdType::FLOAT);
+                    return;
+                }
                 this->user_error_tracker->type_mismatch("in declaration", decl_stmt->type_identifier.value());
                 this->environment->insert(decl_stmt->identifier.lexeme, BirdType::ERROR);
                 return;
@@ -291,6 +301,17 @@ public:
         {
             if (previous != result)
             {
+                if (previous == BirdType::INT && result == BirdType::FLOAT)
+                {
+                    current_env->insert(assign_expr->identifier.lexeme, BirdType::INT);
+                    return;
+                }
+                if (previous == BirdType::FLOAT && result == BirdType::INT)
+                {
+                    current_env->insert(assign_expr->identifier.lexeme, BirdType::FLOAT);
+                    return;
+                }
+
                 this->user_error_tracker->type_mismatch("in assignment", assign_expr->assign_operator);
                 current_env->insert(assign_expr->identifier.lexeme, BirdType::ERROR);
                 return;

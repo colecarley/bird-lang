@@ -121,7 +121,6 @@ void compile(std::string filename)
 
 void interpret(std::string filename)
 {
-    std::cout << "filename " << filename << std::endl;
     auto code = read_file(filename);
     UserErrorTracker error_tracker(code);
 
