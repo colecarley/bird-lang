@@ -57,7 +57,7 @@
 class CodeGen : public Visitor
 {
     std::stack<llvm::Value *> stack;
-    std::shared_ptr<SymbolTable<llvm::Value *>> environment;
+    std::shared_ptr<SymbolTable<llvm::AllocaInst *>> environment;
     std::map<std::string, llvm::FunctionCallee> std_lib;
 
     llvm::LLVMContext context;
@@ -78,7 +78,7 @@ public:
 
     CodeGen() : builder(llvm::IRBuilder<>(this->context))
     {
-        this->environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
+        this->environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
         this->module = std::make_unique<llvm::Module>("test_module", this->context);
     }
 
@@ -235,9 +235,9 @@ public:
 
     void visit_block(Block *block)
     {
-        auto new_environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
-        new_environment->set_enclosing(std::move(this->environment));
-        this->environment = std::move(new_environment);
+        auto new_environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
 
         for (auto &stmt : block->stmts)
         {
@@ -251,10 +251,17 @@ public:
     {
         decl_stmt->value->accept(this);
 
-        llvm::Value *result = this->stack.top();
+        llvm::Value *initializer_value = this->stack.top();
         this->stack.pop();
 
-        this->environment->insert(decl_stmt->identifier.lexeme, result);
+        // TODO: CHECK THAT INITIALIZER_VALUE IS INITIALIZED WITH A VALID TYPE
+
+        llvm::Function *function = this->builder.GetInsertBlock()->getParent();
+
+        llvm::AllocaInst *alloca = create_alloca(function, initializer_value->getType(), decl_stmt->identifier.lexeme);
+        this->builder.CreateStore(initializer_value, alloca);
+
+        this->environment->insert(decl_stmt->identifier.lexeme, alloca);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
@@ -308,7 +315,7 @@ public:
         auto done_block = llvm::BasicBlock::Create(this->context, "done", parent_fn);
 
         this->builder.CreateBr(condition_block);
-        
+
         this->builder.SetInsertPoint(condition_block);
 
         while_stmt->condition->accept(this);
@@ -318,13 +325,18 @@ public:
         this->builder.CreateCondBr(condition, stmt_block, done_block);
 
         this->builder.SetInsertPoint(stmt_block);
-        
-        try {
+
+        try
+        {
             while_stmt->stmt->accept(this);
             this->builder.CreateBr(condition_block);
-        } catch (BreakException) {
+        }
+        catch (BreakException)
+        {
             this->builder.CreateBr(done_block);
-        } catch (ContinueException) {
+        }
+        catch (ContinueException)
+        {
             this->builder.CreateBr(condition_block);
         }
 
@@ -620,5 +632,12 @@ public:
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
         throw ContinueException();
+    }
+
+    llvm::AllocaInst *create_alloca(llvm::Function *function, llvm::Type *type, const std::string &identifier)
+    {
+        llvm::BasicBlock *entry_block = &function->getEntryBlock();
+        llvm::IRBuilder<> temp_builder(entry_block, entry_block->begin());
+        return temp_builder.CreateAlloca(type, nullptr, identifier);
     }
 };
