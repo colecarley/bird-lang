@@ -35,37 +35,6 @@
 #include "../value.h"
 #include "../callable.h"
 
-#define HANDLE_GENERAL_BINARY_OPERATOR(left, right, data_type, op) \
-    if (is_type<data_type>(left) &&                                \
-        is_type<data_type>(right))                                 \
-    {                                                              \
-        this->stack.push(Value(                                    \
-            variant(as_type<data_type>(left)                       \
-                        op as_type<data_type>(right))));           \
-        break;                                                     \
-    }
-
-#define HANDLE_NUMERIC_BINARY_OPERATOR(left, right, op)       \
-    if (is_numeric(left) && is_numeric(right))                \
-    {                                                         \
-        float left_float = is_type<int>(left)                 \
-                               ? as_type<int>(left)           \
-                               : as_type<float>(left);        \
-        float right_float = is_type<int>(right)               \
-                                ? as_type<int>(right)         \
-                                : as_type<float>(right);      \
-                                                              \
-        this->stack.push(Value(variant(left_float             \
-                                           op right_float))); \
-        break;                                                \
-    }
-
-#define THROW_UNKNWOWN_BINARY_OPERATOR(op) \
-    throw BirdException("The '" #op "' binary operator could not be used to interpret these values.");
-
-#define THROW_UNKNWOWN_COMPASSIGN_OPERATOR(op) \
-    throw BirdException("The '" #op "=' assignment operator could not be used to interpret these values.");
-
 /*
  * Visitor that interprets and evaluates the AST
  */
@@ -251,77 +220,32 @@ public:
         {
         case Token::Type::EQUAL:
         {
-            if (is_type<int>(previous_value) && is_numeric(value))
-                previous_value.data = to_type<int, float>(value);
-
-            if (is_type<float>(previous_value) && is_numeric(value))
-                previous_value.data = to_type<float, int>(value);
-
+            previous_value = value;
             break;
         }
         case Token::Type::PLUS_EQUAL:
         {
-            if (is_matching_type<std::string>(previous_value, value))
-                previous_value.data = as_type<std::string>(previous_value) + as_type<std::string>(value);
-
-            else if (is_type<int>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<int>(previous_value) + to_type<int, float>(value);
-
-            else if (is_type<float>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<float>(previous_value) + to_type<float, int>(value);
-
-            else
-                THROW_UNKNWOWN_COMPASSIGN_OPERATOR(+);
-
+            previous_value = previous_value + value;
             break;
         }
         case Token::Type::MINUS_EQUAL:
         {
-            if (is_type<int>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<int>(previous_value) - to_type<int, float>(value);
-
-            else if (is_type<float>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<float>(previous_value) - to_type<float, int>(value);
-
-            else
-                THROW_UNKNWOWN_COMPASSIGN_OPERATOR(-);
-
+            previous_value = previous_value - value;
             break;
         }
         case Token::Type::STAR_EQUAL:
         {
-            if (is_type<int>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<int>(previous_value) * to_type<int, float>(value);
-
-            else if (is_type<float>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<float>(previous_value) * to_type<float, int>(value);
-
-            else
-                THROW_UNKNWOWN_COMPASSIGN_OPERATOR(*);
-
+            previous_value = previous_value * value;
             break;
         }
         case Token::Type::SLASH_EQUAL:
         {
-            if (is_type<int>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<int>(previous_value) / to_type<int, float>(value);
-
-            else if (is_type<float>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<float>(previous_value) / to_type<float, int>(value);
-
-            else
-                THROW_UNKNWOWN_COMPASSIGN_OPERATOR(/);
-
+            previous_value = previous_value / value;
             break;
         }
         case Token::Type::PERCENT_EQUAL:
         {
-            if (is_type<int>(previous_value) && is_numeric(value))
-                previous_value.data = as_type<int>(previous_value) % to_type<int, float>(value);
-
-            else
-                THROW_UNKNWOWN_COMPASSIGN_OPERATOR(%);
-
+            previous_value = previous_value % value;
             break;
         }
         default:
@@ -344,19 +268,7 @@ public:
             auto result = std::move(this->stack.top());
             this->stack.pop();
 
-            if (is_type<int>(result))
-                std::cout << as_type<int>(result);
-
-            else if (is_type<float>(result))
-                std::cout << as_type<float>(result);
-
-            else if (is_type<std::string>(result))
-            {
-                std::cout << as_type<std::string>(result.data);
-            }
-
-            else if (is_type<bool>(result))
-                std::cout << as_type<bool>(result);
+            std::cout << result;
         }
         std::cout << std::endl;
     }
@@ -494,66 +406,53 @@ public:
         {
         case Token::Type::PLUS:
         {
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, +);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, +);
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, std::string, +);
-            THROW_UNKNWOWN_BINARY_OPERATOR(+);
+            this->stack.push(left + right);
+            break;
         }
         case Token::Type::MINUS:
         {
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, -);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, -);
-            THROW_UNKNWOWN_BINARY_OPERATOR(-);
+            this->stack.push(left - right);
+            break;
         }
         case Token::Type::SLASH:
         {
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, /);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, /);
-            THROW_UNKNWOWN_BINARY_OPERATOR(/);
+            this->stack.push(left / right);
+            break;
         }
         case Token::Type::STAR:
         {
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, *);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, *);
-            THROW_UNKNWOWN_BINARY_OPERATOR(*);
+            this->stack.push(left * right);
+            break;
         }
         case Token::Type::GREATER:
         {
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, >);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, >);
-            THROW_UNKNWOWN_BINARY_OPERATOR(>);
+            this->stack.push(left > right);
+            break;
         }
         case Token::Type::GREATER_EQUAL:
         {
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, >=);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, >=);
-            THROW_UNKNWOWN_BINARY_OPERATOR(>=);
+            this->stack.push(left >= right);
+            break;
         }
         case Token::Type::LESS:
         {
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, <);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, <);
-            THROW_UNKNWOWN_BINARY_OPERATOR(<);
+            this->stack.push(left < right);
+            break;
         }
         case Token::Type::LESS_EQUAL:
         {
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, int, <=);
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, <=);
-            THROW_UNKNWOWN_BINARY_OPERATOR(<=);
+            this->stack.push(left <= right);
+            break;
         }
         case Token::Type::BANG_EQUAL:
         {
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, !=);
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, std::string, !=);
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, bool, !=);
-            THROW_UNKNWOWN_BINARY_OPERATOR(!=);
+            this->stack.push(left != right);
+            break;
         }
         case Token::Type::EQUAL_EQUAL:
         {
-            HANDLE_NUMERIC_BINARY_OPERATOR(left, right, ==);
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, std::string, ==);
-            HANDLE_GENERAL_BINARY_OPERATOR(left, right, bool, ==);
-            THROW_UNKNWOWN_BINARY_OPERATOR(==);
+            this->stack.push(left == right);
+            break;
         }
         default:
         {
@@ -568,12 +467,7 @@ public:
         auto expr = std::move(this->stack.top());
         this->stack.pop();
 
-        if (is_type<int>(expr))
-            this->stack.push(Value((-as_type<int>(expr))));
-
-        if (is_type<float>(expr))
-            this->stack.push(Value(
-                variant(-as_type<float>(expr))));
+        this->stack.push(-expr);
     }
 
     void visit_primary(Primary *primary)

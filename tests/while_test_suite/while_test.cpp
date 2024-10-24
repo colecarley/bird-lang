@@ -55,3 +55,20 @@ TEST(WhileTest, WhileContinue)
     ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
     ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 3);
 }
+
+TEST(WhileTest, WhileConstInc)
+{
+    auto code = "const inc = 1; var x = 0; while x < 10 { x += inc; } print x;";
+    auto ast = parse_code(code);
+
+    Interpreter interpreter;
+    interpreter.evaluate(&ast);
+
+    ASSERT_TRUE(interpreter.environment->contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 10);
+
+    ASSERT_TRUE(interpreter.environment->contains("inc"));
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("inc")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("inc")), 1);
+}

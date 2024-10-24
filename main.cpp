@@ -112,6 +112,9 @@ void compile(std::string filename)
     AstPrinter printer;
     printer.print_ast(&ast);
 
+    TypeChecker type_checker(&error_tracker);
+    type_checker.check_types(&ast);
+
     CodeGen code_gen;
     code_gen.generate(&ast);
 }
@@ -136,6 +139,10 @@ void interpret(std::string filename)
 
     AstPrinter printer;
     printer.print_ast(&ast);
+
+    TypeChecker type_checker(&error_tracker);
+    type_checker.check_types(&ast);
+
     Interpreter interpreter;
 
     try

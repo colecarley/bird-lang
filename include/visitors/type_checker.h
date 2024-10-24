@@ -228,6 +228,8 @@ public:
     {
         std::shared_ptr<SymbolTable<BirdType>> new_environment =
             std::make_shared<SymbolTable<BirdType>>();
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
 
         for (auto &stmt : block->stmts)
         {
@@ -283,21 +285,34 @@ public:
         auto result = std::move(this->stack.top());
         this->stack.pop();
 
-        auto previous = this->environment->get(assign_expr->identifier.lexeme);
+        auto previous = current_env->get(assign_expr->identifier.lexeme);
 
-        auto binary_operator = this->assign_to_binary_map[assign_expr->assign_operator.token_type];
-        auto type_map = this->binary_operations[binary_operator];
+        if (assign_expr->assign_operator.token_type == Token::Type::EQUAL)
+        {
+            if (previous != result)
+            {
+                this->user_error_tracker->type_mismatch("in assignment", assign_expr->assign_operator);
+                current_env->insert(assign_expr->identifier.lexeme, BirdType::ERROR);
+                return;
+            }
+
+            current_env->insert(assign_expr->identifier.lexeme, result);
+            return;
+        }
+
+        auto binary_operator = this->assign_to_binary_map.at(assign_expr->assign_operator.token_type);
+        auto type_map = this->binary_operations.at(binary_operator);
 
         if (type_map.find({previous, result}) == type_map.end())
         {
             this->user_error_tracker->type_mismatch("in assignment", assign_expr->assign_operator);
-            this->environment->insert(assign_expr->identifier.lexeme, BirdType::ERROR);
+            current_env->insert(assign_expr->identifier.lexeme, BirdType::ERROR);
             return;
         }
 
-        auto new_type = type_map[{previous, result}];
+        auto new_type = type_map.at({previous, result});
 
-        this->environment->insert(assign_expr->identifier.lexeme, new_type);
+        current_env->insert(assign_expr->identifier.lexeme, new_type);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -401,7 +416,7 @@ public:
         auto left = std::move(this->stack.top());
         this->stack.pop();
 
-        auto operator_options = this->binary_operations[binary->op.token_type];
+        auto operator_options = this->binary_operations.at(binary->op.token_type);
         if (operator_options.find({left, right}) == operator_options.end())
         {
             this->user_error_tracker->type_mismatch("in binary operation", binary->op);
@@ -409,7 +424,7 @@ public:
             return;
         }
 
-        this->stack.push(operator_options[{left, right}]);
+        this->stack.push(operator_options.at({left, right}));
     }
 
     void visit_unary(Unary *unary)
