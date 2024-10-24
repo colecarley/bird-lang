@@ -6,6 +6,8 @@
 #include "include/parser.h"
 #include "include/visitors/ast_printer.h"
 #include "include/visitors/interpreter.h"
+#include "include/visitors/type_checker.h"
+
 #include "include/ast_node/expr/expr.h"
 #include "include/visitors/code_gen.h"
 #include "include/exceptions/user_error_tracker.h"
@@ -44,6 +46,7 @@ int main(int argc, char *argv[])
 void repl()
 {
     Interpreter interpreter;
+    TypeChecker type_checker;
     std::string code;
     while (true)
     {
@@ -66,6 +69,15 @@ void repl()
 
         AstPrinter printer;
         printer.print_ast(&ast);
+
+        try
+        {
+            type_checker.check_types(&ast);
+        }
+        catch (std::exception e)
+        {
+            std::cout << "type error: " << e.what() << std::endl;
+        }
 
         try
         {
