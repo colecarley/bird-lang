@@ -84,6 +84,7 @@
                 "__hash_table": "cpp",
                 "*.def": "cpp",
                 "unordered_set": "cpp",
-                "typeindex": "cpp"
+                "typeindex": "cpp",
+                "__config": "cpp"
         }
 }

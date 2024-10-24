@@ -70,11 +70,12 @@ void repl()
         AstPrinter printer;
         printer.print_ast(&ast);
 
+        // TODO: use error tracker instead
         try
         {
             type_checker.check_types(&ast);
         }
-        catch (std::exception e)
+        catch (BirdException e)
         {
             std::cout << "type error: " << e.what() << std::endl;
         }

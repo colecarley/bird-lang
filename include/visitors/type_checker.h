@@ -52,151 +52,88 @@ public:
         this->call_table = std::make_shared<SymbolTable<BirdFunction>>();
     }
 
-    std::map<Token::Type, std::map<std::pair<BirdType, BirdType>, std::function<BirdType()>>> binary_operations =
-        {
-            {Token::Type::PLUS,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::FLOAT; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::FLOAT; }},
-                 {{BirdType::STRING, BirdType::STRING}, []()
-                  { return BirdType::STRING; }},
-             }},
-            {Token::Type::MINUS,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::FLOAT; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::FLOAT; }},
-             }},
-            {Token::Type::STAR,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::FLOAT; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::FLOAT; }},
-             }},
-            {Token::Type::SLASH,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::FLOAT; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::FLOAT; }},
-             }},
-            {Token::Type::EQUAL_EQUAL,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::BOOL, BirdType::BOOL}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::STRING, BirdType::STRING}, []()
-                  { return BirdType::BOOL; }},
-             }},
-            {Token::Type::BANG_EQUAL,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::BOOL, BirdType::BOOL}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::STRING, BirdType::STRING}, []()
-                  { return BirdType::BOOL; }},
-             }},
-            {Token::Type::LESS,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::STRING, BirdType::STRING}, []()
-                  { return BirdType::BOOL; }},
-             }},
-            {Token::Type::LESS_EQUAL,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::STRING, BirdType::STRING}, []()
-                  { return BirdType::BOOL; }},
-             }},
-            {Token::Type::GREATER,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::STRING, BirdType::STRING}, []()
-                  { return BirdType::BOOL; }},
-             }},
-            {Token::Type::GREATER_EQUAL,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::BOOL; }},
-                 {{BirdType::STRING, BirdType::STRING}, []()
-                  { return BirdType::BOOL; }},
-             }},
-            {Token::Type::PERCENT,
-             {
-                 {{BirdType::INT, BirdType::INT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::FLOAT}, []()
-                  { return BirdType::FLOAT; }},
-                 {{BirdType::INT, BirdType::FLOAT}, []()
-                  { return BirdType::INT; }},
-                 {{BirdType::FLOAT, BirdType::INT}, []()
-                  { return BirdType::FLOAT; }},
-             }},
-        };
+    std::map<Token::Type, Token::Type> assign_to_binary_map = {
+        {Token::Type::PLUS_EQUAL, Token::Type::PLUS},
+        {Token::Type::MINUS_EQUAL, Token::Type::MINUS},
+        {Token::Type::STAR_EQUAL, Token::Type::STAR},
+        {Token::Type::SLASH_EQUAL, Token::Type::SLASH},
+        {Token::Type::PERCENT_EQUAL, Token::Type::PERCENT},
+    };
 
-    void
-    check_types(std::vector<std::unique_ptr<Stmt>> *stmts)
+    // map of binary operations and their return types
+    std::map<Token::Type, std::map<std::pair<BirdType, BirdType>, BirdType>> binary_operations = {
+        {Token::Type::PLUS, {
+                                {{BirdType::INT, BirdType::INT}, BirdType::INT},
+                                {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::FLOAT},
+                                {{BirdType::INT, BirdType::FLOAT}, BirdType::INT},
+                                {{BirdType::FLOAT, BirdType::INT}, BirdType::FLOAT},
+                                {{BirdType::STRING, BirdType::STRING}, BirdType::STRING},
+                            }},
+        {Token::Type::MINUS, {
+                                 {{BirdType::INT, BirdType::INT}, BirdType::INT},
+                                 {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::FLOAT},
+                                 {{BirdType::INT, BirdType::FLOAT}, BirdType::INT},
+                                 {{BirdType::FLOAT, BirdType::INT}, BirdType::FLOAT},
+                             }},
+        {Token::Type::STAR, {
+                                {{BirdType::INT, BirdType::INT}, BirdType::INT},
+                                {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::FLOAT},
+                                {{BirdType::INT, BirdType::FLOAT}, BirdType::INT},
+                                {{BirdType::FLOAT, BirdType::INT}, BirdType::FLOAT},
+                            }},
+        {Token::Type::SLASH, {
+                                 {{BirdType::INT, BirdType::INT}, BirdType::INT},
+                                 {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::FLOAT},
+                                 {{BirdType::INT, BirdType::FLOAT}, BirdType::INT},
+                                 {{BirdType::FLOAT, BirdType::INT}, BirdType::FLOAT},
+                             }},
+        {Token::Type::EQUAL_EQUAL, {
+                                       {{BirdType::INT, BirdType::INT}, BirdType::BOOL},
+                                       {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::BOOL},
+                                       {{BirdType::INT, BirdType::FLOAT}, BirdType::BOOL},
+                                       {{BirdType::FLOAT, BirdType::INT}, BirdType::BOOL},
+                                       {{BirdType::STRING, BirdType::STRING}, BirdType::BOOL},
+                                   }},
+        {Token::Type::BANG_EQUAL, {
+                                      {{BirdType::INT, BirdType::INT}, BirdType::BOOL},
+                                      {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::BOOL},
+                                      {{BirdType::INT, BirdType::FLOAT}, BirdType::BOOL},
+                                      {{BirdType::FLOAT, BirdType::INT}, BirdType::BOOL},
+                                      {{BirdType::STRING, BirdType::STRING}, BirdType::BOOL},
+                                  }},
+        {Token::Type::GREATER, {
+                                   {{BirdType::INT, BirdType::INT}, BirdType::BOOL},
+                                   {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::BOOL},
+                                   {{BirdType::INT, BirdType::FLOAT}, BirdType::BOOL},
+                                   {{BirdType::FLOAT, BirdType::INT}, BirdType::BOOL},
+                               }},
+        {Token::Type::GREATER_EQUAL, {
+                                         {{BirdType::INT, BirdType::INT}, BirdType::BOOL},
+                                         {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::BOOL},
+                                         {{BirdType::INT, BirdType::FLOAT}, BirdType::BOOL},
+                                         {{BirdType::FLOAT, BirdType::INT}, BirdType::BOOL},
+                                     }},
+        {Token::Type::LESS, {
+                                {{BirdType::INT, BirdType::INT}, BirdType::BOOL},
+                                {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::BOOL},
+                                {{BirdType::INT, BirdType::FLOAT}, BirdType::BOOL},
+                                {{BirdType::FLOAT, BirdType::INT}, BirdType::BOOL},
+                            }},
+        {Token::Type::LESS_EQUAL, {
+                                      {{BirdType::INT, BirdType::INT}, BirdType::BOOL},
+                                      {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::BOOL},
+                                      {{BirdType::INT, BirdType::FLOAT}, BirdType::BOOL},
+                                      {{BirdType::FLOAT, BirdType::INT}, BirdType::BOOL},
+                                  }},
+        {Token::Type::PERCENT, {
+                                   {{BirdType::INT, BirdType::INT}, BirdType::INT},
+                                   {{BirdType::FLOAT, BirdType::FLOAT}, BirdType::FLOAT},
+                                   {{BirdType::INT, BirdType::FLOAT}, BirdType::INT},
+                                   {{BirdType::FLOAT, BirdType::INT}, BirdType::FLOAT},
+                               }},
+    };
+
+    void check_types(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
         for (auto &stmt : *stmts)
         {
@@ -299,12 +236,52 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        // TODO: implement
+        decl_stmt->value->accept(this);
+        auto result = std::move(this->stack.top());
+        this->stack.pop();
+
+        if (result == BirdType::VOID)
+        {
+            throw BirdException("cannot declare void type");
+        }
+
+        if (decl_stmt->type_identifier.has_value())
+        {
+            auto type = this->get_type_from_token(decl_stmt->type_identifier.value());
+
+            if (type != result)
+            {
+                throw BirdException("mismatching types in declaration");
+            }
+        }
+
+        this->environment->insert(decl_stmt->identifier.lexeme, result);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        // TODO: implement
+        auto current_env = this->environment;
+        while (current_env && !current_env->contains(assign_expr->identifier.lexeme))
+        {
+            current_env = current_env->get_enclosing();
+        }
+
+        // TODO: make this a different semantic pass
+        if (!current_env)
+        {
+            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
+        }
+
+        assign_expr->value->accept(this);
+        auto result = std::move(this->stack.top());
+        this->stack.pop();
+
+        auto previous = this->environment->get(assign_expr->identifier.lexeme);
+
+        auto binary_operator = this->assign_to_binary_map[assign_expr->assign_operator.token_type];
+        auto new_type = this->binary_operations[binary_operator][{previous, result}];
+
+        this->environment->insert(assign_expr->identifier.lexeme, new_type);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -322,6 +299,26 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
+        const_stmt->value->accept(this);
+        auto result = std::move(this->stack.top());
+        this->stack.pop();
+
+        if (result == BirdType::VOID)
+        {
+            throw BirdException("cannot declare void type");
+        }
+
+        if (const_stmt->type_identifier.has_value())
+        {
+            auto type = this->get_type_from_token(const_stmt->type_identifier.value());
+
+            if (type != result)
+            {
+                throw BirdException("mismatching types in declaration");
+            }
+        }
+
+        this->environment->insert(const_stmt->identifier.lexeme, result);
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
@@ -403,8 +400,7 @@ public:
             throw BirdException("unsupported types for binary operation"); // TODO: make type error
         }
 
-        auto function = operator_options[{left, right}];
-        this->stack.push(function());
+        this->stack.push(operator_options[{left, right}]);
     }
 
     void visit_unary(Unary *unary)
@@ -511,6 +507,10 @@ public:
         else if (type == "void")
         {
             return BirdType::VOID;
+        }
+        else
+        {
+            throw BirdException("unknown type"); // TODO: make this more descriptive
         }
     }
 
