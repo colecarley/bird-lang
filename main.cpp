@@ -46,14 +46,15 @@ int main(int argc, char *argv[])
 void repl()
 {
     Interpreter interpreter;
-    TypeChecker type_checker;
     std::string code;
+    UserErrorTracker error_tracker(code);
+    TypeChecker type_checker(&error_tracker);
     while (true)
     {
         std::cout << ">";
         std::getline(std::cin, code);
 
-        UserErrorTracker error_tracker(code);
+        error_tracker.add_code_line(code);
 
         Lexer lexer(code, &error_tracker);
         auto tokens = lexer.lex();
@@ -70,14 +71,10 @@ void repl()
         AstPrinter printer;
         printer.print_ast(&ast);
 
-        // TODO: use error tracker instead
-        try
+        type_checker.check_types(&ast);
+        if (error_tracker.has_errors())
         {
-            type_checker.check_types(&ast);
-        }
-        catch (BirdException e)
-        {
-            std::cout << "type error: " << e.what() << std::endl;
+            error_tracker.print_errors_and_exit();
         }
 
         try

@@ -2,6 +2,9 @@
 
 #include <vector>
 
+/*
+ * Enum for the types of the language, used for type checking
+ */
 enum class BirdType
 {
     INT,
@@ -9,6 +12,7 @@ enum class BirdType
     STRING,
     BOOL,
     VOID,
+    ERROR,
 };
 
 // TODO: figure out how to do first class functions

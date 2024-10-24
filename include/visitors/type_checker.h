@@ -33,6 +33,7 @@
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
 #include "../exceptions/return_exception.h"
+#include "../exceptions/user_error_tracker.h"
 #include "../bird_type.h"
 
 /*
@@ -46,8 +47,9 @@ public:
     std::shared_ptr<SymbolTable<BirdFunction>> call_table;
     std::stack<BirdType> stack;
     std::optional<BirdType> return_type;
+    UserErrorTracker *user_error_tracker;
 
-    TypeChecker()
+    TypeChecker(UserErrorTracker *user_error_tracker) : user_error_tracker(user_error_tracker)
     {
         this->environment = std::make_shared<SymbolTable<BirdType>>();
         this->call_table = std::make_shared<SymbolTable<BirdFunction>>();
@@ -243,7 +245,9 @@ public:
 
         if (result == BirdType::VOID)
         {
-            throw BirdException("cannot declare void type");
+            this->user_error_tracker->type_error("cannot declare void type", decl_stmt->identifier);
+            this->environment->insert(decl_stmt->identifier.lexeme, BirdType::ERROR);
+            return;
         }
 
         if (decl_stmt->type_identifier.has_value())
@@ -252,7 +256,9 @@ public:
 
             if (type != result)
             {
-                throw BirdException("mismatching types in declaration");
+                this->user_error_tracker->type_mismatch("in declaration", decl_stmt->type_identifier.value());
+                this->environment->insert(decl_stmt->identifier.lexeme, BirdType::ERROR);
+                return;
             }
         }
 
@@ -284,7 +290,9 @@ public:
 
         if (type_map.find({previous, result}) == type_map.end())
         {
-            throw BirdException("mismatching type in assignment");
+            this->user_error_tracker->type_mismatch("in assignment", assign_expr->assign_operator);
+            this->environment->insert(assign_expr->identifier.lexeme, BirdType::ERROR);
+            return;
         }
 
         auto new_type = type_map[{previous, result}];
@@ -313,7 +321,9 @@ public:
 
         if (result == BirdType::VOID)
         {
-            throw BirdException("cannot declare void type");
+            this->user_error_tracker->type_error("cannot declare void type", const_stmt->identifier);
+            this->environment->insert(const_stmt->identifier.lexeme, BirdType::ERROR);
+            return;
         }
 
         if (const_stmt->type_identifier.has_value())
@@ -322,7 +332,9 @@ public:
 
             if (type != result)
             {
-                throw BirdException("mismatching types in declaration");
+                this->user_error_tracker->type_mismatch("in declaration", const_stmt->type_identifier.value());
+                this->environment->insert(const_stmt->identifier.lexeme, BirdType::ERROR);
+                return;
             }
         }
 
@@ -331,31 +343,17 @@ public:
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
-        auto previous_environment = this->environment; // TODO: pull this out into its own function
-
         while_stmt->condition->accept(this);
         auto condition_result = std::move(this->stack.top());
         this->stack.pop();
 
         if (condition_result != BirdType::BOOL)
-            throw BirdException("expected bool in while statement condition");
+        {
+            // TODO: figure out how to track the token
+            this->user_error_tracker->type_error("expected bool in while statement condition", Token());
+        }
 
-        try
-        {
-            while_stmt->stmt->accept(this);
-        }
-        catch (BreakException e)
-        {
-            // do nothing
-        }
-        catch (ContinueException e)
-        {
-            while_stmt->condition->accept(this);
-            condition_result = std::move(this->stack.top());
-            this->stack.pop();
-
-            this->environment = previous_environment;
-        }
+        while_stmt->stmt->accept(this);
     }
 
     void visit_for_stmt(ForStmt *for_stmt)
@@ -378,7 +376,8 @@ public:
 
             if (condition_result != BirdType::BOOL)
             {
-                throw BirdException("expected bool in for statement condition");
+                // TODO: figure out how to track the token
+                this->user_error_tracker->type_error("expected bool in for statement condition", Token());
             }
         }
 
@@ -405,7 +404,9 @@ public:
         auto operator_options = this->binary_operations[binary->op.token_type];
         if (operator_options.find({left, right}) == operator_options.end())
         {
-            throw BirdException("unsupported types for binary operation"); // TODO: make type error
+            this->user_error_tracker->type_mismatch("in binary operation", binary->op);
+            this->stack.push(BirdType::ERROR);
+            return;
         }
 
         this->stack.push(operator_options[{left, right}]);
@@ -426,7 +427,8 @@ public:
         }
         else
         {
-            throw BirdException("unsupported types for unary operation");
+            this->user_error_tracker->type_error("expected int or float in unary operation", unary->op);
+            this->stack.push(BirdType::ERROR);
         }
     }
 
@@ -473,11 +475,6 @@ public:
         auto condition = std::move(this->stack.top());
         this->stack.pop();
 
-        if (condition != BirdType::BOOL)
-        {
-            throw BirdException("expected bool result for ternary condition");
-        }
-
         ternary->true_expr->accept(this);
         auto true_expr = std::move(this->stack.top());
 
@@ -486,10 +483,20 @@ public:
 
         if (true_expr != false_expr)
         {
-            throw BirdException("mismatching types in ternary expression");
+            this->user_error_tracker->type_mismatch("in ternary operation", Token());
+            true_expr = BirdType::ERROR;
         }
 
-        this->stack.push(true_expr);
+        if (condition != BirdType::BOOL)
+        {
+            // TODO: figure out how to track the token
+            this->user_error_tracker->type_error("expected bool in ternary condition", Token());
+            this->stack.push(BirdType::ERROR);
+        }
+        else
+        {
+            this->stack.push(true_expr);
+        }
     }
 
     BirdType get_type_from_token(Token token)
@@ -517,7 +524,8 @@ public:
         }
         else
         {
-            throw BirdException("unknown type"); // TODO: make this more descriptive
+            this->user_error_tracker->type_error("unknown type", token);
+            return BirdType::ERROR;
         }
     }
 
@@ -561,7 +569,8 @@ public:
 
         if (condition != BirdType::BOOL)
         {
-            throw BirdException("expected bool result for if statement condition");
+            // TODO: figure out how to track the token
+            this->user_error_tracker->type_error("expected bool in if statement condition", Token());
         }
 
         if_stmt->then_branch->accept(this);
@@ -578,7 +587,8 @@ public:
 
         if (function.params.size() != call->args.size())
         {
-            throw BirdException("mismatching number of arguments in function call");
+            this->user_error_tracker->expected(std::to_string(function.params.size()) + " arguments", "in function call", call->identifier);
+            return;
         }
 
         for (int i = 0; i < function.params.size(); i++)
@@ -589,7 +599,7 @@ public:
 
             if (arg != function.params[i])
             {
-                throw BirdException("mismatching types in function call");
+                this->user_error_tracker->type_mismatch("in function call", call->identifier);
             }
         }
 
@@ -606,14 +616,16 @@ public:
 
             if (result != this->return_type)
             {
-                throw BirdException("mismatching types in return statement");
+                // TODO: figure out how to track the token
+                this->user_error_tracker->type_mismatch("in return statement", Token());
             }
         }
         else
         {
             if (this->return_type != BirdType::VOID)
             {
-                throw BirdException("expected return value in non-void function");
+                // TODO: figure out how to track the token
+                this->user_error_tracker->type_error("expected return value in non-void function", Token());
             }
         }
     }
