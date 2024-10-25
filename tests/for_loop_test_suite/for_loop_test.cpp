@@ -9,10 +9,10 @@
 
 TEST(ForLoopTest, ForLoopIncrement)
 {
-    auto code = "var z = 0"
-                "for var x: int = 0; x <= 5; x += 1 do"
+    auto code = "var z = 0;"
+                "for var x: int = 0; x <= 5; x += 1 do {"
                 "z = x;"
-                "print z;";
+                "}";
 
     auto ast = parse_code(code);
 

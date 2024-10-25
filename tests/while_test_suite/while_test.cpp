@@ -14,7 +14,7 @@ TEST(WhileTest, While)
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
     ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 9);
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 10);
 }
 
 TEST(WhileTest, WhileFalse)
