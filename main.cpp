@@ -6,6 +6,8 @@
 #include "include/parser.h"
 #include "include/visitors/ast_printer.h"
 #include "include/visitors/interpreter.h"
+#include "include/visitors/type_checker.h"
+
 #include "include/ast_node/expr/expr.h"
 #include "include/visitors/code_gen.h"
 #include "include/exceptions/user_error_tracker.h"
@@ -45,12 +47,14 @@ void repl()
 {
     Interpreter interpreter;
     std::string code;
+    UserErrorTracker error_tracker(code);
+    TypeChecker type_checker(&error_tracker);
     while (true)
     {
         std::cout << ">";
         std::getline(std::cin, code);
 
-        UserErrorTracker error_tracker(code);
+        error_tracker.add_code_line(code);
 
         Lexer lexer(code, &error_tracker);
         auto tokens = lexer.lex();
@@ -66,6 +70,12 @@ void repl()
 
         AstPrinter printer;
         printer.print_ast(&ast);
+
+        type_checker.check_types(&ast);
+        if (error_tracker.has_errors())
+        {
+            error_tracker.print_errors_and_exit();
+        }
 
         try
         {
@@ -102,13 +112,15 @@ void compile(std::string filename)
     AstPrinter printer;
     printer.print_ast(&ast);
 
+    TypeChecker type_checker(&error_tracker);
+    type_checker.check_types(&ast);
+
     CodeGen code_gen;
     code_gen.generate(&ast);
 }
 
 void interpret(std::string filename)
 {
-    std::cout << "filename " << filename << std::endl;
     auto code = read_file(filename);
     UserErrorTracker error_tracker(code);
 
@@ -126,6 +138,10 @@ void interpret(std::string filename)
 
     AstPrinter printer;
     printer.print_ast(&ast);
+
+    TypeChecker type_checker(&error_tracker);
+    type_checker.check_types(&ast);
+
     Interpreter interpreter;
 
     try
