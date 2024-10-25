@@ -180,11 +180,11 @@ public:
 
             if (type_lexeme == "int")
             {
-                result.data = to_type<int, float>(result);
+                result.data = to_type<int, double>(result);
             }
             else if (type_lexeme == "float")
             {
-                result.data = to_type<float, int>(result);
+                result.data = to_type<double, int>(result);
             }
         }
 
@@ -298,11 +298,11 @@ public:
 
             if (type_lexeme == "int")
             {
-                result.data = to_type<int, float>(result);
+                result.data = to_type<int, double>(result);
             }
             else if (type_lexeme == "float")
             {
-                result.data = to_type<float, int>(result);
+                result.data = to_type<double, int>(result);
             }
         }
 
@@ -476,7 +476,7 @@ public:
         {
         case Token::Type::FLOAT_LITERAL:
             this->stack.push(Value(
-                variant(std::stof(primary->value.lexeme))));
+                variant(std::stod(primary->value.lexeme))));
             break;
         case Token::Type::BOOL_LITERAL:
             this->stack.push(Value(

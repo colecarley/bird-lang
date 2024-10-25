@@ -42,8 +42,8 @@ TEST(ConstTest, ConstWithTypeFloat)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<float>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<float>(interpreter.environment->get("x")), 4.0);
+    ASSERT_TRUE(is_type<double>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<double>(interpreter.environment->get("x")), 4.0);
 
     code = "const y: float = 4;";
     ast = parse_code(code);
@@ -51,8 +51,8 @@ TEST(ConstTest, ConstWithTypeFloat)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.environment->contains("y"));
-    ASSERT_TRUE(is_type<float>(interpreter.environment->get("y")));
-    ASSERT_EQ(as_type<float>(interpreter.environment->get("y")), 4.0);
+    ASSERT_TRUE(is_type<double>(interpreter.environment->get("y")));
+    ASSERT_EQ(as_type<double>(interpreter.environment->get("y")), 4.0);
 }
 
 // STRINGS

@@ -20,7 +20,7 @@ inline T as_type(Value value);
 template <typename T, typename U>
 inline T to_type(Value value);
 
-using variant = std::variant<int, float, std::string, bool>;
+using variant = std::variant<int, double, std::string, bool>;
 class Value
 {
 public:
@@ -36,10 +36,10 @@ public:
             return Value(as_type<std::string>(*this) + as_type<std::string>(right));
 
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) + to_type<int, float>(right));
+            return Value(as_type<int>(*this) + to_type<int, double>(right));
 
-        if (is_type<float>(*this) && is_numeric(right))
-            return Value(as_type<float>(*this) + to_type<float, int>(right));
+        if (is_type<double>(*this) && is_numeric(right))
+            return Value(as_type<double>(*this) + to_type<double, int>(right));
 
         throw BirdException("The '+' binary operator could not be used to interpret these values.");
     }
@@ -47,10 +47,10 @@ public:
     Value operator-(Value right)
     {
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) - to_type<int, float>(right));
+            return Value(as_type<int>(*this) - to_type<int, double>(right));
 
-        if (is_type<float>(*this) && is_numeric(right))
-            return Value(as_type<float>(*this) - to_type<float, int>(right));
+        if (is_type<double>(*this) && is_numeric(right))
+            return Value(as_type<double>(*this) - to_type<double, int>(right));
 
         throw BirdException("The '-' binary operator could not be used to interpret these values.");
     }
@@ -58,10 +58,10 @@ public:
     Value operator*(Value right)
     {
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) * to_type<int, float>(right));
+            return Value(as_type<int>(*this) * to_type<int, double>(right));
 
-        if (is_type<float>(*this) && is_numeric(right))
-            return Value(as_type<float>(*this) * to_type<float, int>(right));
+        if (is_type<double>(*this) && is_numeric(right))
+            return Value(as_type<double>(*this) * to_type<double, int>(right));
 
         throw BirdException("The '*' binary operator could not be used to interpret these values.");
     }
@@ -69,10 +69,10 @@ public:
     Value operator/(Value right)
     {
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) / to_type<int, float>(right));
+            return Value(as_type<int>(*this) / to_type<int, double>(right));
 
-        if (is_type<float>(*this) && is_numeric(right))
-            return Value(as_type<float>(*this) / to_type<float, int>(right));
+        if (is_type<double>(*this) && is_numeric(right))
+            return Value(as_type<double>(*this) / to_type<double, int>(right));
 
         throw BirdException("The '/' binary operator could not be used to interpret these values.");
     }
@@ -80,7 +80,7 @@ public:
     Value operator%(Value right)
     {
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) % to_type<int, float>(right));
+            return Value(as_type<int>(*this) % to_type<int, double>(right));
 
         throw BirdException("The '%' binary operator could not be used to interpret these values.");
     }
@@ -88,10 +88,10 @@ public:
     Value operator>(Value right)
     {
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) > to_type<int, float>(right));
+            return Value(as_type<int>(*this) > to_type<int, double>(right));
 
-        if (is_type<float>(*this) && is_numeric(right))
-            return Value(as_type<float>(*this) > to_type<float, int>(right));
+        if (is_type<double>(*this) && is_numeric(right))
+            return Value(as_type<double>(*this) > to_type<double, int>(right));
 
         throw BirdException("The '>' binary operator could not be used to interpret these values.");
     }
@@ -99,10 +99,10 @@ public:
     Value operator>=(Value right)
     {
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) >= to_type<int, float>(right));
+            return Value(as_type<int>(*this) >= to_type<int, double>(right));
 
-        if (is_type<float>(*this) && is_numeric(right))
-            return Value(as_type<float>(*this) >= to_type<float, int>(right));
+        if (is_type<double>(*this) && is_numeric(right))
+            return Value(as_type<double>(*this) >= to_type<double, int>(right));
 
         throw BirdException("The '>=' binary operator could not be used to interpret these values.");
     }
@@ -110,10 +110,10 @@ public:
     Value operator<(Value right)
     {
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) < to_type<int, float>(right));
+            return Value(as_type<int>(*this) < to_type<int, double>(right));
 
-        if (is_type<float>(*this) && is_numeric(right))
-            return Value(as_type<float>(*this) < to_type<float, int>(right));
+        if (is_type<double>(*this) && is_numeric(right))
+            return Value(as_type<double>(*this) < to_type<double, int>(right));
 
         throw BirdException("The '<' binary operator could not be used to interpret these values.");
     }
@@ -122,10 +122,10 @@ public:
     {
 
         if (is_type<int>(*this) && is_numeric(right))
-            return Value(as_type<int>(*this) <= to_type<int, float>(right));
+            return Value(as_type<int>(*this) <= to_type<int, double>(right));
 
-        if (is_type<float>(*this) && is_numeric(right))
-            return Value(as_type<float>(*this) <= to_type<float, int>(right));
+        if (is_type<double>(*this) && is_numeric(right))
+            return Value(as_type<double>(*this) <= to_type<double, int>(right));
 
         throw BirdException("The '<=' binary operator could not be used to interpret these values.");
     }
@@ -134,10 +134,10 @@ public:
     {
         if (is_numeric(*this) && is_numeric(right))
         {
-            float left_float = is_type<int>(*this) ? as_type<int>(*this) : as_type<float>(*this);
-            float right_float = is_type<int>(right) ? as_type<int>(right) : as_type<float>(right);
+            double left_double = is_type<int>(*this) ? as_type<int>(*this) : as_type<double>(*this);
+            double right_double = is_type<int>(right) ? as_type<int>(right) : as_type<double>(right);
 
-            return Value(left_float != right_float);
+            return Value(left_double != right_double);
         }
 
         if (is_type<std::string>(*this) && is_type<std::string>(right))
@@ -153,10 +153,10 @@ public:
     {
         if (is_numeric(*this) && is_numeric(right))
         {
-            float left_float = is_type<int>(*this) ? as_type<int>(*this) : as_type<float>(*this);
-            float right_float = is_type<int>(right) ? as_type<int>(right) : as_type<float>(right);
+            double left_double = is_type<int>(*this) ? as_type<int>(*this) : as_type<double>(*this);
+            double right_double = is_type<int>(right) ? as_type<int>(right) : as_type<double>(right);
 
-            return Value(left_float == right_float);
+            return Value(left_double == right_double);
         }
 
         if (is_type<std::string>(*this) && is_type<std::string>(right))
@@ -181,8 +181,8 @@ public:
         if (is_type<int>(*this))
             return Value(-as_type<int>(*this));
 
-        if (is_type<float>(*this))
-            return Value(-as_type<float>(*this));
+        if (is_type<double>(*this))
+            return Value(-as_type<double>(*this));
 
         throw BirdException("The '-' unary operator could not be used to interpret these values.");
     }
@@ -203,8 +203,8 @@ public:
         if (is_type<int>(obj))
             os << as_type<int>(obj);
 
-        else if (is_type<float>(obj))
-            os << as_type<float>(obj);
+        else if (is_type<double>(obj))
+            os << as_type<double>(obj);
 
         else if (is_type<std::string>(obj))
             os << as_type<std::string>(obj);
@@ -224,7 +224,7 @@ inline bool is_type(Value value)
 
 inline bool is_numeric(Value value)
 {
-    return is_type<int>(value) || is_type<float>(value);
+    return is_type<int>(value) || is_type<double>(value);
 }
 
 template <typename T>
