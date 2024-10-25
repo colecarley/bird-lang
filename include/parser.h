@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include "lexer.h"
 
