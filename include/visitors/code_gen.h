@@ -496,11 +496,15 @@ public:
         }
         case Token::Type::IDENTIFIER:
         {
-            auto value = this->environment->get(primary->value.lexeme);
-            if (value == nullptr)
+            auto allocation = this->environment->get(primary->value.lexeme);
+            if (allocation == nullptr)
             {
                 throw BirdException("undefined identifier");
             }
+
+            auto value =
+                this->builder.CreateLoad(allocation->getAllocatedType(), allocation, primary->value.lexeme.c_str());
+
             this->stack.push(value);
             break;
         }
