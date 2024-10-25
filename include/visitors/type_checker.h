@@ -96,6 +96,7 @@ public:
                                        {{BirdType::INT, BirdType::FLOAT}, BirdType::BOOL},
                                        {{BirdType::FLOAT, BirdType::INT}, BirdType::BOOL},
                                        {{BirdType::STRING, BirdType::STRING}, BirdType::BOOL},
+                                       {{BirdType::BOOL, BirdType::BOOL}, BirdType::BOOL},
                                    }},
         {Token::Type::BANG_EQUAL, {
                                       {{BirdType::INT, BirdType::INT}, BirdType::BOOL},
@@ -103,6 +104,7 @@ public:
                                       {{BirdType::INT, BirdType::FLOAT}, BirdType::BOOL},
                                       {{BirdType::FLOAT, BirdType::INT}, BirdType::BOOL},
                                       {{BirdType::STRING, BirdType::STRING}, BirdType::BOOL},
+                                      {{BirdType::BOOL, BirdType::BOOL}, BirdType::BOOL},
                                   }},
         {Token::Type::GREATER, {
                                    {{BirdType::INT, BirdType::INT}, BirdType::BOOL},
