@@ -224,8 +224,8 @@ TEST(ExprTest, IdentifierInExpr)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<float>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<float>(interpreter.environment->get("x")), 56.2f);
+    ASSERT_TRUE(is_type<double>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<double>(interpreter.environment->get("x")), 56.2f);
 }
 
 TEST(ExprTest, BinaryDivideByZero)
