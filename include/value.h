@@ -68,6 +68,12 @@ public:
 
     Value operator/(Value right)
     {
+        if (is_type<int>(right) && as_type<int>(right) == 0)
+            throw BirdException("Division by zero.");
+
+        if (is_type<double>(right) && as_type<double>(right) == 0)
+            throw BirdException("Division by zero.");
+
         if (is_type<int>(*this) && is_numeric(right))
             return Value(as_type<int>(*this) / to_type<int, double>(right));
 
@@ -79,6 +85,9 @@ public:
 
     Value operator%(Value right)
     {
+        if (is_type<int>(right) && as_type<int>(right) == 0)
+            throw BirdException("Modulo by zero.");
+
         if (is_type<int>(*this) && is_numeric(right))
             return Value(as_type<int>(*this) % to_type<int, double>(right));
 

@@ -51,13 +51,10 @@ TEST(ExprTest, BinaryIntString)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    ASSERT_TRUE(user_error_tracker.has_errors());
 }
 
 TEST(ExprTest, BinaryFloatString)
@@ -68,11 +65,7 @@ TEST(ExprTest, BinaryFloatString)
     auto user_error_tracker = UserErrorTracker(code);
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    ASSERT_TRUE(user_error_tracker.has_errors());
 }
 
 TEST(ExprTest, BinaryBoolInt)
@@ -83,11 +76,7 @@ TEST(ExprTest, BinaryBoolInt)
     auto user_error_tracker = UserErrorTracker(code);
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    ASSERT_TRUE(user_error_tracker.has_errors());
 }
 
 TEST(ExprTest, CondExpr)
@@ -96,8 +85,10 @@ TEST(ExprTest, CondExpr)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
+    user_error_tracker.print_errors();
     ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
@@ -187,12 +178,9 @@ TEST(ExprTest, CondExprBoolString)
 
     auto user_error_tracker = UserErrorTracker(code);
     TypeChecker type_checker(&user_error_tracker);
+
     type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    ASSERT_TRUE(user_error_tracker.has_errors());
 }
 
 TEST(ExprTest, CondExprFloatBool)
@@ -203,29 +191,27 @@ TEST(ExprTest, CondExprFloatBool)
     auto user_error_tracker = UserErrorTracker(code);
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    ASSERT_TRUE(user_error_tracker.has_errors());
 }
 
 TEST(ExprTest, IdentifierInExpr)
 {
-    auto code = "var z: int = 7; const y: float = -9.2; var x = 1 - (z * y) - -y;";
+    auto code = "var z: int = 7; const y: float = -9.2; var x: int = 1 - (z * y) - -y;";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
+
+    user_error_tracker.print_errors();
     ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<double>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<double>(interpreter.environment->get("x")), 56.2f);
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 55);
 }
 
 TEST(ExprTest, BinaryDivideByZero)

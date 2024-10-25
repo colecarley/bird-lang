@@ -454,6 +454,11 @@ public:
             this->stack.push(left == right);
             break;
         }
+        case Token::Type::PERCENT:
+        {
+            this->stack.push(left % right);
+            break;
+        }
         default:
         {
             throw BirdException("Undefined binary operator.");
