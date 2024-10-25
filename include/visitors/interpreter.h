@@ -119,6 +119,7 @@ public:
             if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
             {
                 return_stmt->accept(this);
+                continue;
             }
 
             if (auto break_stmt = dynamic_cast<BreakStmt *>(stmt.get()))

@@ -271,63 +271,76 @@ public:
     void visit_assign_expr(AssignExpr *assign_expr)
     {
         auto lhs = this->environment->get(assign_expr->identifier.lexeme);
+        auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
 
         assign_expr->value->accept(this);
         auto rhs_val = this->stack.top();
         this->stack.pop();
 
+        bool float_flag = (lhs_val->getType()->isFloatTy() || rhs_val->getType()->isFloatTy());
+
+        if (float_flag && lhs_val->getType()->isIntegerTy())
+        {
+            rhs_val = this->builder.CreateFPToSI(rhs_val, lhs_val->getType(), "floattoint");
+        }
+        else if (float_flag && lhs_val->getType()->isFloatTy())
+        {
+            rhs_val = this->builder.CreateSIToFP(rhs_val, lhs_val->getType(), "inttofloat");
+        }
+
+        llvm::Value *result = nullptr;
         switch (assign_expr->assign_operator.token_type)
         {
         case Token::Type::EQUAL:
         {
-            this->builder.CreateStore(rhs_val, lhs);
-
+            result = rhs_val;
             break;
         }
         case Token::Type::PLUS_EQUAL:
         {
-            auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateAdd(lhs_val, rhs_val, "addtmp");
-            this->builder.CreateStore(result, lhs);
-
+            result = (float_flag)
+                         ? this->builder.CreateFAdd(lhs_val, rhs_val, "faddtmp")
+                         : this->builder.CreateAdd(lhs_val, rhs_val, "addtmp");
             break;
         }
         case Token::Type::MINUS_EQUAL:
         {
-            auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateSub(lhs_val, rhs_val, "subtmp");
-            this->builder.CreateStore(result, lhs);
-
+            result = (float_flag)
+                         ? this->builder.CreateFSub(lhs_val, rhs_val, "fsubtmp")
+                         : this->builder.CreateSub(lhs_val, rhs_val, "subtmp");
             break;
         }
         case Token::Type::STAR_EQUAL:
         {
-            auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateMul(lhs_val, rhs_val, "multmp");
-            this->builder.CreateStore(result, lhs);
-
+            result = (float_flag)
+                         ? this->builder.CreateFMul(lhs_val, rhs_val, "fmultmp")
+                         : this->builder.CreateMul(lhs_val, rhs_val, "multmp");
             break;
         }
         case Token::Type::SLASH_EQUAL:
         {
-            auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateSDiv(lhs_val, rhs_val, "divtmp");
-            this->builder.CreateStore(result, lhs);
-
+            /*
+             * this might require branching... 5 / 2 = 2 as is, and if i always
+             * use FDiv, then 4 / 2 = 2.000000
+             */
+            result = (float_flag)
+                         ? this->builder.CreateFDiv(lhs_val, rhs_val, "fdivtmp")
+                         : this->builder.CreateSDiv(lhs_val, rhs_val, "divtmp");
             break;
         }
         case Token::Type::PERCENT_EQUAL:
         {
-            auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateSRem(lhs_val, rhs_val, "modtmp");
-            this->builder.CreateStore(result, lhs);
-
+            result = (float_flag)
+                         ? throw BirdException("Modular operation requires integer values")
+                         : this->builder.CreateSRem(lhs_val, rhs_val, "modtmp");
             break;
         }
         default:
             throw BirdException("Unidentified assignment operator " + assign_expr->assign_operator.lexeme);
             break;
         }
+
+        this->builder.CreateStore(result, lhs);
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)
@@ -473,11 +486,11 @@ public:
 
         bool float_flag = (left->getType()->isFloatTy() || right->getType()->isFloatTy());
 
-        if (left->getType()->isIntegerTy() && right->getType()->isFloatTy())
+        if (float_flag && left->getType()->isIntegerTy() && right->getType()->isFloatTy())
         {
             left = this->builder.CreateSIToFP(left, right->getType(), "inttofloat");
         }
-        else if (left->getType()->isFloatTy() && right->getType()->isIntegerTy())
+        else if (float_flag && left->getType()->isFloatTy() && right->getType()->isIntegerTy())
         {
             right = this->builder.CreateSIToFP(right, left->getType(), "inttofloat");
         }
