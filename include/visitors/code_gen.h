@@ -57,7 +57,7 @@
 class CodeGen : public Visitor
 {
     std::stack<llvm::Value *> stack;
-    std::shared_ptr<SymbolTable<llvm::Value *>> environment;
+    std::shared_ptr<SymbolTable<llvm::AllocaInst *>> environment;
     std::map<std::string, llvm::FunctionCallee> std_lib;
 
     llvm::LLVMContext context;
@@ -78,7 +78,7 @@ public:
 
     CodeGen() : builder(llvm::IRBuilder<>(this->context))
     {
-        this->environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
+        this->environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
         this->module = std::make_unique<llvm::Module>("test_module", this->context);
     }
 
@@ -249,9 +249,9 @@ public:
 
     void visit_block(Block *block)
     {
-        auto new_environment = std::make_unique<SymbolTable<llvm::Value *>>(SymbolTable<llvm::Value *>());
-        new_environment->set_enclosing(std::move(this->environment));
-        this->environment = std::move(new_environment);
+        auto new_environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
 
         for (auto &stmt : block->stmts)
         {
@@ -265,10 +265,17 @@ public:
     {
         decl_stmt->value->accept(this);
 
-        llvm::Value *result = this->stack.top();
+        llvm::Value *initializer_value = this->stack.top();
         this->stack.pop();
 
-        this->environment->insert(decl_stmt->identifier.lexeme, result);
+        // TODO: CHECK THAT INITIALIZER_VALUE IS INITIALIZED WITH A VALID TYPE
+
+        llvm::Function *function = this->builder.GetInsertBlock()->getParent();
+
+        llvm::AllocaInst *alloca = create_alloca(function, initializer_value->getType(), decl_stmt->identifier.lexeme);
+        this->builder.CreateStore(initializer_value, alloca);
+
+        this->environment->insert(decl_stmt->identifier.lexeme, alloca);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
@@ -504,11 +511,15 @@ public:
         }
         case Token::Type::IDENTIFIER:
         {
-            auto value = this->environment->get(primary->value.lexeme);
-            if (value == nullptr)
+            auto allocation = this->environment->get(primary->value.lexeme);
+            if (allocation == nullptr)
             {
                 throw BirdException("undefined type identifier");
             }
+
+            auto value =
+                this->builder.CreateLoad(allocation->getAllocatedType(), allocation, primary->value.lexeme.c_str());
+
             this->stack.push(value);
             break;
         }
@@ -669,5 +680,12 @@ public:
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
         throw ContinueException();
+    }
+
+    llvm::AllocaInst *create_alloca(llvm::Function *function, llvm::Type *type, const std::string &identifier)
+    {
+        llvm::BasicBlock *entry_block = &function->getEntryBlock();
+        llvm::IRBuilder<> temp_builder(entry_block, entry_block->begin());
+        return temp_builder.CreateAlloca(type, nullptr, identifier);
     }
 };
