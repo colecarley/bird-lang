@@ -6,6 +6,7 @@
 #include "include/parser.h"
 #include "include/visitors/ast_printer.h"
 #include "include/visitors/interpreter.h"
+#include "include/visitors/semantic_analyzer.h"
 #include "include/visitors/type_checker.h"
 
 #include "include/ast_node/expr/expr.h"
@@ -48,6 +49,7 @@ void repl()
     Interpreter interpreter;
     std::string code;
     UserErrorTracker error_tracker(code);
+    SemanticAnalyzer semantic_analyzer(&error_tracker);
     TypeChecker type_checker(&error_tracker);
     while (true)
     {
@@ -70,6 +72,12 @@ void repl()
 
         AstPrinter printer;
         printer.print_ast(&ast);
+
+        semantic_analyzer.analyze_semantics(&ast);
+        if (error_tracker.has_errors())
+        {
+            error_tracker.print_errors_and_exit();
+        }
 
         type_checker.check_types(&ast);
         if (error_tracker.has_errors())
