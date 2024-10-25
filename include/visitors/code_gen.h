@@ -273,21 +273,21 @@ public:
         auto lhs = this->environment->get(assign_expr->identifier.lexeme);
 
         assign_expr->value->accept(this);
-        auto rhs = this->stack.top();
+        auto rhs_val = this->stack.top();
         this->stack.pop();
 
         switch (assign_expr->assign_operator.token_type)
         {
         case Token::Type::EQUAL:
         {
-            this->builder.CreateStore(rhs, lhs);
+            this->builder.CreateStore(rhs_val, lhs);
 
             break;
         }
         case Token::Type::PLUS_EQUAL:
         {
             auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateAdd(lhs_val, rhs, "addtmp");
+            auto result = this->builder.CreateAdd(lhs_val, rhs_val, "addtmp");
             this->builder.CreateStore(result, lhs);
 
             break;
@@ -295,7 +295,7 @@ public:
         case Token::Type::MINUS_EQUAL:
         {
             auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateSub(lhs_val, rhs, "subtmp");
+            auto result = this->builder.CreateSub(lhs_val, rhs_val, "subtmp");
             this->builder.CreateStore(result, lhs);
 
             break;
@@ -303,7 +303,7 @@ public:
         case Token::Type::STAR_EQUAL:
         {
             auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateMul(lhs_val, rhs, "multmp");
+            auto result = this->builder.CreateMul(lhs_val, rhs_val, "multmp");
             this->builder.CreateStore(result, lhs);
 
             break;
@@ -311,7 +311,7 @@ public:
         case Token::Type::SLASH_EQUAL:
         {
             auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateSDiv(lhs_val, rhs, "divtmp");
+            auto result = this->builder.CreateSDiv(lhs_val, rhs_val, "divtmp");
             this->builder.CreateStore(result, lhs);
 
             break;
@@ -319,7 +319,7 @@ public:
         case Token::Type::PERCENT_EQUAL:
         {
             auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
-            auto result = this->builder.CreateSRem(lhs_val, rhs, "modtmp");
+            auto result = this->builder.CreateSRem(lhs_val, rhs_val, "modtmp");
             this->builder.CreateStore(result, lhs);
 
             break;
