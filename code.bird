@@ -1,3 +1,4 @@
+/*
 while true {
     print "first";
     break;
@@ -144,7 +145,7 @@ while (o < 5) {
 
     print "o = ", o;
 }
-
+*/
 // works in codegen
 
 print "scope assignment";
@@ -174,5 +175,10 @@ var q = 0;
         q = y;
     }
 }
-
 print q;
+
+var r = 5.0;
+
+r /= 2;
+
+print r;

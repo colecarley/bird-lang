@@ -319,10 +319,6 @@ public:
         }
         case Token::Type::SLASH_EQUAL:
         {
-            /*
-             * this might require branching... 5 / 2 = 2 as is, and if i always
-             * use FDiv, then 4 / 2 = 2.000000
-             */
             result = (float_flag)
                          ? this->builder.CreateFDiv(lhs_val, rhs_val, "fdivtmp")
                          : this->builder.CreateSDiv(lhs_val, rhs_val, "divtmp");
