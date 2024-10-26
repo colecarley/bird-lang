@@ -282,6 +282,7 @@ public:
         if (float_flag && lhs_val->getType()->isIntegerTy())
         {
             rhs_val = this->builder.CreateFPToSI(rhs_val, lhs_val->getType(), "floattoint");
+            float_flag = false;
         }
         else if (float_flag && lhs_val->getType()->isFloatTy())
         {
