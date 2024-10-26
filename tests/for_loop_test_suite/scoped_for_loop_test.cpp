@@ -8,7 +8,7 @@
 #include "../helpers/parse_test_helper.hpp"
 #include "../../include/visitors/type_checker.h"
 
-TEST(ForLoopTest, ForLoopIncrement)
+TEST(ForLoopTest, ScopedForLoopIncrement)
 {
     auto code = "var x = 0;"
                 "{"
