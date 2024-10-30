@@ -87,8 +87,3 @@ TEST(ForLoopTest, ForLoopContinue)
     ASSERT_TRUE(is_type<int>(interpreter.environment->get("z")));
     EXPECT_EQ(as_type<int>(interpreter.environment->get("z").data), 3);
 }
-
-TEST(ForLoopTest, Failure)
-{
-    ASSERT_TRUE(false);
-}
