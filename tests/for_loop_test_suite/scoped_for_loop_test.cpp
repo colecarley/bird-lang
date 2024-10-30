@@ -8,15 +8,21 @@
 #include "../helpers/parse_test_helper.hpp"
 #include "../../include/visitors/type_checker.h"
 
-TEST(TernaryTest, AssignmentWithTernary)
+TEST(ForLoopTest, ScopedForLoopIncrement)
 {
-    auto code = "var x = 1;"
-                "x += true ? 1 : 2;";
+    auto code = "var x = 0;"
+                "{"
+                "   for var y = 0; y <= 5; y += 1 do {"
+                "       x = y;"
+                "   }"
+                "}";
+
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
+
     ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
@@ -24,5 +30,5 @@ TEST(TernaryTest, AssignmentWithTernary)
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
     ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 2);
+    EXPECT_EQ(as_type<int>(interpreter.environment->get("x").data), 5);
 }

@@ -2,6 +2,8 @@
 
 #include <string>
 #include <memory>
+#include <optional>
+
 #include "stmt.h"
 #include "../../lexer.h"
 #include "../../visitors/visitor.h"

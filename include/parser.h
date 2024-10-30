@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include "lexer.h"
 
@@ -97,4 +98,6 @@ public:
     bool is_at_end();
 
     void synchronize();
+
+    void consume(Token::Type expected_type, std::string token_type_string, std::string where, Token token);
 };

@@ -147,6 +147,11 @@ public:
                 while_stmt->accept(this);
             }
 
+            if (auto for_stmt = dynamic_cast<ForStmt *>(stmt.get()))
+            {
+                for_stmt->accept(this);
+            }
+
             if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
             {
                 return_stmt->accept(this);
@@ -269,7 +274,6 @@ public:
         this->stack.pop();
 
         // TODO: CHECK THAT INITIALIZER_VALUE IS INITIALIZED WITH A VALID TYPE
-
         llvm::Function *function = this->builder.GetInsertBlock()->getParent();
 
         llvm::AllocaInst *alloca = create_alloca(function, initializer_value->getType(), decl_stmt->identifier.lexeme);
@@ -280,7 +284,74 @@ public:
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        throw BirdException("Implement assign statement code gen.");
+        auto lhs = this->environment->get(assign_expr->identifier.lexeme);
+        auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
+
+        assign_expr->value->accept(this);
+        auto rhs_val = this->stack.top();
+        this->stack.pop();
+
+        bool float_flag = (lhs_val->getType()->isFloatTy() || rhs_val->getType()->isFloatTy());
+
+        if (float_flag && lhs_val->getType()->isIntegerTy())
+        {
+            rhs_val = this->builder.CreateFPToSI(rhs_val, lhs_val->getType(), "floattoint");
+            float_flag = false;
+        }
+        else if (float_flag && lhs_val->getType()->isFloatTy())
+        {
+            rhs_val = this->builder.CreateSIToFP(rhs_val, lhs_val->getType(), "inttofloat");
+        }
+
+        llvm::Value *result = nullptr;
+        switch (assign_expr->assign_operator.token_type)
+        {
+        case Token::Type::EQUAL:
+        {
+            result = rhs_val;
+            break;
+        }
+        case Token::Type::PLUS_EQUAL:
+        {
+            result = (float_flag)
+                         ? this->builder.CreateFAdd(lhs_val, rhs_val, "faddtmp")
+                         : this->builder.CreateAdd(lhs_val, rhs_val, "addtmp");
+            break;
+        }
+        case Token::Type::MINUS_EQUAL:
+        {
+            result = (float_flag)
+                         ? this->builder.CreateFSub(lhs_val, rhs_val, "fsubtmp")
+                         : this->builder.CreateSub(lhs_val, rhs_val, "subtmp");
+            break;
+        }
+        case Token::Type::STAR_EQUAL:
+        {
+            result = (float_flag)
+                         ? this->builder.CreateFMul(lhs_val, rhs_val, "fmultmp")
+                         : this->builder.CreateMul(lhs_val, rhs_val, "multmp");
+            break;
+        }
+        case Token::Type::SLASH_EQUAL:
+        {
+            result = (float_flag)
+                         ? this->builder.CreateFDiv(lhs_val, rhs_val, "fdivtmp")
+                         : this->builder.CreateSDiv(lhs_val, rhs_val, "divtmp");
+            break;
+        }
+        case Token::Type::PERCENT_EQUAL:
+        {
+            result = (float_flag)
+                         ? throw BirdException("Modular operation requires integer values")
+                         : this->builder.CreateSRem(lhs_val, rhs_val, "modtmp");
+            break;
+        }
+        default:
+            throw BirdException("Unidentified assignment operator " + assign_expr->assign_operator.lexeme);
+            break;
+        }
+
+        this->builder.CreateStore(result, lhs);
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)
@@ -324,9 +395,9 @@ public:
     {
         auto parent_fn = this->builder.GetInsertBlock()->getParent();
 
-        auto condition_block = llvm::BasicBlock::Create(this->context, "condition", parent_fn);
-        auto stmt_block = llvm::BasicBlock::Create(this->context, "stmt", parent_fn);
-        auto done_block = llvm::BasicBlock::Create(this->context, "done", parent_fn);
+        auto condition_block = llvm::BasicBlock::Create(this->context, "while_condition", parent_fn);
+        auto stmt_block = llvm::BasicBlock::Create(this->context, "while_stmt", parent_fn);
+        auto done_block = llvm::BasicBlock::Create(this->context, "while_done", parent_fn);
 
         this->builder.CreateBr(condition_block);
 
@@ -359,7 +430,58 @@ public:
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
-        throw BirdException("implement for statement visit");
+        std::shared_ptr<SymbolTable<llvm::AllocaInst *>> new_environment =
+            std::make_shared<SymbolTable<llvm::AllocaInst *>>();
+
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
+
+        auto parent_fn = this->builder.GetInsertBlock()->getParent();
+
+        auto init_block = llvm::BasicBlock::Create(this->context, "for_initializer", parent_fn);
+        auto condition_block = llvm::BasicBlock::Create(this->context, "for_condition", parent_fn);
+        auto increment_block = llvm::BasicBlock::Create(this->context, "for_increment", parent_fn);
+        auto body_block = llvm::BasicBlock::Create(this->context, "for_body", parent_fn);
+        auto done_block = llvm::BasicBlock::Create(this->context, "for_merge", parent_fn);
+
+        this->builder.CreateBr(init_block);
+        this->builder.SetInsertPoint(init_block);
+
+        if (for_stmt->initializer.has_value())
+        {
+            for_stmt->initializer.value()->accept(this);
+        }
+
+        this->builder.CreateBr(condition_block);
+        this->builder.SetInsertPoint(condition_block);
+
+        if (for_stmt->condition.has_value())
+        {
+            for_stmt->condition.value()->accept(this);
+            auto result = this->stack.top();
+
+            this->builder.CreateCondBr(result, body_block, done_block);
+        }
+        else
+        {
+            this->builder.CreateBr(body_block);
+        }
+
+        this->builder.SetInsertPoint(body_block);
+        for_stmt->body->accept(this);
+
+        this->builder.CreateBr(increment_block);
+        this->builder.SetInsertPoint(increment_block);
+
+        if (for_stmt->increment.has_value())
+        {
+            for_stmt->increment.value()->accept(this);
+        }
+
+        this->builder.CreateBr(condition_block);
+        this->builder.SetInsertPoint(done_block);
+
+        this->environment = this->environment->get_enclosing();
     }
 
     void visit_binary(Binary *binary)
@@ -373,15 +495,13 @@ public:
         auto left = this->stack.top();
         this->stack.pop();
 
-        bool float_flag = (left->getType()->isFloatTy() || right->getType()->isFloatTy())
-                              ? true
-                              : false;
+        bool float_flag = (left->getType()->isFloatTy() || right->getType()->isFloatTy());
 
-        if (left->getType()->isIntegerTy() && right->getType()->isFloatTy())
+        if (float_flag && left->getType()->isIntegerTy() && right->getType()->isFloatTy())
         {
             left = this->builder.CreateSIToFP(left, right->getType(), "inttofloat");
         }
-        else if (left->getType()->isFloatTy() && right->getType()->isIntegerTy())
+        else if (float_flag && left->getType()->isFloatTy() && right->getType()->isIntegerTy())
         {
             right = this->builder.CreateSIToFP(right, left->getType(), "inttofloat");
         }
@@ -390,71 +510,81 @@ public:
         {
         case Token::Type::PLUS:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFAdd(left, right, "faddftmp"))
-                         : this->stack.push(this->builder.CreateAdd(left, right, "addtmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFAdd(left, right, "faddftmp"))
+                : this->stack.push(this->builder.CreateAdd(left, right, "addtmp"));
 
             break;
         }
         case Token::Type::MINUS:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFSub(left, right, "fsubtmp"))
-                         : this->stack.push(this->builder.CreateSub(left, right, "subtmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFSub(left, right, "fsubtmp"))
+                : this->stack.push(this->builder.CreateSub(left, right, "subtmp"));
 
             break;
         }
         case Token::Type::SLASH:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFDiv(left, right, "fdivtmp"))
-                         : this->stack.push(this->builder.CreateSDiv(left, right, "sdivtmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFDiv(left, right, "fdivtmp"))
+                : this->stack.push(this->builder.CreateSDiv(left, right, "sdivtmp"));
 
             break;
         }
         case Token::Type::STAR:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFMul(left, right, "fmultmp"))
-                         : this->stack.push(this->builder.CreateMul(left, right, "smultmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFMul(left, right, "fmultmp"))
+                : this->stack.push(this->builder.CreateMul(left, right, "smultmp"));
 
             break;
         }
         case Token::Type::GREATER:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFCmpOGT(left, right, "fogttmp"))
-                         : this->stack.push(this->builder.CreateICmpSGT(left, right, "sgttmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFCmpOGT(left, right, "fogttmp"))
+                : this->stack.push(this->builder.CreateICmpSGT(left, right, "sgttmp"));
 
             break;
         }
         case Token::Type::GREATER_EQUAL:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFCmpOGE(left, right, "fogetmp"))
-                         : this->stack.push(this->builder.CreateICmpSGE(left, right, "sgetmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFCmpOGE(left, right, "fogetmp"))
+                : this->stack.push(this->builder.CreateICmpSGE(left, right, "sgetmp"));
 
             break;
         }
         case Token::Type::LESS:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFCmpOLT(left, right, "folttmp"))
-                         : this->stack.push(this->builder.CreateICmpSLT(left, right, "slttmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFCmpOLT(left, right, "folttmp"))
+                : this->stack.push(this->builder.CreateICmpSLT(left, right, "slttmp"));
 
             break;
         }
         case Token::Type::LESS_EQUAL:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFCmpOLE(left, right, "foletmp"))
-                         : this->stack.push(this->builder.CreateICmpSLE(left, right, "sletmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFCmpOLE(left, right, "foletmp"))
+                : this->stack.push(this->builder.CreateICmpSLE(left, right, "sletmp"));
 
             break;
         }
         case Token::Type::EQUAL_EQUAL:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFCmpOEQ(left, right, "foeqtmp"))
-                         : this->stack.push(this->builder.CreateICmpEQ(left, right, "eqtmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFCmpOEQ(left, right, "foeqtmp"))
+                : this->stack.push(this->builder.CreateICmpEQ(left, right, "eqtmp"));
 
             break;
         }
         case Token::Type::BANG_EQUAL:
         {
-            (float_flag) ? this->stack.push(this->builder.CreateFCmpONE(left, right, "fonetmp"))
-                         : this->stack.push(this->builder.CreateICmpNE(left, right, "netmp"));
+            (float_flag)
+                ? this->stack.push(this->builder.CreateFCmpONE(left, right, "fonetmp"))
+                : this->stack.push(this->builder.CreateICmpNE(left, right, "netmp"));
 
             break;
         }
