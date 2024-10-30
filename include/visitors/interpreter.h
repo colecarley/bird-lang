@@ -46,6 +46,9 @@ public:
     std::shared_ptr<SymbolTable<Callable>> call_table;
     std::stack<Value> stack;
 
+    // used for break and continue statements
+    std::shared_ptr<SymbolTable<Value>> temp_environment;
+
     Interpreter()
     {
         this->environment = std::make_shared<SymbolTable<Value>>();
@@ -311,7 +314,8 @@ public:
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
-        auto original_environment = this->environment;
+        // auto original_environment = this->environment;
+        this->temp_environment = this->environment;
 
         while_stmt->condition->accept(this);
         auto condition_result = std::move(this->stack.top());
@@ -333,8 +337,6 @@ public:
                 condition_result = std::move(this->stack.top());
                 this->stack.pop();
 
-                this->environment = original_environment;
-
                 continue;
             }
 
@@ -349,6 +351,8 @@ public:
         std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
         new_environment->set_enclosing(this->environment);
         this->environment = new_environment;
+
+        this->temp_environment = this->environment;
 
         if (for_stmt->initializer.has_value())
         {
@@ -379,6 +383,10 @@ public:
             }
             catch (ContinueException e)
             {
+                if (for_stmt->increment.has_value())
+                {
+                    for_stmt->increment.value()->accept(this);
+                }
                 continue;
             }
 
@@ -563,12 +571,13 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        this->environment = this->environment->get_enclosing(); // TODO: do this better
+        this->environment = this->temp_environment;
         throw BreakException();
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
+        this->environment = this->temp_environment;
         throw ContinueException();
     }
 };

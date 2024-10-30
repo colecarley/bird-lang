@@ -231,7 +231,7 @@ TEST(ExprTest, BinaryDivideByZero)
 
 TEST(ExprTest, BinaryModulus)
 {
-    auto code = "var x: int = 10 % 0 + 5 % 2 + 6 % 2 + 4 % 6;";
+    auto code = "var x: int =  10 % (0 + 5) % 2 + 6 % 2 + 4 % 6;";
     auto ast = parse_code(code);
 
     Interpreter interpreter;
@@ -239,7 +239,7 @@ TEST(ExprTest, BinaryModulus)
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
     ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 15);
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 4);
 }
 
 TEST(ExprTest, BinaryModulusFail)
