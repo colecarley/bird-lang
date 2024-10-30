@@ -31,7 +31,7 @@ public:
         {
             if (this->enclosing.get() == nullptr)
             {
-                throw BirdException("undefined identifier");
+                throw BirdException("undefined identifier in symboltable");
             }
             return this->enclosing->get(identifier);
         }

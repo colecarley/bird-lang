@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <string>
 #include "../ast_node/stmt/stmt.h"
 #include "../ast_node/expr/expr.h"
 
@@ -112,6 +113,11 @@ public:
 
         for (auto &stmt : *stmts)
         {
+            if (auto func_stmt = dynamic_cast<Func *>(stmt.get()))
+            {
+                func_stmt->accept(this);
+            }
+
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
             {
                 decl_stmt->accept(this);
@@ -246,6 +252,8 @@ public:
             return llvm::Type::getInt64Ty(context);
         else if (token.lexeme == "float")
             return llvm::Type::getFloatTy(context);
+        else if (token.lexeme == "void")
+            return llvm::Type::getVoidTy(context);
         else if (token.lexeme == "string")
             throw BirdException("TODO: implement codegen for string type");
         else
@@ -719,36 +727,51 @@ public:
 
     void visit_func(Func *func)
     {
-        llvm::Function *function = module->getFunction(func->identifier.lexeme);
-
-        if (function)
-        {
-            throw BirdException("function " + func->identifier.lexeme + " is already defined");
-        }
+        std::cout << "visiting function " << func->identifier.lexeme << std::endl;
+        llvm::Function *function = nullptr;
 
         std::vector<llvm::Type *> param_types;
         for (const auto &param : func->param_list)
-            param_types.push_back(from_bird_type(param.second));
+        {
+            auto param_type = from_bird_type(param.second);
+            param_types.push_back(param_type);
+        }
 
         auto return_type = func->return_type ? from_bird_type(func->return_type.value()) : llvm::Type::getVoidTy(context);
 
         auto function_type = llvm::FunctionType::get(return_type, param_types, false);
 
-        auto function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, func->identifier.lexeme, module.get());
-
-        unsigned i = 0;
-        for (auto &param : function->args())
-        {
-            param.setName(func->param_list[i++].first.lexeme);
-        }
-
-        this->visit_block(dynamic_cast<Block *>(func->block.get()));
+        function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, func->identifier.lexeme, module.get());
 
         auto block = llvm::BasicBlock::Create(context, "entry", function);
         this->builder.SetInsertPoint(block);
 
-        // for (auto &param : function->args())
-        //     this->environment->insert()
+        auto new_environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
+
+        unsigned i = 0;
+        for (auto &param : function->args())
+        {
+            std::string &param_name = func->param_list[i++].first.lexeme;
+            param.setName(param_name);
+            llvm::AllocaInst *alloca = create_alloca(function, param.getType(), param_name);
+            this->builder.CreateStore(&param, alloca);
+            environment->insert(param_name, alloca);
+        }
+
+        this->visit_block(dynamic_cast<Block *>(func->block.get()));
+
+        this->environment = this->environment->get_enclosing();
+
+        llvm::Value *return_value = nullptr;
+        if (!function->getReturnType()->isVoidTy() && !stack.empty())
+            auto return_value = stack.top();
+
+        builder.CreateRet(return_value);
+
+        std::cout << "visited function " << func->identifier.lexeme << "\n"
+                  << std::endl;
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -794,12 +817,31 @@ public:
 
     void visit_call(Call *call)
     {
-        throw BirdException("implement call");
+        std::cout << "visiting call to function " << call->identifier.lexeme << std::endl;
+
+        auto *function = module->getFunction(call->identifier.lexeme);
+
+        if (!function)
+            throw BirdException("Function '" + call->identifier.lexeme + "' could not be found from callsite");
+
+        std::vector<llvm::Value *> arguments;
+
+        for (auto &arg : call->args)
+        {
+            arg->accept(this);
+            arguments.push_back(stack.top());
+            stack.pop();
+        }
+
+        this->builder.CreateCall(function, arguments, "calltmp");
+
+        std::cout << "visited call to function " << call->identifier.lexeme << "\n"
+                  << std::endl;
     }
 
     void visit_return_stmt(ReturnStmt *return_stmt)
     {
-        throw BirdException("implement return stmt");
+        return_stmt->expr->get()->accept(this);
     }
 
     void visit_break_stmt(BreakStmt *break_stmt)
