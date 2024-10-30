@@ -259,7 +259,6 @@ public:
         llvm::Value *initializer_value = this->stack.top();
         this->stack.pop();
 
-        // TODO: CHECK THAT INITIALIZER_VALUE IS INITIALIZED WITH A VALID TYPE
         llvm::Function *function = this->builder.GetInsertBlock()->getParent();
 
         llvm::AllocaInst *alloca = create_alloca(function, initializer_value->getType(), decl_stmt->identifier.lexeme);
@@ -699,7 +698,20 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        throw BirdException("implement const statment visit");
+        const_stmt->value->accept(this);
+
+        llvm::Value *initializer_value = this->stack.top();
+        this->stack.pop();
+
+        llvm::Function *function = this->builder.GetInsertBlock()->getParent();
+
+        llvm::AllocaInst *alloca = create_alloca(function,
+                                                 initializer_value->getType(),
+                                                 const_stmt->identifier.lexeme);
+
+        this->builder.CreateStore(initializer_value, alloca);
+
+        this->environment->insert(const_stmt->identifier.lexeme, alloca);
     }
 
     void visit_func(Func *func)
