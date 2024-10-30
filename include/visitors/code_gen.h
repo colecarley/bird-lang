@@ -381,9 +381,9 @@ public:
     {
         auto parent_fn = this->builder.GetInsertBlock()->getParent();
 
-        auto condition_block = llvm::BasicBlock::Create(this->context, "condition", parent_fn);
-        auto stmt_block = llvm::BasicBlock::Create(this->context, "stmt", parent_fn);
-        auto done_block = llvm::BasicBlock::Create(this->context, "done", parent_fn);
+        auto condition_block = llvm::BasicBlock::Create(this->context, "while_condition", parent_fn);
+        auto stmt_block = llvm::BasicBlock::Create(this->context, "while_stmt", parent_fn);
+        auto done_block = llvm::BasicBlock::Create(this->context, "while_done", parent_fn);
 
         this->builder.CreateBr(condition_block);
 
@@ -424,11 +424,11 @@ public:
 
         auto parent_fn = this->builder.GetInsertBlock()->getParent();
 
-        auto init_block = llvm::BasicBlock::Create(this->context, "initializer", parent_fn);
-        auto condition_block = llvm::BasicBlock::Create(this->context, "condition", parent_fn);
-        auto increment_block = llvm::BasicBlock::Create(this->context, "increment", parent_fn);
-        auto body_block = llvm::BasicBlock::Create(this->context, "body", parent_fn);
-        auto done_block = llvm::BasicBlock::Create(this->context, "merge", parent_fn);
+        auto init_block = llvm::BasicBlock::Create(this->context, "for_initializer", parent_fn);
+        auto condition_block = llvm::BasicBlock::Create(this->context, "for_condition", parent_fn);
+        auto increment_block = llvm::BasicBlock::Create(this->context, "for_increment", parent_fn);
+        auto body_block = llvm::BasicBlock::Create(this->context, "for_body", parent_fn);
+        auto done_block = llvm::BasicBlock::Create(this->context, "for_merge", parent_fn);
 
         this->builder.CreateBr(init_block);
         this->builder.SetInsertPoint(init_block);
