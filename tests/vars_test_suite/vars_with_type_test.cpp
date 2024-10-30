@@ -6,6 +6,7 @@
 #include "../../include/visitors/interpreter.h"
 #include "../../src/callable.cpp"
 #include "../helpers/parse_test_helper.hpp"
+#include "../../include/visitors/semantic_analyzer.h"
 #include "../../include/visitors/type_checker.h"
 
 // INT
@@ -15,6 +16,10 @@ TEST(VarTest, VarWithTypeInt)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -34,6 +39,10 @@ TEST(VarTest, VarWithTypeFloat)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -47,6 +56,9 @@ TEST(VarTest, VarWithTypeFloat)
 
     code = "var y: float = 4;";
     ast = parse_code(code);
+
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -65,6 +77,10 @@ TEST(VarTest, VarWithTypeString)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -84,6 +100,10 @@ TEST(VarTest, VarWithTypeBool)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -97,6 +117,9 @@ TEST(VarTest, VarWithTypeBool)
 
     code = "var y: bool = false;";
     ast = parse_code(code);
+
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());

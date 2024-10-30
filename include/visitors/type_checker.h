@@ -287,12 +287,6 @@ public:
             current_env = current_env->get_enclosing();
         }
 
-        // TODO: make this a different semantic pass
-        if (!current_env)
-        {
-            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
-        }
-
         assign_expr->value->accept(this);
         auto result = std::move(this->stack.top());
         this->stack.pop();
