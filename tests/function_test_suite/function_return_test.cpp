@@ -35,11 +35,11 @@ TEST(FunctionTest, FunctionReturnTypeInt)
 
 TEST(FunctionTest, FunctionReturnTypeString)
 {
-    auto code = "fn function(i: int, j: int) -> string"
+    auto code = "fn function(i: int, j: int) -> str"
                 "{"
                 "return \"string\";"
                 "}"
-                "var result: string = function(2, 3);";
+                "var result: str = function(2, 3);";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -51,10 +51,27 @@ TEST(FunctionTest, FunctionReturnTypeString)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.call_table->contains("function"));
-    auto callable = interpreter.call_table->get("function");
 
     ASSERT_TRUE(interpreter.environment->contains("result"));
     auto result = interpreter.environment->get("result");
     ASSERT_TRUE(is_type<std::string>(result));
-    EXPECT_EQ(result, "string");
+    EXPECT_EQ(as_type<std::string>(result), "string");
+}
+
+TEST(FunctionTest, FunctionWrongReturnType)
+{
+    auto code = "fn function(i: int, j: int) -> int"
+                "{"
+                "return \"string\";"
+                "}";
+
+    auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+
+    ASSERT_TRUE(user_error_tracker.has_errors());
+    auto errors = user_error_tracker.get_errors();
+    EXPECT_EQ(errors.size(), 1);
 }

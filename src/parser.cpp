@@ -676,7 +676,8 @@ void Parser::synchronize()
 }
 
 // Maybe 'token_type_string' could be replaced with a function that retrieves the string of a 'Token::Type'.
-void Parser::consume(Token::Type expected_type, std::string token_type_string, std::string where, Token token) {
+void Parser::consume(Token::Type expected_type, std::string token_type_string, std::string where, Token token)
+{
     if (this->advance().token_type != expected_type)
     {
         user_error_tracker->expected(token_type_string, where, token);

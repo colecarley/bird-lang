@@ -23,7 +23,7 @@ TEST(FunctionTest, GoodFunctionCall)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.call_table->contains("function"));
-    ASSERT_TRUE(interpreter.environment->contains("resutl"));
+    ASSERT_TRUE(interpreter.environment->contains("result"));
     auto result = interpreter.environment->get("result");
     ASSERT_TRUE(is_type<int>(result));
     EXPECT_EQ(as_type<int>(result), 4);
@@ -33,35 +33,38 @@ TEST(FunctionTest, MalformedCall)
 {
     auto code = "fn function() {} "
                 "function(;";
-    ASSERT_THROW(parse_code(code), UserException);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    parse_code_with_error_tracker(code, user_error_tracker);
+
+    ASSERT_TRUE(user_error_tracker.has_errors());
+    auto errors = user_error_tracker.get_errors();
+    ASSERT_EQ(errors.size(), 1);
+    // TODO: fix double space
+    EXPECT_EQ(std::get<0>(errors[0]), ">>[ERROR] expected identifier or i32  (line 0, character 26)");
 }
 
 TEST(FunctionTest, CallWithIncorrectTypes)
 {
-    auto code = "fn function(i: int, j: string) {}"
+    auto code = "fn function(i: int, j: str) {}"
                 "function(4, 6);";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    ASSERT_TRUE(user_error_tracker.has_errors());
 }
 
 TEST(FunctionTest, StoreReturnWithIncorrectVarType)
 {
     auto code = "fn function() -> int {return 3;} "
-                "var:string = function();";
+                "var result: str = function();";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    ASSERT_TRUE(user_error_tracker.has_errors());
 }
