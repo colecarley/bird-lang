@@ -46,6 +46,9 @@ public:
     std::shared_ptr<SymbolTable<Callable>> call_table;
     std::stack<Value> stack;
 
+    // used for break and continue statements
+    std::shared_ptr<SymbolTable<Value>> temp_environment;
+
     Interpreter()
     {
         this->environment = std::make_shared<SymbolTable<Value>>();
@@ -119,6 +122,7 @@ public:
             if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
             {
                 return_stmt->accept(this);
+                continue;
             }
 
             if (auto break_stmt = dynamic_cast<BreakStmt *>(stmt.get()))
@@ -180,11 +184,11 @@ public:
 
             if (type_lexeme == "int")
             {
-                result.data = to_type<int, float>(result);
+                result.data = to_type<int, double>(result);
             }
             else if (type_lexeme == "float")
             {
-                result.data = to_type<float, int>(result);
+                result.data = to_type<double, int>(result);
             }
         }
 
@@ -298,11 +302,11 @@ public:
 
             if (type_lexeme == "int")
             {
-                result.data = to_type<int, float>(result);
+                result.data = to_type<int, double>(result);
             }
             else if (type_lexeme == "float")
             {
-                result.data = to_type<float, int>(result);
+                result.data = to_type<double, int>(result);
             }
         }
 
@@ -311,7 +315,8 @@ public:
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
-        auto original_environment = this->environment;
+        // auto original_environment = this->environment;
+        this->temp_environment = this->environment;
 
         while_stmt->condition->accept(this);
         auto condition_result = std::move(this->stack.top());
@@ -333,8 +338,6 @@ public:
                 condition_result = std::move(this->stack.top());
                 this->stack.pop();
 
-                this->environment = original_environment;
-
                 continue;
             }
 
@@ -349,6 +352,8 @@ public:
         std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
         new_environment->set_enclosing(this->environment);
         this->environment = new_environment;
+
+        this->temp_environment = this->environment;
 
         if (for_stmt->initializer.has_value())
         {
@@ -379,6 +384,10 @@ public:
             }
             catch (ContinueException e)
             {
+                if (for_stmt->increment.has_value())
+                {
+                    for_stmt->increment.value()->accept(this);
+                }
                 continue;
             }
 
@@ -454,6 +463,11 @@ public:
             this->stack.push(left == right);
             break;
         }
+        case Token::Type::PERCENT:
+        {
+            this->stack.push(left % right);
+            break;
+        }
         default:
         {
             throw BirdException("Undefined binary operator.");
@@ -476,7 +490,7 @@ public:
         {
         case Token::Type::FLOAT_LITERAL:
             this->stack.push(Value(
-                variant(std::stof(primary->value.lexeme))));
+                variant(std::stod(primary->value.lexeme))));
             break;
         case Token::Type::BOOL_LITERAL:
             this->stack.push(Value(
@@ -558,12 +572,13 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        this->environment = this->environment->get_enclosing(); // TODO: do this better
+        this->environment = this->temp_environment;
         throw BreakException();
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
+        this->environment = this->temp_environment;
         throw ContinueException();
     }
 };

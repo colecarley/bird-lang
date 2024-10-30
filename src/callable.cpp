@@ -36,7 +36,7 @@ void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>>
         if (param_list[i].second.lexeme == "bool" && !is_type<bool>(evaluated_args[i]))
             throw BirdException("Type mismatch");
 
-        if (param_list[i].second.lexeme == "float" && !is_type<float>(evaluated_args[i]))
+        if (param_list[i].second.lexeme == "float" && !is_type<double>(evaluated_args[i]))
             throw BirdException("Type mismatch");
 
         interpreter->environment->insert(param_list[i].first.lexeme, evaluated_args[i]);

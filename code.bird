@@ -145,4 +145,39 @@ while (o < 5) {
     print "o = ", o;
 }
 
+// works in codegen
 
+print "scope assignment";
+
+var p = 0;
+
+{ p += 1; }
+
+print p;
+
+print "for loop, print y";
+
+for var y = 0; y <= 5; y += 1 do {
+    print y;
+    p = y;
+}
+
+print "assignment in for loop";
+
+print p;
+
+print "for-loop in nested scope assignment";
+var q = 0;
+
+{
+    for var y = 0; y <= 5; y += 1 do {
+        q = y;
+    }
+}
+print q;
+
+var r = 5.0;
+
+r /= 2;
+
+print r;

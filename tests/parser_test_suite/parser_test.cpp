@@ -257,7 +257,7 @@ TEST(ParserTest, ParseFunctionNoArgs)
 
 TEST(ParserTest, ParseFunctionNoReturnType)
 {
-    std::string code = "fn function(i: int, j: string) {}";
+    std::string code = "fn function(i: int, j: str) {}";
 
     auto stmts = parse_code(code);
 
@@ -273,7 +273,7 @@ TEST(ParserTest, ParseFunctionNoReturnType)
     EXPECT_EQ(func_stmt->param_list[0].first.lexeme, "i");
     EXPECT_EQ(func_stmt->param_list[0].second.lexeme, "int");
     EXPECT_EQ(func_stmt->param_list[1].first.lexeme, "j");
-    EXPECT_EQ(func_stmt->param_list[1].second.lexeme, "string");
+    EXPECT_EQ(func_stmt->param_list[1].second.lexeme, "str");
 
     // get Block and check for not nullptr
     Block *block_stmt = dynamic_cast<Block *>(func_stmt->block.get());
@@ -287,14 +287,14 @@ TEST(ParserTest, FunctionFailsArrowNoReturnType)
 
     UserErrorTracker error_tracker(code);
 
-    ASSERT_THROW(auto stmts = parse_code_with_error_tracker(code, error_tracker), UserException);
+    parse_code_with_error_tracker(code, error_tracker);
 
     ASSERT_TRUE(error_tracker.has_errors());
 
     auto errors = error_tracker.get_errors();
 
     ASSERT_EQ(errors.size(), 1);
-    EXPECT_EQ(std::get<0>(errors[0]), "expected return type after arrow operator");
+    EXPECT_EQ(std::get<0>(errors[0]), ">>[ERROR] expected type after arrow (line 0, character 15)");
 }
 
 TEST(ParserTest, ParseIfStmt)
