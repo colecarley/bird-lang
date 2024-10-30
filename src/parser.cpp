@@ -97,12 +97,7 @@ std::unique_ptr<Stmt> Parser::return_stmt()
 
     auto expr = this->expr();
 
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected(";", "after const statement", this->peek());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::SEMICOLON, ";", "after const statement", this->peek());
 
     return std::make_unique<ReturnStmt>(ReturnStmt(std::move(expr)));
 }
@@ -114,14 +109,9 @@ std::unique_ptr<Stmt> Parser::const_decl()
         throw BirdException("Expected 'const' at the beginning of const decl");
     }
 
-    auto identifier = this->advance();
+    auto identifier = this->peek();
 
-    if (identifier.token_type != Token::Type::IDENTIFIER)
-    {
-        this->user_error_tracker->expected("identifier", "after const", this->peek());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::IDENTIFIER, "identifier", "after const", this->peek());
 
     std::optional<Token> type_identifier = std::nullopt;
     if (this->peek().token_type == Token::Type::COLON)
@@ -139,21 +129,11 @@ std::unique_ptr<Stmt> Parser::const_decl()
         }
     }
 
-    if (this->advance().token_type != Token::Type::EQUAL)
-    {
-        this->user_error_tracker->expected("=", "after type identifier", this->peek());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::EQUAL, "=", "after type identifier", this->peek());
 
     auto expr = this->expr();
 
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected(";", "after const statement", this->peek());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::SEMICOLON, ";", "after const statement", this->peek());
 
     return std::make_unique<ConstStmt>(
         ConstStmt(
@@ -175,12 +155,7 @@ std::unique_ptr<Stmt> Parser::block()
         stmts.push_back(std::move(stmt));
     }
 
-    if (this->advance().token_type != Token::Type::RBRACE)
-    {
-        this->user_error_tracker->expected("}", "at the end of block", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::RBRACE, "}", "at the end of block", this->peek_previous());
 
     return std::make_unique<Block>(Block(std::move(stmts)));
 }
@@ -216,12 +191,7 @@ std::unique_ptr<Stmt> Parser::expr_stmt()
     auto result = std::make_unique<ExprStmt>(
         ExprStmt(this->expr()));
 
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
 
     return result;
 }
@@ -247,12 +217,7 @@ std::unique_ptr<Stmt> Parser::print_stmt()
         this->advance();
     }
 
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected(";", "after 'print'", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::SEMICOLON, ";", "after 'print'", this->peek_previous());
 
     auto result = std::make_unique<PrintStmt>(PrintStmt(std::move(values)));
     return result;
@@ -346,12 +311,7 @@ std::unique_ptr<Stmt> Parser::var_decl()
         }
     }
 
-    if (this->advance().token_type != Token::Type::EQUAL)
-    {
-        this->user_error_tracker->expected("=", "in assignment", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::EQUAL, "=", "in assignment", this->peek_previous());
 
     auto result = std::make_unique<DeclStmt>(
         DeclStmt(
@@ -359,12 +319,7 @@ std::unique_ptr<Stmt> Parser::var_decl()
             type_identifier,
             this->expr()));
 
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
 
     return result;
 }
@@ -414,12 +369,7 @@ std::unique_ptr<Stmt> Parser::break_stmt()
         throw BirdException("Expected 'break' at the beginning of break stmt");
     }
 
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
 
     return std::make_unique<BreakStmt>();
 }
@@ -431,12 +381,7 @@ std::unique_ptr<Stmt> Parser::continue_stmt()
         throw BirdException("Expected 'continue' at the beginning of continue stmt");
     }
 
-    if (this->advance().token_type != Token::Type::SEMICOLON)
-    {
-        this->user_error_tracker->expected(";", "at the end of expression", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
 
     return std::make_unique<ContinueStmt>();
 }
@@ -456,12 +401,7 @@ std::unique_ptr<Expr> Parser::ternary()
 
         auto true_expr = this->expr();
 
-        if (this->advance().token_type != Token::Type::COLON)
-        {
-            this->user_error_tracker->expected(":", "after true expression in ternary operator", this->peek_previous());
-            this->synchronize();
-            throw UserException();
-        }
+        this->consume(Token::Type::COLON, ":", "after true expression in ternary operator", this->peek_previous());
 
         auto false_expr = this->expr();
 
@@ -578,12 +518,7 @@ std::vector<std::unique_ptr<Expr>> Parser::args()
             this->advance();
     }
 
-    if (this->advance().token_type != Token::Type::RPAREN)
-    {
-        this->user_error_tracker->expected(")", "after function call", this->peek());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::RPAREN, ")", "after function call", this->peek());
 
     return args;
 }
@@ -620,12 +555,7 @@ std::unique_ptr<Expr> Parser::grouping()
 
     auto expr = this->expr();
 
-    if (this->advance().token_type != Token::Type::RPAREN)
-    {
-        this->user_error_tracker->expected("(", "after grouping", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::RPAREN, ")", "after grouping", this->peek_previous());
 
     return expr;
 }
@@ -637,29 +567,14 @@ std::unique_ptr<Stmt> Parser::func()
         throw BirdException("expected fn keyword");
     }
 
-    auto fn_identifier = this->advance();
+    auto fn_identifier = this->peek();
 
-    if (fn_identifier.token_type != Token::Type::IDENTIFIER)
-    {
-        this->user_error_tracker->expected("identifier", "after keyword", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
-    if (this->advance().token_type != Token::Type::LPAREN)
-    {
-        this->user_error_tracker->expected("(", "after identifier", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::IDENTIFIER, "identifier", "after keyword", this->peek_previous());
+    this->consume(Token::Type::LPAREN, "(", "after identifier", this->peek_previous());
 
     auto fn_params = this->fn_params();
 
-    if (this->advance().token_type != Token::Type::RPAREN)
-    {
-        this->user_error_tracker->expected(")", "after function parameter list", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::RPAREN, ")", "after function parameter list", this->peek_previous());
 
     auto fn_return_type = this->fn_return_type();
 
@@ -696,30 +611,15 @@ std::vector<std::pair<Token, Token>> Parser::fn_params()
 
 std::pair<Token, Token> Parser::param_decl()
 {
-    auto identifier = this->advance();
+    auto identifier = this->peek();
 
-    if (identifier.token_type != Token::Type::IDENTIFIER)
-    {
-        this->user_error_tracker->expected("identifier", "in function parameter list", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::IDENTIFIER, "identifier", "in function parameter list", this->peek_previous());
 
-    if (this->advance().token_type != Token::Type::COLON)
-    {
-        this->user_error_tracker->expected(":", "after identifier in parameter declaration", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::COLON, ":", "after identifier in parameter declaration", this->peek_previous());
 
-    auto type_identifier = this->advance();
+    auto type_identifier = this->peek();
 
-    if (type_identifier.token_type != Token::Type::TYPE_IDENTIFIER)
-    {
-        this->user_error_tracker->expected("type identifier", "after \':\' in parameter declaration", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::TYPE_IDENTIFIER, "type", "after \':\' in parameter declaration", this->peek_previous());
 
     return {identifier, type_identifier};
 }
@@ -733,14 +633,9 @@ std::optional<Token> Parser::fn_return_type()
 
     this->advance();
 
-    auto return_type = this->advance();
+    auto return_type = this->peek();
 
-    if (return_type.token_type != Token::Type::TYPE_IDENTIFIER)
-    {
-        this->user_error_tracker->expected("return type", "after arrow", this->peek_previous());
-        this->synchronize();
-        throw UserException();
-    }
+    this->consume(Token::Type::TYPE_IDENTIFIER, "type", "after arrow", this->peek_previous());
 
     return return_type;
 }
@@ -777,5 +672,15 @@ void Parser::synchronize()
     while (this->advance().token_type != Token::Type::SEMICOLON && !this->is_at_end())
     {
         // do nothing
+    }
+}
+
+// Maybe 'token_type_string' could be replaced with a function that retrieves the string of a 'Token::Type'.
+void Parser::consume(Token::Type expected_type, std::string token_type_string, std::string where, Token token) {
+    if (this->advance().token_type != expected_type)
+    {
+        user_error_tracker->expected(token_type_string, where, token);
+        this->synchronize();
+        throw UserException();
     }
 }
