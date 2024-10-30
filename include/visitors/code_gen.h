@@ -116,6 +116,7 @@ public:
             if (auto func_stmt = dynamic_cast<Func *>(stmt.get()))
             {
                 func_stmt->accept(this);
+                this->builder.SetInsertPoint(entry);
             }
 
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
@@ -249,12 +250,12 @@ public:
         if (token.lexeme == "bool")
             return llvm::Type::getInt1Ty(context);
         else if (token.lexeme == "int")
-            return llvm::Type::getInt64Ty(context);
+            return llvm::Type::getInt32Ty(context);
         else if (token.lexeme == "float")
-            return llvm::Type::getFloatTy(context);
+            return llvm::Type::getDoubleTy(context);
         else if (token.lexeme == "void")
             return llvm::Type::getVoidTy(context);
-        else if (token.lexeme == "string")
+        else if (token.lexeme == "str")
             throw BirdException("TODO: implement codegen for string type");
         else
             throw BirdException("invalid type");
@@ -283,7 +284,7 @@ public:
 
         llvm::Function *function = this->builder.GetInsertBlock()->getParent();
 
-        llvm::AllocaInst *alloca = create_alloca(function, initializer_value->getType(), decl_stmt->identifier.lexeme);
+        llvm::AllocaInst *alloca = this->builder.CreateAlloca(initializer_value->getType(), nullptr, decl_stmt->identifier.lexeme.c_str());
         this->builder.CreateStore(initializer_value, alloca);
 
         this->environment->insert(decl_stmt->identifier.lexeme, alloca);
@@ -298,14 +299,14 @@ public:
         auto rhs_val = this->stack.top();
         this->stack.pop();
 
-        bool float_flag = (lhs_val->getType()->isFloatTy() || rhs_val->getType()->isFloatTy());
+        bool float_flag = (lhs_val->getType()->isDoubleTy() || rhs_val->getType()->isDoubleTy());
 
         if (float_flag && lhs_val->getType()->isIntegerTy())
         {
             rhs_val = this->builder.CreateFPToSI(rhs_val, lhs_val->getType(), "floattoint");
             float_flag = false;
         }
-        else if (float_flag && lhs_val->getType()->isFloatTy())
+        else if (float_flag && lhs_val->getType()->isDoubleTy())
         {
             rhs_val = this->builder.CreateSIToFP(rhs_val, lhs_val->getType(), "inttofloat");
         }
@@ -379,7 +380,7 @@ public:
             {
                 formatStr = this->builder.CreateGlobalString("%d\n");
             }
-            else if (result->getType()->isFloatTy())
+            else if (result->getType()->isDoubleTy())
             {
                 formatStr = this->builder.CreateGlobalString("%f\n");
                 result = builder.CreateFPExt(result, llvm::Type::getDoubleTy(context));
@@ -502,15 +503,18 @@ public:
         auto left = this->stack.top();
         this->stack.pop();
 
-        bool float_flag = (left->getType()->isFloatTy() || right->getType()->isFloatTy());
+        bool float_flag = left->getType()->isDoubleTy();
 
-        if (float_flag && left->getType()->isIntegerTy() && right->getType()->isFloatTy())
+        if (left->getType()->isDoubleTy())
         {
-            left = this->builder.CreateSIToFP(left, right->getType(), "inttofloat");
+            if (right->getType()->isIntegerTy())
+                right = this->builder.CreateSIToFP(right, llvm::Type::getDoubleTy(context));
         }
-        else if (float_flag && left->getType()->isFloatTy() && right->getType()->isIntegerTy())
+
+        if (left->getType()->isIntegerTy())
         {
-            right = this->builder.CreateSIToFP(right, left->getType(), "inttofloat");
+            if (right->getType()->isDoubleTy())
+                right = this->builder.CreateFPToSI(right, llvm::Type::getInt32Ty(context));
         }
 
         switch (binary->op.token_type)
@@ -627,7 +631,7 @@ public:
         }
         case Token::Type::FLOAT_LITERAL:
         {
-            float value = std::stof(primary->value.lexeme);
+            double value = std::stod(primary->value.lexeme);
 
             auto llvm_value = llvm::ConstantFP::get(this->context, llvm::APFloat(value));
             this->stack.push(llvm_value);
@@ -728,9 +732,7 @@ public:
 
         llvm::Function *function = this->builder.GetInsertBlock()->getParent();
 
-        llvm::AllocaInst *alloca = create_alloca(function,
-                                                 initializer_value->getType(),
-                                                 const_stmt->identifier.lexeme);
+        llvm::AllocaInst *alloca = this->builder.CreateAlloca(initializer_value->getType(), nullptr, const_stmt->identifier.lexeme.c_str());
 
         this->builder.CreateStore(initializer_value, alloca);
 
@@ -739,7 +741,6 @@ public:
 
     void visit_func(Func *func)
     {
-        std::cout << "visiting function " << func->identifier.lexeme << std::endl;
         llvm::Function *function = nullptr;
 
         std::vector<llvm::Type *> param_types;
@@ -749,7 +750,7 @@ public:
             param_types.push_back(param_type);
         }
 
-        auto return_type = func->return_type ? from_bird_type(func->return_type.value()) : llvm::Type::getVoidTy(context);
+        auto return_type = func->return_type.has_value() ? from_bird_type(func->return_type.value()) : llvm::Type::getVoidTy(context);
 
         auto function_type = llvm::FunctionType::get(return_type, param_types, false);
 
@@ -767,23 +768,20 @@ public:
         {
             std::string &param_name = func->param_list[i++].first.lexeme;
             param.setName(param_name);
-            llvm::AllocaInst *alloca = create_alloca(function, param.getType(), param_name);
+            llvm::AllocaInst *alloca = this->builder.CreateAlloca(param.getType(), nullptr, param_name.c_str());
             this->builder.CreateStore(&param, alloca);
             environment->insert(param_name, alloca);
         }
 
-        this->visit_block(dynamic_cast<Block *>(func->block.get()));
+        func->block->accept(this);
 
         this->environment = this->environment->get_enclosing();
 
-        llvm::Value *return_value = nullptr;
-        if (!function->getReturnType()->isVoidTy() && !stack.empty())
-            auto return_value = stack.top();
-
-        builder.CreateRet(return_value);
-
-        std::cout << "visited function " << func->identifier.lexeme << "\n"
-                  << std::endl;
+        // other return types are handled in visit_return_stmt
+        if (!func->return_type.has_value() || func->return_type.value().lexeme == "void")
+        {
+            this->builder.CreateRetVoid();
+        }
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -829,9 +827,7 @@ public:
 
     void visit_call(Call *call)
     {
-        std::cout << "visiting call to function " << call->identifier.lexeme << std::endl;
-
-        auto *function = module->getFunction(call->identifier.lexeme);
+        auto *function = this->module->getFunction(call->identifier.lexeme);
 
         if (!function)
             throw BirdException("Function '" + call->identifier.lexeme + "' could not be found from callsite");
@@ -845,15 +841,23 @@ public:
             stack.pop();
         }
 
-        this->builder.CreateCall(function, arguments, "calltmp");
-
-        std::cout << "visited call to function " << call->identifier.lexeme << "\n"
-                  << std::endl;
+        if (function->getReturnType()->isVoidTy())
+            this->builder.CreateCall(function, arguments);
+        else
+            this->stack.push(this->builder.CreateCall(function, arguments, "calltmp"));
     }
 
     void visit_return_stmt(ReturnStmt *return_stmt)
     {
-        return_stmt->expr->get()->accept(this);
+        if (return_stmt->expr.has_value())
+        {
+            return_stmt->expr->get()->accept(this);
+            this->builder.CreateRet(this->stack.top());
+        }
+        else
+        {
+            this->builder.CreateRetVoid();
+        }
     }
 
     void visit_break_stmt(BreakStmt *break_stmt)
@@ -864,12 +868,5 @@ public:
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
         throw ContinueException();
-    }
-
-    llvm::AllocaInst *create_alloca(llvm::Function *function, llvm::Type *type, const std::string &identifier)
-    {
-        llvm::BasicBlock *entry_block = &function->getEntryBlock();
-        llvm::IRBuilder<> temp_builder(entry_block, entry_block->begin());
-        return temp_builder.CreateAlloca(type, nullptr, identifier);
     }
 };

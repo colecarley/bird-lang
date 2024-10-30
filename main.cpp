@@ -115,6 +115,11 @@ void compile(std::string filename)
     TypeChecker type_checker(&error_tracker);
     type_checker.check_types(&ast);
 
+    if (error_tracker.has_errors())
+    {
+        error_tracker.print_errors_and_exit();
+    }
+
     CodeGen code_gen;
     code_gen.generate(&ast);
 }
@@ -141,6 +146,11 @@ void interpret(std::string filename)
 
     TypeChecker type_checker(&error_tracker);
     type_checker.check_types(&ast);
+
+    if (error_tracker.has_errors())
+    {
+        error_tracker.print_errors_and_exit();
+    }
 
     Interpreter interpreter;
 
