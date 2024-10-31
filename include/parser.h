@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include "lexer.h"
 
@@ -39,11 +40,15 @@ public:
 
     std::unique_ptr<Stmt> const_decl();
 
-    std::unique_ptr<Stmt> assign_stmt();
+    std::unique_ptr<Expr> assign_expr();
 
     std::unique_ptr<Stmt> block();
 
     std::unique_ptr<Stmt> return_stmt();
+
+    std::unique_ptr<Stmt> break_stmt();
+
+    std::unique_ptr<Stmt> continue_stmt();
 
     std::unique_ptr<Stmt> if_stmt();
 
@@ -58,6 +63,8 @@ public:
     std::optional<Token> fn_return_type();
 
     std::unique_ptr<Stmt> while_stmt();
+
+    std::unique_ptr<Stmt> for_stmt();
 
     // exprs
     std::unique_ptr<Expr> expr();

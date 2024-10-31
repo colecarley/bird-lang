@@ -79,6 +79,11 @@ public:
         this->code_lines = lines;
     }
 
+    void add_code_line(std::string line)
+    {
+        this->code_lines.push_back(line);
+    }
+
     bool has_errors()
     {
         return this->errors.size() > 0;
@@ -137,6 +142,21 @@ public:
     void expected(std::string context, Token token)
     {
         this->errors.push_back(std::make_tuple(this->format_message(context, token.line_num, token.char_num), token));
+    }
+
+    void type_mismatch(std::string where, Token token)
+    {
+        this->errors.push_back(std::make_tuple(this->format_message("type mismatch: " + where, token.line_num, token.char_num), token));
+    }
+
+    void type_error(std::string message, Token token)
+    {
+        this->errors.push_back(std::make_tuple(this->format_message("type error: " + message, token.line_num, token.char_num), token));
+    }
+
+    const std::vector<std::tuple<std::string, Token>> get_errors() const
+    {
+        return this->errors;
     }
 
     void print_errors()

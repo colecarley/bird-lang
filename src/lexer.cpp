@@ -30,6 +30,8 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::IF, "IF"},
     {Token::Type::ELSE, "ELSE"},
     {Token::Type::WHILE, "WHILE"},
+    {Token::Type::FOR, "FOR"},
+    {Token::Type::DO, "DO"},
     {Token::Type::GREATER, "GREATER"},
     {Token::Type::LESS, "LESS"},
     {Token::Type::BANG, "BANG"},
@@ -44,6 +46,8 @@ static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::SLASH_EQUAL, "SLASH_EQUAL"},
     {Token::Type::PERCENT_EQUAL, "PERCENT_EQUAL"},
     {Token::Type::RETURN, "RETURN"},
+    {Token::Type::BREAK, "BREAK"},
+    {Token::Type::CONTINUE, "CONTINUE"},
     {Token::Type::FN, "FN"},
     {Token::Type::END, "END"},
 };
@@ -53,7 +57,7 @@ void Token::print_token()
     std::cout << "{ "
               << "token_type: " << token_strings.at(this->token_type)
               << ",  lexeme: " << this->lexeme
-              << "}"
+              << " }"
               << std::endl;
 }
 
@@ -86,6 +90,8 @@ const std::map<std::string, Token::Type> Lexer::keywords = {
     {"if", Token::Type::IF},
     {"else", Token::Type::ELSE},
     {"while", Token::Type::WHILE},
+    {"for", Token::Type::FOR},
+    {"do", Token::Type::DO},
     {"int", Token::Type::TYPE_IDENTIFIER},
     {"float", Token::Type::TYPE_IDENTIFIER},
     {"str", Token::Type::TYPE_IDENTIFIER},
@@ -95,6 +101,8 @@ const std::map<std::string, Token::Type> Lexer::keywords = {
     {"false", Token::Type::BOOL_LITERAL},
     {"fn", Token::Type::FN},
     {"return", Token::Type::RETURN},
+    {"break", Token::Type::BREAK},
+    {"continue", Token::Type::CONTINUE},
     {"const", Token::Type::CONST},
 };
 

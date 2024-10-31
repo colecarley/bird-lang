@@ -1,17 +1,13 @@
 #include <gtest/gtest.h>
-#include <vector>
-#include <memory>
-#include "../../include/exceptions/user_error_tracker.h"
 #include "../../include/value.h"
 #include "../../include/visitors/interpreter.h"
 #include "../../src/callable.cpp"
 #include "../helpers/parse_test_helper.hpp"
 #include "../../include/visitors/type_checker.h"
 
-// INT
-TEST(VarTest, VarWithTypeInt)
+TEST(WhileTest, While)
 {
-    auto code = "var x: int = 4;";
+    auto code = "var x = 0; while x < 10 { x += 1; }";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -24,13 +20,12 @@ TEST(VarTest, VarWithTypeInt)
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
     ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 4);
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 10);
 }
 
-// FLOAT
-TEST(VarTest, VarWithTypeFloat)
+TEST(WhileTest, WhileFalse)
 {
-    auto code = "var x: float = 4.0;";
+    auto code = "var x = 0; while false { x = 1; }";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -42,26 +37,13 @@ TEST(VarTest, VarWithTypeFloat)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<double>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<double>(interpreter.environment->get("x")), 4.0);
-
-    code = "var y: float = 4;";
-    ast = parse_code(code);
-
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    interpreter.evaluate(&ast);
-
-    ASSERT_TRUE(interpreter.environment->contains("y"));
-    ASSERT_TRUE(is_type<double>(interpreter.environment->get("y")));
-    ASSERT_EQ(as_type<double>(interpreter.environment->get("y")), 4.0);
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 0);
 }
 
-// STRINGS
-TEST(VarTest, VarWithTypeString)
+TEST(WhileTest, WhileBreak)
 {
-    auto code = "var x: str = \"hello\";";
+    auto code = "var x = 1; while true { x = 2; break; }";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -73,14 +55,13 @@ TEST(VarTest, VarWithTypeString)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<std::string>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<std::string>(interpreter.environment->get("x")), "hello");
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 2);
 }
 
-// BOOL
-TEST(VarTest, VarWithTypeBool)
+TEST(WhileTest, WhileContinue)
 {
-    auto code = "var x: bool = true;";
+    auto code = "var x = 0; while true { x += 1; if (x <= 2) { continue; } break; }";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -92,18 +73,28 @@ TEST(VarTest, VarWithTypeBool)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 3);
+}
 
-    code = "var y: bool = false;";
-    ast = parse_code(code);
+TEST(WhileTest, WhileConstInc)
+{
+    auto code = "const inc = 1; var x = 0; while x < 10 { x += inc; } print x;";
+    auto ast = parse_code(code);
 
+    auto user_error_tracker = UserErrorTracker(code);
+    TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
 
+    Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("y"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("y")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("y")), false);
+    ASSERT_TRUE(interpreter.environment->contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 10);
+
+    ASSERT_TRUE(interpreter.environment->contains("inc"));
+    ASSERT_TRUE(is_type<int>(interpreter.environment->get("inc")));
+    ASSERT_EQ(as_type<int>(interpreter.environment->get("inc")), 1);
 }

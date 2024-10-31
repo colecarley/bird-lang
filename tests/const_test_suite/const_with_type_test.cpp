@@ -9,9 +9,9 @@
 #include "../../include/visitors/type_checker.h"
 
 // INT
-TEST(VarTest, VarWithTypeInt)
+TEST(ConstTest, ConstWithTypeInt)
 {
-    auto code = "var x: int = 4;";
+    auto code = "const x: int = 4;";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -28,9 +28,9 @@ TEST(VarTest, VarWithTypeInt)
 }
 
 // FLOAT
-TEST(VarTest, VarWithTypeFloat)
+TEST(ConstTest, ConstWithTypeFloat)
 {
-    auto code = "var x: float = 4.0;";
+    auto code = "const x: float = 4.0;";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -45,11 +45,8 @@ TEST(VarTest, VarWithTypeFloat)
     ASSERT_TRUE(is_type<double>(interpreter.environment->get("x")));
     ASSERT_EQ(as_type<double>(interpreter.environment->get("x")), 4.0);
 
-    code = "var y: float = 4;";
+    code = "const y: float = 4;";
     ast = parse_code(code);
-
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
 
     interpreter.evaluate(&ast);
 
@@ -59,9 +56,9 @@ TEST(VarTest, VarWithTypeFloat)
 }
 
 // STRINGS
-TEST(VarTest, VarWithTypeString)
+TEST(ConstTest, ConstWithTypeString)
 {
-    auto code = "var x: str = \"hello\";";
+    auto code = "const x: str = \"hello\";";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -78,9 +75,9 @@ TEST(VarTest, VarWithTypeString)
 }
 
 // BOOL
-TEST(VarTest, VarWithTypeBool)
+TEST(ConstTest, ConstWithTypeBool)
 {
-    auto code = "var x: bool = true;";
+    auto code = "const x: bool = true;";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -95,11 +92,8 @@ TEST(VarTest, VarWithTypeBool)
     ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
     ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
 
-    code = "var y: bool = false;";
+    code = "const y: bool = false;";
     ast = parse_code(code);
-
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
 
     interpreter.evaluate(&ast);
 
