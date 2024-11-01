@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <string>
 #include "../ast_node/stmt/stmt.h"
 #include "../ast_node/expr/expr.h"
 
@@ -62,6 +63,10 @@ class CodeGen : public Visitor
 
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
+    std::map<std::string, llvm::Value *> format_strings;
+
+    llvm::BasicBlock *current_condition_block;
+    llvm::BasicBlock *current_done_block;
 
 public:
     std::unique_ptr<llvm::Module> module;
@@ -110,8 +115,18 @@ public:
 
         this->builder.SetInsertPoint(entry);
 
+        this->format_strings["int"] = this->builder.CreateGlobalString("%d");
+        this->format_strings["float"] = this->builder.CreateGlobalString("%f");
+        this->format_strings["str"] = this->builder.CreateGlobalString("%s");
+        this->format_strings["newline"] = this->builder.CreateGlobalString("\n");
+
         for (auto &stmt : *stmts)
         {
+            if (auto func_stmt = dynamic_cast<Func *>(stmt.get()))
+            {
+                func_stmt->accept(this);
+            }
+
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
             {
                 decl_stmt->accept(this);
@@ -238,6 +253,22 @@ public:
         dest.flush();
     }
 
+    llvm::Type *from_bird_type(Token token)
+    {
+        if (token.lexeme == "bool")
+            return llvm::Type::getInt1Ty(context);
+        else if (token.lexeme == "int")
+            return llvm::Type::getInt32Ty(context);
+        else if (token.lexeme == "float")
+            return llvm::Type::getDoubleTy(context);
+        else if (token.lexeme == "void")
+            return llvm::Type::getVoidTy(context);
+        else if (token.lexeme == "str")
+            return llvm::Type::getInt8Ty(this->context)->getPointerTo();
+        else
+            throw BirdException("invalid type");
+    }
+
     void visit_block(Block *block)
     {
         auto new_environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
@@ -261,7 +292,7 @@ public:
 
         llvm::Function *function = this->builder.GetInsertBlock()->getParent();
 
-        llvm::AllocaInst *alloca = create_alloca(function, initializer_value->getType(), decl_stmt->identifier.lexeme);
+        llvm::AllocaInst *alloca = this->builder.CreateAlloca(initializer_value->getType(), nullptr, decl_stmt->identifier.lexeme.c_str());
         this->builder.CreateStore(initializer_value, alloca);
 
         this->environment->insert(decl_stmt->identifier.lexeme, alloca);
@@ -276,14 +307,14 @@ public:
         auto rhs_val = this->stack.top();
         this->stack.pop();
 
-        bool float_flag = (lhs_val->getType()->isFloatTy() || rhs_val->getType()->isFloatTy());
+        bool float_flag = (lhs_val->getType()->isDoubleTy() || rhs_val->getType()->isDoubleTy());
 
         if (float_flag && lhs_val->getType()->isIntegerTy())
         {
             rhs_val = this->builder.CreateFPToSI(rhs_val, lhs_val->getType(), "floattoint");
             float_flag = false;
         }
-        else if (float_flag && lhs_val->getType()->isFloatTy())
+        else if (float_flag && lhs_val->getType()->isDoubleTy())
         {
             rhs_val = this->builder.CreateSIToFP(rhs_val, lhs_val->getType(), "inttofloat");
         }
@@ -349,26 +380,34 @@ public:
         // TODO: figure out a better way to do this
         auto printfFunc = this->std_lib["print"];
 
+        std::vector<llvm::Value *> results;
         for (int i = 0; i < print_stmt->args.size(); i++)
         {
-            auto result = this->stack.top();
+            results.push_back(this->stack.top());
+            this->stack.pop();
+        }
+
+        for (int i = 0; i < results.size(); i++)
+        {
+            auto result = results[results.size() - 1 - i];
             llvm::Value *formatStr;
             if (result->getType()->isIntegerTy())
             {
-                formatStr = this->builder.CreateGlobalString("%d\n");
+                formatStr = this->format_strings["int"];
             }
-            else if (result->getType()->isFloatTy())
+            else if (result->getType()->isDoubleTy())
             {
-                formatStr = this->builder.CreateGlobalString("%f\n");
+                formatStr = this->format_strings["float"];
                 result = builder.CreateFPExt(result, llvm::Type::getDoubleTy(context));
             }
             else if (result->getType()->isPointerTy())
             {
-                formatStr = this->builder.CreateGlobalString("%s\n");
+                formatStr = this->format_strings["str"];
             }
-            this->stack.pop();
             this->builder.CreateCall(printfFunc, {formatStr, result});
         }
+
+        this->builder.CreateCall(printfFunc, {this->format_strings["newline"]});
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -384,8 +423,13 @@ public:
         auto stmt_block = llvm::BasicBlock::Create(this->context, "while_stmt", parent_fn);
         auto done_block = llvm::BasicBlock::Create(this->context, "while_done", parent_fn);
 
-        this->builder.CreateBr(condition_block);
+        auto old_condition_block = this->current_condition_block;
+        auto old_done_block = this->current_done_block;
 
+        this->current_condition_block = condition_block;
+        this->current_done_block = done_block;
+
+        this->builder.CreateBr(condition_block);
         this->builder.SetInsertPoint(condition_block);
 
         while_stmt->condition->accept(this);
@@ -396,21 +440,24 @@ public:
 
         this->builder.SetInsertPoint(stmt_block);
 
-        try
-        {
-            while_stmt->stmt->accept(this);
-            this->builder.CreateBr(condition_block);
-        }
-        catch (BreakException)
-        {
-            this->builder.CreateBr(done_block);
-        }
-        catch (ContinueException)
-        {
-            this->builder.CreateBr(condition_block);
-        }
+        // try
+        // {
+        while_stmt->stmt->accept(this);
+        this->builder.CreateBr(condition_block);
+        // }
+        // catch (BreakException)
+        // {
+        //     this->builder.CreateBr(done_block);
+        // }
+        // catch (ContinueException)
+        // {
+        //     this->builder.CreateBr(condition_block);
+        // }
 
         this->builder.SetInsertPoint(done_block);
+
+        this->current_condition_block = old_condition_block;
+        this->current_done_block = old_done_block;
     }
 
     void visit_for_stmt(ForStmt *for_stmt)
@@ -428,6 +475,12 @@ public:
         auto increment_block = llvm::BasicBlock::Create(this->context, "for_increment", parent_fn);
         auto body_block = llvm::BasicBlock::Create(this->context, "for_body", parent_fn);
         auto done_block = llvm::BasicBlock::Create(this->context, "for_merge", parent_fn);
+
+        auto old_condition_block = this->current_condition_block;
+        auto old_done_block = this->current_done_block;
+
+        this->current_condition_block = condition_block;
+        this->current_done_block = done_block;
 
         this->builder.CreateBr(init_block);
         this->builder.SetInsertPoint(init_block);
@@ -467,6 +520,9 @@ public:
         this->builder.SetInsertPoint(done_block);
 
         this->environment = this->environment->get_enclosing();
+
+        this->current_condition_block = old_condition_block;
+        this->current_done_block = old_done_block;
     }
 
     void visit_binary(Binary *binary)
@@ -480,15 +536,18 @@ public:
         auto left = this->stack.top();
         this->stack.pop();
 
-        bool float_flag = (left->getType()->isFloatTy() || right->getType()->isFloatTy());
+        bool float_flag = left->getType()->isDoubleTy();
 
-        if (float_flag && left->getType()->isIntegerTy() && right->getType()->isFloatTy())
+        if (left->getType()->isDoubleTy())
         {
-            left = this->builder.CreateSIToFP(left, right->getType(), "inttofloat");
+            if (right->getType()->isIntegerTy())
+                right = this->builder.CreateSIToFP(right, llvm::Type::getDoubleTy(context));
         }
-        else if (float_flag && left->getType()->isFloatTy() && right->getType()->isIntegerTy())
+
+        if (left->getType()->isIntegerTy())
         {
-            right = this->builder.CreateSIToFP(right, left->getType(), "inttofloat");
+            if (right->getType()->isDoubleTy())
+                right = this->builder.CreateFPToSI(right, llvm::Type::getInt32Ty(context));
         }
 
         switch (binary->op.token_type)
@@ -604,7 +663,7 @@ public:
         }
         case Token::Type::FLOAT_LITERAL:
         {
-            float value = std::stof(primary->value.lexeme);
+            double value = std::stod(primary->value.lexeme);
 
             auto llvm_value = llvm::ConstantFP::get(this->context, llvm::APFloat(value));
             this->stack.push(llvm_value);
@@ -616,11 +675,18 @@ public:
             break;
         case Token::Type::STR_LITERAL:
         {
-            // TODO: figure out strings
             auto value = primary->value.lexeme;
-            auto llvm_value = this->builder.CreateGlobalString(value);
 
-            this->stack.push(llvm_value);
+            auto alloca = this->builder.CreateAlloca(
+                llvm::ArrayType::get(llvm::Type::getInt8Ty(this->context), value.size() + 1),
+                nullptr, "strtmp");
+
+            this->builder.CreateStore(llvm::ConstantDataArray::getString(this->context, value, true), alloca);
+
+            auto pointer = this->builder.CreateBitCast(alloca,
+                                                       llvm::Type::getInt8Ty(this->context)->getPointerTo());
+
+            this->stack.push(pointer);
             break;
         }
         case Token::Type::IDENTIFIER:
@@ -628,7 +694,7 @@ public:
             auto allocation = this->environment->get(primary->value.lexeme);
             if (allocation == nullptr)
             {
-                throw BirdException("undefined identifier");
+                throw BirdException("undefined type identifier");
             }
 
             auto value =
@@ -705,9 +771,7 @@ public:
 
         llvm::Function *function = this->builder.GetInsertBlock()->getParent();
 
-        llvm::AllocaInst *alloca = create_alloca(function,
-                                                 initializer_value->getType(),
-                                                 const_stmt->identifier.lexeme);
+        llvm::AllocaInst *alloca = this->builder.CreateAlloca(initializer_value->getType(), nullptr, const_stmt->identifier.lexeme.c_str());
 
         this->builder.CreateStore(initializer_value, alloca);
 
@@ -716,7 +780,50 @@ public:
 
     void visit_func(Func *func)
     {
-        throw BirdException("implement func visit");
+        llvm::Function *function = nullptr;
+
+        std::vector<llvm::Type *> param_types;
+        for (const auto &param : func->param_list)
+        {
+            auto param_type = from_bird_type(param.second);
+            param_types.push_back(param_type);
+        }
+
+        auto return_type = func->return_type.has_value() ? from_bird_type(func->return_type.value()) : llvm::Type::getVoidTy(context);
+
+        auto function_type = llvm::FunctionType::get(return_type, param_types, false);
+
+        function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, func->identifier.lexeme, module.get());
+
+        auto block = llvm::BasicBlock::Create(context, "entry", function);
+        auto old_insert_point = this->builder.GetInsertBlock();
+        this->builder.SetInsertPoint(block);
+
+        auto new_environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
+        new_environment->set_enclosing(this->environment);
+        this->environment = new_environment;
+
+        unsigned i = 0;
+        for (auto &param : function->args())
+        {
+            std::string &param_name = func->param_list[i++].first.lexeme;
+            param.setName(param_name);
+            llvm::AllocaInst *alloca = this->builder.CreateAlloca(param.getType(), nullptr, param_name.c_str());
+            this->builder.CreateStore(&param, alloca);
+            environment->insert(param_name, alloca);
+        }
+
+        func->block->accept(this);
+
+        this->environment = this->environment->get_enclosing();
+
+        // other return types are handled in visit_return_stmt
+        if (!func->return_type.has_value() || func->return_type.value().lexeme == "void")
+        {
+            this->builder.CreateRetVoid();
+        }
+
+        this->builder.SetInsertPoint(old_insert_point);
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -762,28 +869,54 @@ public:
 
     void visit_call(Call *call)
     {
-        throw BirdException("implement call");
+        auto *function = this->module->getFunction(call->identifier.lexeme);
+
+        if (!function)
+            throw BirdException("Function '" + call->identifier.lexeme + "' could not be found from callsite");
+
+        std::vector<llvm::Value *> arguments;
+
+        for (auto &arg : call->args)
+        {
+            arg->accept(this);
+            arguments.push_back(stack.top());
+            stack.pop();
+        }
+
+        if (function->getReturnType()->isVoidTy())
+            this->builder.CreateCall(function, arguments);
+        else
+            this->stack.push(this->builder.CreateCall(function, arguments, "calltmp"));
     }
 
     void visit_return_stmt(ReturnStmt *return_stmt)
     {
-        throw BirdException("implement return stmt");
+        if (return_stmt->expr.has_value())
+        {
+            return_stmt->expr->get()->accept(this);
+            this->builder.CreateRet(this->stack.top());
+        }
+        else
+        {
+            this->builder.CreateRetVoid();
+        }
     }
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        throw BreakException();
+        this->builder.CreateBr(this->current_done_block);
+
+        // this is to stop the compiler from complaining about unreachable code
+        llvm::BasicBlock *break_block = llvm::BasicBlock::Create(this->context, "unreachable", this->builder.GetInsertBlock()->getParent());
+        this->builder.SetInsertPoint(break_block);
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
-        throw ContinueException();
-    }
+        this->builder.CreateBr(this->current_condition_block);
 
-    llvm::AllocaInst *create_alloca(llvm::Function *function, llvm::Type *type, const std::string &identifier)
-    {
-        llvm::BasicBlock *entry_block = &function->getEntryBlock();
-        llvm::IRBuilder<> temp_builder(entry_block, entry_block->begin());
-        return temp_builder.CreateAlloca(type, nullptr, identifier);
+        // this is to stop the compiler from complaining about unreachable code
+        llvm::BasicBlock *break_block = llvm::BasicBlock::Create(this->context, "unreachable", this->builder.GetInsertBlock()->getParent());
+        this->builder.SetInsertPoint(break_block);
     }
 };
