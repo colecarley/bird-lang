@@ -58,7 +58,6 @@ TEST(FunctionTest, CallWithIncorrectTypes)
     auto user_error_tracker = UserErrorTracker(code);
     SemanticAnalyzer analyze_semantics(&user_error_tracker);
     analyze_semantics.analyze_semantics(&ast);
-    user_error_tracker.print_errors();
     ASSERT_FALSE(user_error_tracker.has_errors());
 
     TypeChecker type_checker(&user_error_tracker);
@@ -75,7 +74,6 @@ TEST(FunctionTest, StoreReturnWithIncorrectVarType)
     auto user_error_tracker = UserErrorTracker(code);
     SemanticAnalyzer analyze_semantics(&user_error_tracker);
     analyze_semantics.analyze_semantics(&ast);
-    user_error_tracker.print_errors();
     ASSERT_FALSE(user_error_tracker.has_errors());
 
     TypeChecker type_checker(&user_error_tracker);
