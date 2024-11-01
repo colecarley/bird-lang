@@ -617,12 +617,6 @@ public:
     {
         auto function = this->call_table->get(call->identifier.lexeme);
 
-        if (function.params.size() != call->args.size())
-        {
-            this->user_error_tracker->expected(std::to_string(function.params.size()) + " arguments", "in function call", call->identifier);
-            return;
-        }
-
         for (int i = 0; i < function.params.size(); i++)
         {
             call->args[i]->accept(this);

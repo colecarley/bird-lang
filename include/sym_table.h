@@ -51,4 +51,19 @@ public:
     {
         return vars.find(identifier) != vars.end();
     }
+
+    bool is_accessible(std::string identifier)
+    {
+        if (this->contains(identifier))
+        {
+            return true;
+        }
+        
+        if (this->enclosing)
+        {
+            return this->enclosing->is_accessible(identifier);
+        }
+        
+        return false;
+    }
 };

@@ -34,7 +34,7 @@
 #include "../exceptions/continue_exception.h"
 #include "../exceptions/user_error_tracker.h"
 #include "../value.h"
-#include "../callable.h"
+#include "../bird_type.h"
 
 /*
  * Visitor that analyzes semantics of the AST
@@ -44,7 +44,7 @@ class SemanticAnalyzer : public Visitor
 
 public:
     std::shared_ptr<SymbolTable<Value>> environment;
-    std::shared_ptr<SymbolTable<Callable>> call_table;
+    std::shared_ptr<SymbolTable<BirdFunction>> call_table;
     UserErrorTracker *user_error_tracker;
     int loop_depth;
     int function_depth;
@@ -52,7 +52,7 @@ public:
     SemanticAnalyzer(UserErrorTracker *user_error_tracker) : user_error_tracker(user_error_tracker)
     {
         this->environment = std::make_shared<SymbolTable<Value>>();
-        this->call_table = std::make_shared<SymbolTable<Callable>>();
+        this->call_table = std::make_shared<SymbolTable<BirdFunction>>();
         this->loop_depth = 0;
         this->function_depth = 0;
     }
@@ -163,6 +163,7 @@ public:
             if (this->environment->contains(decl_stmt->identifier.lexeme))
             {
                 this->user_error_tracker->semantic_error("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
+                return;
             }
 
             current_env = current_env->get_enclosing();
@@ -187,6 +188,7 @@ public:
         if (!current_env)
         {
             this->user_error_tracker->semantic_error("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
+            return;
         }
 
         auto previous_value = current_env->get(assign_expr->identifier.lexeme);
@@ -194,6 +196,7 @@ public:
         if (!previous_value.is_mutable)
         {
             this->user_error_tracker->semantic_error("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.");
+            return;
         }
 
         assign_expr->value->accept(this);
@@ -221,6 +224,7 @@ public:
             if (this->environment->contains(const_stmt->identifier.lexeme))
             {
                 this->user_error_tracker->semantic_error("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
+                return;
             }
 
             current_env = current_env->get_enclosing();
@@ -284,9 +288,10 @@ public:
 
     void visit_primary(Primary *primary)
     {
-        if (primary->value.token_type == Token::Type::IDENTIFIER && !this->environment->contains(primary->value.lexeme))
+        if (primary->value.token_type == Token::Type::IDENTIFIER && !this->environment->is_accessible(primary->value.lexeme))
         {
             this->user_error_tracker->semantic_error("Identifier '" + primary->value.lexeme + "' is not initialized.");
+            return;
         }
     }
 
@@ -301,7 +306,7 @@ public:
     {
         this->function_depth += 1;
 
-        this->call_table->insert(func->identifier.lexeme, Callable());
+        this->call_table->insert(func->identifier.lexeme, BirdFunction());
 
         this->function_depth -= 1;
     }
@@ -321,7 +326,16 @@ public:
     {
         if (!this->call_table->contains(call->identifier.lexeme))
         {
-            this->user_error_tracker->semantic_error("Function identifier '" + call->identifier.lexeme + "' is not declared.");
+            this->user_error_tracker->semantic_error("Function call identifier '" + call->identifier.lexeme + "' is not declared.");
+            return;
+        }
+
+        auto function = this->call_table->get(call->identifier.lexeme);
+
+        if (function.params.size() != call->args.size())
+        {
+            this->user_error_tracker->semantic_error("Function call identifer '" + call->identifier.lexeme + "' does not use the correct number of arguments.");
+            return;
         }
     }
 
@@ -330,6 +344,7 @@ public:
         if (this->function_depth == 0)
         {
             this->user_error_tracker->semantic_error("Return statement is declared outside of a function.");
+            return;
         }
 
         if (return_stmt->expr.has_value())
@@ -343,6 +358,7 @@ public:
         if (this->loop_depth == 0)
         {
             this->user_error_tracker->semantic_error("Break statement is declared outside of a loop.");
+            return;
         }
     }
 
@@ -351,6 +367,7 @@ public:
         if (this->loop_depth == 0)
         {
             this->user_error_tracker->semantic_error("Continue statement is declared outside of a loop.");
+            return;
         }
     }
 };

@@ -16,9 +16,5 @@ TEST(VarTest, VarRedeclaration)
     auto user_error_tracker = UserErrorTracker(code);
     SemanticAnalyzer analyze_semantics(&user_error_tracker);
     analyze_semantics.analyze_semantics(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    TypeChecker type_checker(&user_error_tracker);
-    type_checker.check_types(&ast);
     ASSERT_TRUE(user_error_tracker.has_errors());
 }
