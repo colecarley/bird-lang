@@ -63,6 +63,10 @@ class CodeGen : public Visitor
 
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
+    std::map<std::string, llvm::Value *> format_strings;
+
+    llvm::BasicBlock *current_condition_block;
+    llvm::BasicBlock *current_done_block;
 
 public:
     std::unique_ptr<llvm::Module> module;
@@ -111,12 +115,16 @@ public:
 
         this->builder.SetInsertPoint(entry);
 
+        this->format_strings["int"] = this->builder.CreateGlobalString("%d");
+        this->format_strings["float"] = this->builder.CreateGlobalString("%f");
+        this->format_strings["str"] = this->builder.CreateGlobalString("%s");
+        this->format_strings["newline"] = this->builder.CreateGlobalString("\n");
+
         for (auto &stmt : *stmts)
         {
             if (auto func_stmt = dynamic_cast<Func *>(stmt.get()))
             {
                 func_stmt->accept(this);
-                this->builder.SetInsertPoint(entry);
             }
 
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
@@ -256,7 +264,7 @@ public:
         else if (token.lexeme == "void")
             return llvm::Type::getVoidTy(context);
         else if (token.lexeme == "str")
-            throw BirdException("TODO: implement codegen for string type");
+            return llvm::Type::getInt8Ty(this->context)->getPointerTo();
         else
             throw BirdException("invalid type");
     }
@@ -372,26 +380,34 @@ public:
         // TODO: figure out a better way to do this
         auto printfFunc = this->std_lib["print"];
 
+        std::vector<llvm::Value *> results;
         for (int i = 0; i < print_stmt->args.size(); i++)
         {
-            auto result = this->stack.top();
+            results.push_back(this->stack.top());
+            this->stack.pop();
+        }
+
+        for (int i = 0; i < results.size(); i++)
+        {
+            auto result = results[results.size() - 1 - i];
             llvm::Value *formatStr;
             if (result->getType()->isIntegerTy())
             {
-                formatStr = this->builder.CreateGlobalString("%d\n");
+                formatStr = this->format_strings["int"];
             }
             else if (result->getType()->isDoubleTy())
             {
-                formatStr = this->builder.CreateGlobalString("%f\n");
+                formatStr = this->format_strings["float"];
                 result = builder.CreateFPExt(result, llvm::Type::getDoubleTy(context));
             }
             else if (result->getType()->isPointerTy())
             {
-                formatStr = this->builder.CreateGlobalString("%s\n");
+                formatStr = this->format_strings["str"];
             }
-            this->stack.pop();
             this->builder.CreateCall(printfFunc, {formatStr, result});
         }
+
+        this->builder.CreateCall(printfFunc, {this->format_strings["newline"]});
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -407,8 +423,13 @@ public:
         auto stmt_block = llvm::BasicBlock::Create(this->context, "while_stmt", parent_fn);
         auto done_block = llvm::BasicBlock::Create(this->context, "while_done", parent_fn);
 
-        this->builder.CreateBr(condition_block);
+        auto old_condition_block = this->current_condition_block;
+        auto old_done_block = this->current_done_block;
 
+        this->current_condition_block = condition_block;
+        this->current_done_block = done_block;
+
+        this->builder.CreateBr(condition_block);
         this->builder.SetInsertPoint(condition_block);
 
         while_stmt->condition->accept(this);
@@ -419,21 +440,24 @@ public:
 
         this->builder.SetInsertPoint(stmt_block);
 
-        try
-        {
-            while_stmt->stmt->accept(this);
-            this->builder.CreateBr(condition_block);
-        }
-        catch (BreakException)
-        {
-            this->builder.CreateBr(done_block);
-        }
-        catch (ContinueException)
-        {
-            this->builder.CreateBr(condition_block);
-        }
+        // try
+        // {
+        while_stmt->stmt->accept(this);
+        this->builder.CreateBr(condition_block);
+        // }
+        // catch (BreakException)
+        // {
+        //     this->builder.CreateBr(done_block);
+        // }
+        // catch (ContinueException)
+        // {
+        //     this->builder.CreateBr(condition_block);
+        // }
 
         this->builder.SetInsertPoint(done_block);
+
+        this->current_condition_block = old_condition_block;
+        this->current_done_block = old_done_block;
     }
 
     void visit_for_stmt(ForStmt *for_stmt)
@@ -451,6 +475,12 @@ public:
         auto increment_block = llvm::BasicBlock::Create(this->context, "for_increment", parent_fn);
         auto body_block = llvm::BasicBlock::Create(this->context, "for_body", parent_fn);
         auto done_block = llvm::BasicBlock::Create(this->context, "for_merge", parent_fn);
+
+        auto old_condition_block = this->current_condition_block;
+        auto old_done_block = this->current_done_block;
+
+        this->current_condition_block = condition_block;
+        this->current_done_block = done_block;
 
         this->builder.CreateBr(init_block);
         this->builder.SetInsertPoint(init_block);
@@ -490,6 +520,9 @@ public:
         this->builder.SetInsertPoint(done_block);
 
         this->environment = this->environment->get_enclosing();
+
+        this->current_condition_block = old_condition_block;
+        this->current_done_block = old_done_block;
     }
 
     void visit_binary(Binary *binary)
@@ -618,7 +651,6 @@ public:
 
     void visit_primary(Primary *primary)
     {
-
         switch (primary->value.token_type)
         {
         case Token::Type::INT_LITERAL:
@@ -643,11 +675,18 @@ public:
             break;
         case Token::Type::STR_LITERAL:
         {
-            // TODO: figure out strings
             auto value = primary->value.lexeme;
-            auto llvm_value = this->builder.CreateGlobalString(value);
 
-            this->stack.push(llvm_value);
+            auto alloca = this->builder.CreateAlloca(
+                llvm::ArrayType::get(llvm::Type::getInt8Ty(this->context), value.size() + 1),
+                nullptr, "strtmp");
+
+            this->builder.CreateStore(llvm::ConstantDataArray::getString(this->context, value, true), alloca);
+
+            auto pointer = this->builder.CreateBitCast(alloca,
+                                                       llvm::Type::getInt8Ty(this->context)->getPointerTo());
+
+            this->stack.push(pointer);
             break;
         }
         case Token::Type::IDENTIFIER:
@@ -757,6 +796,7 @@ public:
         function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, func->identifier.lexeme, module.get());
 
         auto block = llvm::BasicBlock::Create(context, "entry", function);
+        auto old_insert_point = this->builder.GetInsertBlock();
         this->builder.SetInsertPoint(block);
 
         auto new_environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
@@ -782,6 +822,8 @@ public:
         {
             this->builder.CreateRetVoid();
         }
+
+        this->builder.SetInsertPoint(old_insert_point);
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -862,11 +904,19 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        throw BreakException();
+        this->builder.CreateBr(this->current_done_block);
+
+        // this is to stop the compiler from complaining about unreachable code
+        llvm::BasicBlock *break_block = llvm::BasicBlock::Create(this->context, "unreachable", this->builder.GetInsertBlock()->getParent());
+        this->builder.SetInsertPoint(break_block);
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
-        throw ContinueException();
+        this->builder.CreateBr(this->current_condition_block);
+
+        // this is to stop the compiler from complaining about unreachable code
+        llvm::BasicBlock *break_block = llvm::BasicBlock::Create(this->context, "unreachable", this->builder.GetInsertBlock()->getParent());
+        this->builder.SetInsertPoint(break_block);
     }
 };
