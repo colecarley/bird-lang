@@ -256,3 +256,12 @@ inline T to_type(Value value)
 {
     return is_type<T>(value) ? as_type<T>(value) : static_cast<T>(as_type<U>(value));
 }
+
+
+struct SemanticValue
+{
+    bool is_mutable;
+
+    SemanticValue(bool is_mutable) : is_mutable(is_mutable) {}
+    SemanticValue() = default;
+};

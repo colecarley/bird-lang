@@ -75,14 +75,6 @@ print "the quadruple of 2 is ", quadruple(2);
 var x = double(2);
 print double(x);
 
-print "hello " + "world";
-
-fn concat(first: str, second: str) -> int {
-    return first + second;
-}
-
-print concat("foo", "bar");
-
 print "for loop";
 var z = 0;
 
@@ -144,8 +136,6 @@ while (o < 5) {
 
     print "o = ", o;
 }
-
-// works in codegen
 
 print "scope assignment";
 

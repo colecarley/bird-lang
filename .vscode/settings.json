@@ -85,6 +85,7 @@
                 "*.def": "cpp",
                 "unordered_set": "cpp",
                 "typeindex": "cpp",
-                "__config": "cpp"
+                "__config": "cpp",
+                "*.inc": "cpp"
         }
 }

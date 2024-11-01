@@ -34,7 +34,7 @@
 #include "../exceptions/continue_exception.h"
 #include "../exceptions/user_error_tracker.h"
 #include "../value.h"
-#include "../bird_type.h"
+#include "../callable.h"
 
 /*
  * Visitor that analyzes semantics of the AST
@@ -43,16 +43,16 @@ class SemanticAnalyzer : public Visitor
 {
 
 public:
-    std::shared_ptr<SymbolTable<Value>> environment;
-    std::shared_ptr<SymbolTable<BirdFunction>> call_table;
+    std::shared_ptr<SymbolTable<SemanticValue>> environment;
+    std::shared_ptr<SymbolTable<SemanticCallable>> call_table;
     UserErrorTracker *user_error_tracker;
     int loop_depth;
     int function_depth;
 
     SemanticAnalyzer(UserErrorTracker *user_error_tracker) : user_error_tracker(user_error_tracker)
     {
-        this->environment = std::make_shared<SymbolTable<Value>>();
-        this->call_table = std::make_shared<SymbolTable<BirdFunction>>();
+        this->environment = std::make_shared<SymbolTable<SemanticValue>>();
+        this->call_table = std::make_shared<SymbolTable<SemanticCallable>>();
         this->loop_depth = 0;
         this->function_depth = 0;
     }
@@ -142,7 +142,7 @@ public:
 
     void visit_block(Block *block)
     {
-        std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
+        std::shared_ptr<SymbolTable<SemanticValue>> new_environment = std::make_shared<SymbolTable<SemanticValue>>();
         new_environment->set_enclosing(this->environment);
         this->environment = new_environment;
 
@@ -156,7 +156,7 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
+        std::shared_ptr<SymbolTable<SemanticValue>> current_env = this->environment;
 
         while (current_env)
         {
@@ -171,14 +171,14 @@ public:
 
         decl_stmt->value->accept(this);
 
-        Value mutable_value;
+        SemanticValue mutable_value;
         mutable_value.is_mutable = true;
         this->environment->insert(decl_stmt->identifier.lexeme, mutable_value);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
+        std::shared_ptr<SymbolTable<SemanticValue>> current_env = this->environment;
 
         while (current_env && !current_env->contains(assign_expr->identifier.lexeme))
         {
@@ -217,7 +217,7 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
+        std::shared_ptr<SymbolTable<SemanticValue>> current_env = this->environment;
 
         while (current_env)
         {
@@ -232,7 +232,7 @@ public:
 
         const_stmt->value->accept(this);
 
-        this->environment->insert(const_stmt->identifier.lexeme, Value());
+        this->environment->insert(const_stmt->identifier.lexeme, SemanticValue());
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
@@ -249,7 +249,7 @@ public:
     {
         this->loop_depth += 1;
 
-        std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
+        std::shared_ptr<SymbolTable<SemanticValue>> new_environment = std::make_shared<SymbolTable<SemanticValue>>();
         new_environment->set_enclosing(this->environment);
         this->environment = new_environment;
 
@@ -306,7 +306,7 @@ public:
     {
         this->function_depth += 1;
 
-        this->call_table->insert(func->identifier.lexeme, BirdFunction());
+        this->call_table->insert(func->identifier.lexeme, SemanticCallable(func->param_list.size()));
 
         this->function_depth -= 1;
     }
@@ -332,7 +332,7 @@ public:
 
         auto function = this->call_table->get(call->identifier.lexeme);
 
-        if (function.params.size() != call->args.size())
+        if (function.param_count != call->args.size())
         {
             this->user_error_tracker->semantic_error("Function call identifer '" + call->identifier.lexeme + "' does not use the correct number of arguments.");
             return;

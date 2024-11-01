@@ -9,10 +9,13 @@
 #include "../../include/visitors/semantic_analyzer.h"
 #include "../../include/visitors/type_checker.h"
 
-TEST(FunctionTest, GoodFunctionCall)
+TEST(FunctionTest, FunctionReturnTypeInt)
 {
-    auto code = "fn function(i: int) -> int {return i;} "
-                "var result: int = function(4);";
+    auto code = "fn function(i: int, j: int) -> int"
+                "{"
+                "return 3;"
+                "}"
+                "var result: int = function(2, 3);";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -28,23 +31,20 @@ TEST(FunctionTest, GoodFunctionCall)
     interpreter.evaluate(&ast);
 
     ASSERT_TRUE(interpreter.call_table->contains("function"));
-    ASSERT_TRUE(interpreter.environment->contains("resutl"));
+
+    ASSERT_TRUE(interpreter.environment->contains("result"));
     auto result = interpreter.environment->get("result");
     ASSERT_TRUE(is_type<int>(result));
-    EXPECT_EQ(as_type<int>(result), 4);
+    EXPECT_EQ(as_type<int>(result), 3);
 }
 
-TEST(FunctionTest, MalformedCall)
+TEST(FunctionTest, FunctionReturnTypeString)
 {
-    auto code = "fn function() {} "
-                "function(;";
-    ASSERT_THROW(parse_code(code), UserException);
-}
-
-TEST(FunctionTest, CallWithIncorrectTypes)
-{
-    auto code = "fn function(i: int, j: string) {}"
-                "function(4, 6);";
+    auto code = "fn function(i: int, j: int) -> str"
+                "{"
+                "return \"string\";"
+                "}"
+                "var result: str = function(2, 3);";
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -57,13 +57,23 @@ TEST(FunctionTest, CallWithIncorrectTypes)
     ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    interpreter.evaluate(&ast);
+
+    ASSERT_TRUE(interpreter.call_table->contains("function"));
+
+    ASSERT_TRUE(interpreter.environment->contains("result"));
+    auto result = interpreter.environment->get("result");
+    ASSERT_TRUE(is_type<std::string>(result));
+    EXPECT_EQ(as_type<std::string>(result), "string");
 }
 
-TEST(FunctionTest, StoreReturnWithIncorrectVarType)
+TEST(FunctionTest, FunctionWrongReturnType)
 {
-    auto code = "fn function() -> int {return 3;} "
-                "var:string = function();";
+    auto code = "fn function(i: int, j: int) -> int"
+                "{"
+                "return \"string\";"
+                "}";
+
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
@@ -73,8 +83,8 @@ TEST(FunctionTest, StoreReturnWithIncorrectVarType)
 
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
 
-    Interpreter interpreter;
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    ASSERT_TRUE(user_error_tracker.has_errors());
+    auto errors = user_error_tracker.get_errors();
+    EXPECT_EQ(errors.size(), 1);
 }
