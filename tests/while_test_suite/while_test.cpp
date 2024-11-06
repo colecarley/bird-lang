@@ -23,9 +23,9 @@ TEST(WhileTest, While)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 10);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 10);
 }
 
 TEST(WhileTest, WhileFalse)
@@ -45,9 +45,9 @@ TEST(WhileTest, WhileFalse)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 0);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 0);
 }
 
 TEST(WhileTest, WhileBreak)
@@ -67,9 +67,9 @@ TEST(WhileTest, WhileBreak)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 2);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 2);
 }
 
 TEST(WhileTest, WhileContinue)
@@ -89,9 +89,9 @@ TEST(WhileTest, WhileContinue)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 3);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 3);
 }
 
 TEST(WhileTest, WhileConstInc)
@@ -111,11 +111,11 @@ TEST(WhileTest, WhileConstInc)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 10);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 10);
 
-    ASSERT_TRUE(interpreter.environment->contains("inc"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("inc")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("inc")), 1);
+    ASSERT_TRUE(interpreter.env.contains("inc"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("inc")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("inc")), 1);
 }

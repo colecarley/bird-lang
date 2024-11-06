@@ -5,6 +5,9 @@ while true {
 }
 
 
+
+
+
 if (false) {
     print "if";
 } 
@@ -122,6 +125,8 @@ while true {
     break; 
 }
 
+
+
 print "j = ", j;
 
 print "while test continue";
@@ -136,6 +141,7 @@ while (o < 5) {
 
     print "o = ", o;
 }
+
 
 print "scope assignment";
 

@@ -27,9 +27,9 @@ TEST(VarTest, VarWithTypeInt)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 4);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 4);
 }
 
 // FLOAT
@@ -50,9 +50,9 @@ TEST(VarTest, VarWithTypeFloat)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<double>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<double>(interpreter.environment->get("x")), 4.0);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<double>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<double>(interpreter.env.get("x")), 4.0);
 
     code = "var y: float = 4;";
     ast = parse_code(code);
@@ -65,9 +65,9 @@ TEST(VarTest, VarWithTypeFloat)
 
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("y"));
-    ASSERT_TRUE(is_type<double>(interpreter.environment->get("y")));
-    ASSERT_EQ(as_type<double>(interpreter.environment->get("y")), 4.0);
+    ASSERT_TRUE(interpreter.env.contains("y"));
+    ASSERT_TRUE(is_type<double>(interpreter.env.get("y")));
+    ASSERT_EQ(as_type<double>(interpreter.env.get("y")), 4.0);
 }
 
 // STRINGS
@@ -88,9 +88,9 @@ TEST(VarTest, VarWithTypeString)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<std::string>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<std::string>(interpreter.environment->get("x")), "hello");
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<std::string>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<std::string>(interpreter.env.get("x")), "hello");
 }
 
 // BOOL
@@ -111,9 +111,9 @@ TEST(VarTest, VarWithTypeBool)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<bool>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
 
     code = "var y: bool = false;";
     ast = parse_code(code);
@@ -126,7 +126,7 @@ TEST(VarTest, VarWithTypeBool)
 
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("y"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("y")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("y")), false);
+    ASSERT_TRUE(interpreter.env.contains("y"));
+    ASSERT_TRUE(is_type<bool>(interpreter.env.get("y")));
+    ASSERT_EQ(as_type<bool>(interpreter.env.get("y")), false);
 }

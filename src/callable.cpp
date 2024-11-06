@@ -21,9 +21,8 @@ void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>>
         evaluated_args.push_back(value);
     }
 
-    auto new_environment = std::make_unique<SymbolTable<Value>>(SymbolTable<Value>());
-    new_environment->set_enclosing(std::move(interpreter->environment));
-    interpreter->environment = std::move(new_environment);
+    interpreter->env.push_env();
+    auto num_envs = interpreter->env.envs.size();
 
     for (int i = 0; i < this->param_list.size(); i++)
     {
@@ -39,7 +38,7 @@ void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>>
         if (param_list[i].second.lexeme == "float" && !is_type<double>(evaluated_args[i]))
             throw BirdException("Type mismatch");
 
-        interpreter->environment->insert(param_list[i].first.lexeme, evaluated_args[i]);
+        interpreter->env.declare(param_list[i].first.lexeme, evaluated_args[i]);
     }
 
     for (auto &stmt : dynamic_cast<Block *>(this->block.get())->stmts)
@@ -50,10 +49,10 @@ void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>>
         }
         catch (ReturnException e)
         {
-            interpreter->environment = interpreter->environment->get_enclosing();
+            interpreter->env.pop_env();
             return;
         }
     }
 
-    interpreter->environment = interpreter->environment->get_enclosing();
+    interpreter->env.pop_env();
 }
