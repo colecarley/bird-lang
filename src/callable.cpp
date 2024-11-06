@@ -16,8 +16,7 @@ void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>>
     for (auto &arg : args)
     {
         arg->accept(interpreter);
-        auto value = interpreter->stack.top();
-        interpreter->stack.pop();
+        auto value = interpreter->stack.pop();
         evaluated_args.push_back(value);
     }
 
