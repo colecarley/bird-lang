@@ -6,6 +6,7 @@
 #include "../../include/visitors/interpreter.h"
 #include "../../src/callable.cpp"
 #include "../helpers/parse_test_helper.hpp"
+#include "../../include/visitors/semantic_analyzer.h"
 #include "../../include/visitors/type_checker.h"
 
 TEST(FunctionTest, GoodFunctionCall)
@@ -15,6 +16,10 @@ TEST(FunctionTest, GoodFunctionCall)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -51,6 +56,10 @@ TEST(FunctionTest, CallWithIncorrectTypes)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_TRUE(user_error_tracker.has_errors());
@@ -63,8 +72,23 @@ TEST(FunctionTest, StoreReturnWithIncorrectVarType)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
+    ASSERT_TRUE(user_error_tracker.has_errors());
+}
+
+TEST(FunctionTest, ArityFail)
+{
+    auto code = "fn function(i: int, j: str) {}"
+                "function(4, 6, 7);";
+    auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
     ASSERT_TRUE(user_error_tracker.has_errors());
 }

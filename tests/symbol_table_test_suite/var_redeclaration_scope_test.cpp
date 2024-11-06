@@ -6,6 +6,7 @@
 #include "../../include/visitors/interpreter.h"
 #include "../../src/callable.cpp"
 #include "../helpers/parse_test_helper.hpp"
+#include "../../include/visitors/semantic_analyzer.h"
 #include "../../include/visitors/type_checker.h"
 
 TEST(SymbolTableTest, VarRedeclarationScope)
