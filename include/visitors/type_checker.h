@@ -625,7 +625,7 @@ public:
 
         if (function.params.size() != call->args.size())
         {
-            this->user_error_tracker->expected(std::to_string(function.params.size()) + " arguments", "in function call", call->identifier);
+            this->user_error_tracker->expected(std::to_string(function.params.size()) + " arguments in function call", call->identifier);
             return;
         }
 

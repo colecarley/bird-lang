@@ -106,8 +106,6 @@ std::unique_ptr<Stmt> Parser::const_decl()
 
     auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_user_error("expected identifier after const keyword");
 
-    this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after identifier");
-
     std::optional<Token> type_identifier = std::nullopt;
     if (this->expect_token(Token::Type::COLON).is_valid())
     {
@@ -147,27 +145,38 @@ std::unique_ptr<Stmt> Parser::block()
 // IF_STATEMENT: if EXPRESSION STATEMENT ?(ELSE STMT)
 std::unique_ptr<Stmt> Parser::if_stmt()
 {
+    std::cout << "parsing if statement" << std::endl;
     this->expect_token(Token::Type::IF).adv_or_bird_error("Expected 'if' at the beginning of if statement");
 
     auto condition = this->expr();
 
+    std::cout << "successfully parsed condition" << std::endl;
+
     auto statement = this->stmt();
+
+    std::cout << "successfully parsed statement" << std::endl;
 
     if (this->expect_token(Token::Type::ELSE).is_invalid())
     {
-        return std::make_unique<IfStmt>(
+        std::cout << "found else keyword" << std::endl;
+        auto if_ast_node = std::make_unique<IfStmt>(
             std::move(condition),
             std::move(statement),
             std::nullopt);
+        std::cout << "parsed if stmt (else found)" << std::endl;
+        return std::move(if_ast_node);
     }
 
     this->expect_token(Token::Type::ELSE).adv_or_bird_error("Expected else token");
     auto else_stmt = this->stmt();
 
-    return std::make_unique<IfStmt>(
+    auto if_ast_node = std::make_unique<IfStmt>(
         std::move(condition),
         std::move(statement),
         std::make_optional<std::unique_ptr<Stmt>>(std::move(this->stmt())));
+
+    std::cout << "parsed if statement (no else found)" << std::endl;
+    return std::move(if_ast_node);
 }
 
 // EXPR_STMT: EXPR;
@@ -227,8 +236,6 @@ std::unique_ptr<Stmt> Parser::for_stmt()
         initializer = this->stmt();
     }
 
-    this->expect_token(Token::Type::SEMICOLON).adv_or_user_error("expected ';' after for statement initializer clause");
-
     std::optional<std::unique_ptr<Expr>> condition;
     if (this->peek().token_type != Token::Type::SEMICOLON)
     {
@@ -287,39 +294,31 @@ std::unique_ptr<Expr> Parser::assign_expr()
 {
     auto left = this->ternary();
 
-    // auto identifier = this->expect_token(Token::Type::IDENTIFIER).adv_or_bird_error("Expected variable identifier in assignment statement");
-
-    auto assign_operator =
-        this->expect_one_of({Token::Type::EQUAL,
+    if (this->expect_one_of({Token::Type::EQUAL,
                              Token::Type::PLUS_EQUAL,
                              Token::Type::MINUS_EQUAL,
                              Token::Type::STAR_EQUAL,
                              Token::Type::SLASH_EQUAL,
-                             Token::Type::PERCENT_EQUAL});
-
-    // if next token is an assignment operator
-    if (assign_operator.is_valid())
+                             Token::Type::PERCENT_EQUAL})
+            .is_invalid())
     {
-        // check that left is an identifier, if not throw BirdException
-        if (auto *identifier = dynamic_cast<Primary *>(left.get()))
-        {
-            if (identifier->value.token_type != Token::Type::IDENTIFIER)
-            {
-                throw BirdException("can not assign value to non-identifier");
-            }
-
-            auto right = this->expr(); // parse expression
-
-            // create assignment expression with identifier, operator and expression
-            return std::make_unique<AssignExpr>(identifier->value, assign_operator, std::move(right));
-        }
-        else
-        {
-            throw BirdException("can not assign value to non-identifier");
-        }
+        return left;
     }
 
-    return left;
+    auto assign_operator = this->advance();
+
+    auto *identifier = dynamic_cast<Primary *>(left.get());
+
+    // if the identifier isn't a primary expr with the identifier type, throw exception
+    if (!identifier || identifier->value.token_type != Token::Type::IDENTIFIER)
+    {
+        throw BirdException("Expected variable identifier in assignment statement (primary value type is not identifier)");
+    }
+
+    auto right = this->expr(); // parse expression
+
+    // create assignment expression with identifier, operator and expression
+    return std::make_unique<AssignExpr>(identifier->value, assign_operator, std::move(right));
 }
 
 std::unique_ptr<Stmt> Parser::break_stmt()
@@ -349,23 +348,23 @@ std::unique_ptr<Expr> Parser::ternary()
 {
     auto condition = this->equality();
 
-    if (this->expect_token(Token::Type::QUESTION).is_valid())
+    if (this->expect_token(Token::Type::QUESTION).is_invalid())
     {
-        this->expect_token(Token::Type::QUESTION).adv_or_bird_error("Expected '?' in ternary statment");
-
-        auto true_expr = this->expr();
-
-        this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after true branch in ternary expression");
-
-        auto false_expr = this->expr();
-
-        return std::make_unique<Ternary>(
-            std::move(condition),
-            std::move(true_expr),
-            std::move(false_expr));
+        return condition;
     }
 
-    return condition;
+    this->advance();
+
+    auto true_expr = this->expr();
+
+    this->expect_token(Token::Type::COLON).adv_or_user_error("expected ':' after true branch in ternary expression");
+
+    auto false_expr = this->expr();
+
+    return std::make_unique<Ternary>(
+        std::move(condition),
+        std::move(true_expr),
+        std::move(false_expr));
 }
 
 std::unique_ptr<Expr> Parser::equality()
@@ -378,10 +377,10 @@ std::unique_ptr<Expr> Parser::equality()
     {
         Token op = this->advance();
         std::unique_ptr<Expr> right = this->comparison();
-        equality_expr = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
+        left = std::make_unique<Binary>(Binary(std::move(left), op, std::move(right)));
     }
 
-    return equality_expr;
+    return left;
 }
 
 std::unique_ptr<Expr> Parser::comparison()
@@ -451,7 +450,7 @@ std::unique_ptr<Expr> Parser::call()
 
     if (auto primary = dynamic_cast<Primary *>(identifier.get()))
     {
-        if (this->expect_token(Token::Type::LPAREN).is_valid())
+        if (this->expect_token(Token::Type::LPAREN).is_invalid())
             return identifier;
 
         auto args = this->args();
@@ -471,10 +470,11 @@ std::vector<std::unique_ptr<Expr>> Parser::args()
     {
         args.push_back(this->expr());
 
-        this->expect_token(Token::Type::COMMA).adv_or_user_error("expected ',' after argument in argument list");
+        if (this->peek().token_type == Token::Type::COMMA)
+            this->advance();
     }
 
-    this->expect_token(Token::Type::RPAREN).adv_or_user_error("expected '(' after function call");
+    this->expect_token(Token::Type::RPAREN).adv_or_user_error("expected ')' after args in function call");
 
     return args;
 }
@@ -614,11 +614,6 @@ void Parser::synchronize()
 
 Parser::ExpectedToken Parser::expect_token(Token::Type type)
 {
-    if (this->is_at_end())
-    {
-        this->user_error_tracker->unexpected_end_of_token_stream();
-    }
-
     auto token = this->peek();
     if (token.token_type == type)
     {
@@ -630,11 +625,6 @@ Parser::ExpectedToken Parser::expect_token(Token::Type type)
 
 Parser::ExpectedToken Parser::expect_one_of(std::initializer_list<Token::Type> types)
 {
-    if (this->is_at_end())
-    {
-        this->user_error_tracker->unexpected_end_of_token_stream();
-    }
-
     auto token = this->peek();
     for (auto type : types)
     {

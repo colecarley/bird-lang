@@ -12,9 +12,10 @@
 TEST(ConstTest, ConstWithTypeInt)
 {
     auto code = "const x: int = 4;";
-    auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+
+    auto ast = parse_code_with_error_tracker(code, user_error_tracker);
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -31,9 +32,11 @@ TEST(ConstTest, ConstWithTypeInt)
 TEST(ConstTest, ConstWithTypeFloat)
 {
     auto code = "const x: float = 4.0;";
-    auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+
+    auto ast = parse_code_with_error_tracker(code, user_error_tracker);
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -59,9 +62,10 @@ TEST(ConstTest, ConstWithTypeFloat)
 TEST(ConstTest, ConstWithTypeString)
 {
     auto code = "const x: str = \"hello\";";
-    auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+
+    auto ast = parse_code_with_error_tracker(code, user_error_tracker);
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -78,9 +82,11 @@ TEST(ConstTest, ConstWithTypeString)
 TEST(ConstTest, ConstWithTypeBool)
 {
     auto code = "const x: bool = true;";
-    auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+
+    auto ast = parse_code_with_error_tracker(code, user_error_tracker);
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());

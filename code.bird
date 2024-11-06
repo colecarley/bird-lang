@@ -151,6 +151,8 @@ print "scope assignment";
 
 var p = 0;
 
+const x: int = 4;
+
 { p += 1; }
 
 print p;

@@ -12,9 +12,11 @@ TEST(VarTest, VarRedeclaration)
 {
     auto code = "var x = 0;"
                 "var x = 1;";
-    auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    auto ast = parse_code_with_error_tracker(code, user_error_tracker);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());

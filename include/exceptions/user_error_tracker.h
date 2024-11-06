@@ -125,18 +125,6 @@ public:
     }
 
     /*
-     * Used by the parser when a token is expected but there are none left
-     */
-    [[noreturn]] void unexpected_end_of_token_stream()
-    {
-        this->print_errors();
-        std::cout << this->format_message("expected token but reached end of token stream instead") << std::endl;
-
-        this->print_where(this->code_lines.size(), this->code_lines.back().size());
-        this->exit_program();
-    }
-
-    /*
      * Used when a symbol is expected, in a position but is not found
      */
     void expected(std::string context, Token token)
