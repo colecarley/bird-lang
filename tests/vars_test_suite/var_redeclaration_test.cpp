@@ -6,6 +6,7 @@
 #include "../../include/visitors/interpreter.h"
 #include "../../src/callable.cpp"
 #include "../helpers/parse_test_helper.hpp"
+#include "../../include/visitors/semantic_analyzer.h"
 #include "../../include/visitors/type_checker.h"
 
 TEST(VarTest, VarRedeclaration)
@@ -15,10 +16,7 @@ TEST(VarTest, VarRedeclaration)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
-    TypeChecker type_checker(&user_error_tracker);
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-    ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_TRUE(user_error_tracker.has_errors());
 }

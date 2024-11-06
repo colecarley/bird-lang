@@ -6,6 +6,7 @@
 #include "../../include/visitors/interpreter.h"
 #include "../../src/callable.cpp"
 #include "../helpers/parse_test_helper.hpp"
+#include "../../include/visitors/semantic_analyzer.h"
 #include "../../include/visitors/type_checker.h"
 
 // Add modulus operator test when it has been implemented.
@@ -15,6 +16,10 @@ TEST(ExprTest, BinaryExpr)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -33,6 +38,10 @@ TEST(ExprTest, BinaryStringString)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -51,6 +60,9 @@ TEST(ExprTest, BinaryIntString)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
@@ -63,6 +75,10 @@ TEST(ExprTest, BinaryFloatString)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_TRUE(user_error_tracker.has_errors());
@@ -74,6 +90,10 @@ TEST(ExprTest, BinaryBoolInt)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_TRUE(user_error_tracker.has_errors());
@@ -85,10 +105,12 @@ TEST(ExprTest, CondExpr)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-    user_error_tracker.print_errors();
     ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
@@ -105,6 +127,10 @@ TEST(ExprTest, CondExprIntInt)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -123,6 +149,10 @@ TEST(ExprTest, CondExprFloatIntOverflow)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -141,6 +171,10 @@ TEST(ExprTest, CondExprIntFloatOverflow)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -159,6 +193,10 @@ TEST(ExprTest, CondExprIntFloat)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -177,8 +215,11 @@ TEST(ExprTest, CondExprBoolString)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
-    TypeChecker type_checker(&user_error_tracker);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
+    TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_TRUE(user_error_tracker.has_errors());
 }
@@ -189,6 +230,10 @@ TEST(ExprTest, CondExprFloatBool)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_TRUE(user_error_tracker.has_errors());
@@ -200,9 +245,12 @@ TEST(ExprTest, IdentifierInExpr)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
-
     user_error_tracker.print_errors();
     ASSERT_FALSE(user_error_tracker.has_errors());
 
@@ -220,6 +268,10 @@ TEST(ExprTest, BinaryDivideByZero)
     auto ast = parse_code(code);
 
     auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     TypeChecker type_checker(&user_error_tracker);
     type_checker.check_types(&ast);
     ASSERT_FALSE(user_error_tracker.has_errors());
@@ -234,6 +286,15 @@ TEST(ExprTest, BinaryModulus)
     auto code = "var x: int =  10 % (0 + 5) % 2 + 6 % 2 + 4 % 6;";
     auto ast = parse_code(code);
 
+    auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
@@ -247,6 +308,15 @@ TEST(ExprTest, BinaryModulusFail)
     auto code = "var x: int = 10 % 0.0;";
     auto ast = parse_code(code);
 
+    auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
     Interpreter interpreter;
 
     ASSERT_THROW(interpreter.evaluate(&ast), BirdException);
@@ -256,6 +326,15 @@ TEST(ExprTest, AssignModulus)
 {
     auto code = "var x: int = 5; x %= 2;";
     auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
+
+    TypeChecker type_checker(&user_error_tracker);
+    type_checker.check_types(&ast);
+    ASSERT_FALSE(user_error_tracker.has_errors());
 
     Interpreter interpreter;
     interpreter.evaluate(&ast);

@@ -286,12 +286,6 @@ public:
             current_env = current_env->get_enclosing();
         }
 
-        // TODO: make this a different semantic pass
-        if (!current_env)
-        {
-            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
-        }
-
         assign_expr->value->accept(this);
         auto result = std::move(this->stack.pop());
 
@@ -613,12 +607,6 @@ public:
     void visit_call(Call *call)
     {
         auto function = this->call_table->get(call->identifier.lexeme);
-
-        if (function.params.size() != call->args.size())
-        {
-            this->user_error_tracker->expected(std::to_string(function.params.size()) + " arguments", "in function call", call->identifier);
-            return;
-        }
 
         for (int i = 0; i < function.params.size(); i++)
         {

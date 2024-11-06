@@ -161,18 +161,6 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
-
-        while (current_env)
-        {
-            if (this->environment->contains(decl_stmt->identifier.lexeme))
-            {
-                throw BirdException("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
-            }
-
-            current_env = current_env->get_enclosing();
-        }
-
         decl_stmt->value->accept(this);
 
         auto result = std::move(this->stack.pop());
@@ -204,17 +192,7 @@ public:
             current_env = current_env->get_enclosing();
         }
 
-        if (!current_env)
-        {
-            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
-        }
-
         auto previous_value = current_env->get(assign_expr->identifier.lexeme);
-
-        if (!previous_value.is_mutable)
-        {
-            throw BirdException("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.");
-        }
 
         assign_expr->value->accept(this);
         auto value = std::move(this->stack.pop());
@@ -277,18 +255,6 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
-
-        while (current_env)
-        {
-            if (this->environment->contains(const_stmt->identifier.lexeme))
-            {
-                throw BirdException("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
-            }
-
-            current_env = current_env->get_enclosing();
-        }
-
         const_stmt->value->accept(this);
 
         auto result = std::move(this->stack.pop());
@@ -539,11 +505,6 @@ public:
 
     void visit_call(Call *call)
     {
-        if (!this->call_table->contains(call->identifier.lexeme))
-        {
-            throw BirdException("undefined function");
-        }
-
         auto callable = this->call_table->get(call->identifier.lexeme);
         callable.call(this, std::move(call->args));
     }
