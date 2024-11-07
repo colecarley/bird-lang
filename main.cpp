@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <cstring>
 
 #include "include/lexer.h"
 #include "include/parser.h"
@@ -10,8 +11,13 @@
 #include "include/visitors/type_checker.h"
 
 #include "include/ast_node/expr/expr.h"
-#include "include/visitors/code_gen.h"
 #include "include/exceptions/user_error_tracker.h"
+
+#include "include/visitors/code_gen.h"
+#include "binaryen-c.h"
+#include "include/parser2.hpp" // TODO: change this name
+
+extern int bird_parse(const char *input);
 
 void repl();
 void compile(std::string filename);
@@ -122,7 +128,7 @@ void compile(std::string filename)
 
     SemanticAnalyzer semantic_analyzer(&error_tracker);
     semantic_analyzer.analyze_semantics(&ast);
-    
+
     if (error_tracker.has_errors())
     {
         error_tracker.print_errors_and_exit();
@@ -135,9 +141,6 @@ void compile(std::string filename)
     {
         error_tracker.print_errors_and_exit();
     }
-
-    CodeGen code_gen;
-    code_gen.generate(&ast);
 }
 
 void interpret(std::string filename)

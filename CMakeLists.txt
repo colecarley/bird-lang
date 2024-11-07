@@ -8,14 +8,16 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-find_package(LLVM 18.1.8 REQUIRED CONFIG)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
-include_directories(${LLVM_INCLUDE_DIRS})
-separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-add_definitions(${LLVM_DEFINITIONS_LIST})
+BISON_TARGET(Parser ${PROJECT_SOURCE_DIR}/src/parser.y ${PROJECT_SOURCE_DIR}/src/parser2.cpp DEFINES_FILE ${PROJECT_SOURCE_DIR}/include/parser2.hpp)
+FLEX_TARGET(Lexer ${PROJECT_SOURCE_DIR}/src/lexer.l ${PROJECT_SOURCE_DIR}/src/lexer2.cpp)
+
+include_directories("/usr/include/")
+link_directories("/usr/lib/x86_64-linux-gnu/")
 
 add_definitions(-DGTEST_HAS_CXXABI_H_=0) # dont touch this
 
@@ -24,17 +26,10 @@ include_directories(${PROJECT_SOURCE_DIR}/tests)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-add_executable(compiler main.cpp ${SOURCES})
+add_executable(compiler main.cpp ${SOURCES} ${BISON_Parser_OUTPUTS} ${FLEX_Lexer_OUTPUTS})
 
-# Find the libraries that correspond to the LLVM components
-# that we wish to use
-llvm_map_components_to_libnames(llvm_libs ${LLVM_TARGETS_TO_BUILD} support core irreader)
 
-foreach(target ${LLVM_TARGETS_TO_BUILD})
-  list(APPEND targets "LLVM${target}CodeGen")
-endforeach()
-
-target_link_libraries(compiler ${llvm_libs} ${targets})
+target_link_libraries(compiler binaryen)
 
 option(TESTS "Build the tests" OFF)
 
