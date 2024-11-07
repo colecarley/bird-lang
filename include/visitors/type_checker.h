@@ -4,7 +4,6 @@
 #include <vector>
 #include <map>
 #include <functional>
-#include <stack>
 #include <algorithm>
 
 #include "../ast_node/stmt/stmt.h"
@@ -35,6 +34,7 @@
 #include "../exceptions/return_exception.h"
 #include "../exceptions/user_error_tracker.h"
 #include "../bird_type.h"
+#include "../stack.h"
 
 /*
  * Visitor that checks types of the AST
@@ -45,7 +45,7 @@ class TypeChecker : public Visitor
 public:
     std::shared_ptr<SymbolTable<BirdType>> environment;
     std::shared_ptr<SymbolTable<BirdFunction>> call_table;
-    std::stack<BirdType> stack;
+    Stack<BirdType> stack;
     std::optional<BirdType> return_type;
     UserErrorTracker *user_error_tracker;
 
@@ -244,8 +244,7 @@ public:
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
         decl_stmt->value->accept(this);
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         if (result == BirdType::VOID)
         {
@@ -288,8 +287,7 @@ public:
         }
 
         assign_expr->value->accept(this);
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         auto previous = current_env->get(assign_expr->identifier.lexeme);
 
@@ -348,8 +346,7 @@ public:
     void visit_const_stmt(ConstStmt *const_stmt)
     {
         const_stmt->value->accept(this);
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         if (result == BirdType::VOID)
         {
@@ -376,8 +373,7 @@ public:
     void visit_while_stmt(WhileStmt *while_stmt)
     {
         while_stmt->condition->accept(this);
-        auto condition_result = std::move(this->stack.top());
-        this->stack.pop();
+        auto condition_result = std::move(this->stack.pop());
 
         if (condition_result != BirdType::BOOL)
         {
@@ -403,8 +399,7 @@ public:
         if (for_stmt->condition.has_value())
         {
             for_stmt->condition.value()->accept(this);
-            auto condition_result = std::move(this->stack.top());
-            this->stack.pop();
+            auto condition_result = std::move(this->stack.pop());
 
             if (condition_result != BirdType::BOOL)
             {
@@ -426,12 +421,10 @@ public:
         binary->left->accept(this);
         binary->right->accept(this);
 
-        auto right = std::move(this->stack.top());
-        this->stack.pop();
+        auto right = std::move(this->stack.pop());
 
         // TODO: investigate these moves
-        auto left = std::move(this->stack.top());
-        this->stack.pop();
+        auto left = std::move(this->stack.pop());
 
         auto operator_options = this->binary_operations.at(binary->op.token_type);
         if (operator_options.find({left, right}) == operator_options.end())
@@ -447,7 +440,7 @@ public:
     void visit_unary(Unary *unary)
     {
         unary->expr->accept(this);
-        auto result = std::move(this->stack.top());
+        auto result = std::move(this->stack.pop());
 
         if (result == BirdType::INT)
         {
@@ -504,14 +497,13 @@ public:
     void visit_ternary(Ternary *ternary)
     {
         ternary->condition->accept(this);
-        auto condition = std::move(this->stack.top());
-        this->stack.pop();
+        auto condition = std::move(this->stack.pop());
 
         ternary->true_expr->accept(this);
-        auto true_expr = std::move(this->stack.top());
+        auto true_expr = std::move(this->stack.pop());
 
         ternary->false_expr->accept(this);
-        auto false_expr = std::move(this->stack.top());
+        auto false_expr = std::move(this->stack.pop());
 
         if (true_expr != false_expr)
         {
@@ -596,8 +588,7 @@ public:
     void visit_if_stmt(IfStmt *if_stmt)
     {
         if_stmt->condition->accept(this);
-        auto condition = std::move(this->stack.top());
-        this->stack.pop();
+        auto condition = std::move(this->stack.pop());
 
         if (condition != BirdType::BOOL)
         {
@@ -620,8 +611,7 @@ public:
         for (int i = 0; i < function.params.size(); i++)
         {
             call->args[i]->accept(this);
-            auto arg = std::move(this->stack.top());
-            this->stack.pop();
+            auto arg = std::move(this->stack.pop());
 
             if (arg != function.params[i])
             {
@@ -637,8 +627,7 @@ public:
         if (return_stmt->expr.has_value())
         {
             return_stmt->expr.value()->accept(this);
-            auto result = std::move(this->stack.top());
-            this->stack.pop();
+            auto result = std::move(this->stack.pop());
 
             if (result != this->return_type)
             {

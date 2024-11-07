@@ -34,6 +34,7 @@
 #include "../exceptions/continue_exception.h"
 #include "../value.h"
 #include "../callable.h"
+#include "../stack.h"
 
 /*
  * Visitor that interprets and evaluates the AST
@@ -44,7 +45,7 @@ class Interpreter : public Visitor
 public:
     std::shared_ptr<SymbolTable<Value>> environment;
     std::shared_ptr<SymbolTable<Callable>> call_table;
-    std::stack<Value> stack;
+    Stack<Value> stack;
 
     // used for break and continue statements
     std::shared_ptr<SymbolTable<Value>> temp_environment;
@@ -162,8 +163,7 @@ public:
     {
         decl_stmt->value->accept(this);
 
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
         result.is_mutable = true;
 
         if (decl_stmt->type_identifier.has_value())
@@ -195,8 +195,7 @@ public:
         auto previous_value = current_env->get(assign_expr->identifier.lexeme);
 
         assign_expr->value->accept(this);
-        auto value = std::move(this->stack.top());
-        this->stack.pop();
+        auto value = std::move(this->stack.pop());
 
         switch (assign_expr->assign_operator.token_type)
         {
@@ -247,8 +246,7 @@ public:
         for (auto &arg : print_stmt->args)
         {
             arg->accept(this);
-            auto result = std::move(this->stack.top());
-            this->stack.pop();
+            auto result = std::move(this->stack.pop());
 
             std::cout << result;
         }
@@ -259,8 +257,7 @@ public:
     {
         const_stmt->value->accept(this);
 
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         if (const_stmt->type_identifier.has_value())
         {
@@ -285,8 +282,7 @@ public:
         this->temp_environment = this->environment;
 
         while_stmt->condition->accept(this);
-        auto condition_result = std::move(this->stack.top());
-        this->stack.pop();
+        auto condition_result = std::move(this->stack.pop());
 
         while (as_type<bool>(condition_result))
         {
@@ -301,15 +297,13 @@ public:
             catch (ContinueException e)
             {
                 while_stmt->condition->accept(this);
-                condition_result = std::move(this->stack.top());
-                this->stack.pop();
+                condition_result = std::move(this->stack.pop());
 
                 continue;
             }
 
             while_stmt->condition->accept(this);
-            condition_result = std::move(this->stack.top());
-            this->stack.pop();
+            condition_result = std::move(this->stack.pop());
         }
     }
 
@@ -331,8 +325,7 @@ public:
             if (for_stmt->condition.has_value())
             {
                 for_stmt->condition.value()->accept(this);
-                auto condition_result = std::move(this->stack.top());
-                this->stack.pop();
+                auto condition_result = std::move(this->stack.pop());
 
                 if (!as_type<bool>(condition_result.data))
                 {
@@ -371,11 +364,9 @@ public:
         binary->left->accept(this);
         binary->right->accept(this);
 
-        auto right = std::move(this->stack.top());
-        this->stack.pop();
+        auto right = std::move(this->stack.pop());
 
-        auto left = std::move(this->stack.top());
-        this->stack.pop();
+        auto left = std::move(this->stack.pop());
 
         switch (binary->op.token_type)
         {
@@ -444,8 +435,7 @@ public:
     void visit_unary(Unary *unary)
     {
         unary->expr->accept(this);
-        auto expr = std::move(this->stack.top());
-        this->stack.pop();
+        auto expr = std::move(this->stack.pop());
 
         this->stack.push(-expr);
     }
@@ -483,8 +473,7 @@ public:
     {
         ternary->condition->accept(this);
 
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         if (as_type<bool>(result))
             ternary->true_expr->accept(this);
@@ -506,8 +495,7 @@ public:
     {
         if_stmt->condition->accept(this);
 
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         if (as_type<bool>(result))
             if_stmt->then_branch->accept(this);
