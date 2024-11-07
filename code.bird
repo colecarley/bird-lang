@@ -1,9 +1,8 @@
-while true {
-    print "first";
-    break;
-    print "second";
-}
 
+
+fn add(x: int, y: int) -> int {
+    return x + y;
+}
 
 if (false) {
     print "if";
@@ -60,16 +59,16 @@ fn printDoubleF(x: float) -> void {
 printDoubleF(2.0);
 printDoubleF(1.2);
 
+
 fn double(x: int) -> int {
     return x * 2;
 }
 
 fn quadruple(x: int) -> int {
-    return double(x) * 2;
+    return double(double(x));
 }
 
-print "the double of 2 is ", double(2);
-print "the quadruple of 2 is ", quadruple(2);
+print quadruple(4);
 
 
 var x = double(2);
@@ -122,6 +121,8 @@ while true {
     break; 
 }
 
+
+
 print "j = ", j;
 
 print "while test continue";
@@ -136,6 +137,7 @@ while (o < 5) {
 
     print "o = ", o;
 }
+
 
 print "scope assignment";
 

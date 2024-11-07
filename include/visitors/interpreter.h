@@ -34,6 +34,7 @@
 #include "../exceptions/continue_exception.h"
 #include "../value.h"
 #include "../callable.h"
+#include "../stack.h"
 
 /*
  * Visitor that interprets and evaluates the AST
@@ -42,17 +43,14 @@ class Interpreter : public Visitor
 {
 
 public:
-    std::shared_ptr<SymbolTable<Value>> environment;
-    std::shared_ptr<SymbolTable<Callable>> call_table;
-    std::stack<Value> stack;
-
-    // used for break and continue statements
-    std::shared_ptr<SymbolTable<Value>> temp_environment;
+    Environment<Value> env;
+    Environment<Callable> call_table;
+    Stack<Value> stack;
 
     Interpreter()
     {
-        this->environment = std::make_shared<SymbolTable<Value>>();
-        this->call_table = std::make_shared<SymbolTable<Callable>>();
+        this->env.push_env();
+        this->call_table.push_env();
     }
 
     void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
@@ -146,24 +144,20 @@ public:
 
     void visit_block(Block *block)
     {
-        std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
-
+        this->env.push_env();
         for (auto &stmt : block->stmts)
         {
             stmt->accept(this);
         }
 
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
         decl_stmt->value->accept(this);
 
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
         result.is_mutable = true;
 
         if (decl_stmt->type_identifier.has_value())
@@ -180,23 +174,15 @@ public:
             }
         }
 
-        this->environment->insert(decl_stmt->identifier.lexeme, std::move(result));
+        this->env.declare(decl_stmt->identifier.lexeme, std::move(result));
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        std::shared_ptr<SymbolTable<Value>> current_env = this->environment;
-
-        while (current_env && !current_env->contains(assign_expr->identifier.lexeme))
-        {
-            current_env = current_env->get_enclosing();
-        }
-
-        auto previous_value = current_env->get(assign_expr->identifier.lexeme);
+        auto previous_value = this->env.get(assign_expr->identifier.lexeme);
 
         assign_expr->value->accept(this);
-        auto value = std::move(this->stack.top());
-        this->stack.pop();
+        auto value = std::move(this->stack.pop());
 
         switch (assign_expr->assign_operator.token_type)
         {
@@ -234,7 +220,7 @@ public:
             throw BirdException("Unidentified assignment operator " + assign_expr->assign_operator.lexeme);
         }
 
-        current_env->insert(assign_expr->identifier.lexeme, previous_value);
+        this->env.set(assign_expr->identifier.lexeme, previous_value);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -247,8 +233,7 @@ public:
         for (auto &arg : print_stmt->args)
         {
             arg->accept(this);
-            auto result = std::move(this->stack.top());
-            this->stack.pop();
+            auto result = std::move(this->stack.pop());
 
             std::cout << result;
         }
@@ -259,8 +244,7 @@ public:
     {
         const_stmt->value->accept(this);
 
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         if (const_stmt->type_identifier.has_value())
         {
@@ -276,17 +260,15 @@ public:
             }
         }
 
-        this->environment->insert(const_stmt->identifier.lexeme, std::move(result));
+        this->env.declare(const_stmt->identifier.lexeme, std::move(result));
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
-        // auto original_environment = this->environment;
-        this->temp_environment = this->environment;
-
         while_stmt->condition->accept(this);
-        auto condition_result = std::move(this->stack.top());
-        this->stack.pop();
+        auto condition_result = std::move(this->stack.pop());
+
+        auto num_envs = this->env.envs.size();
 
         while (as_type<bool>(condition_result))
         {
@@ -296,43 +278,49 @@ public:
             }
             catch (BreakException e)
             {
+                auto previous_size = this->env.envs.size();
+                for (int i = 0; i < previous_size - num_envs; i++)
+                {
+                    this->env.pop_env();
+                }
+
                 break;
             }
             catch (ContinueException e)
             {
-                while_stmt->condition->accept(this);
-                condition_result = std::move(this->stack.top());
-                this->stack.pop();
+                auto previous_size = this->env.envs.size();
+                for (int i = 0; i < previous_size - num_envs; i++)
+                {
+                    this->env.pop_env();
+                }
 
+                while_stmt->condition->accept(this);
+                condition_result = std::move(this->stack.pop());
                 continue;
             }
 
             while_stmt->condition->accept(this);
-            condition_result = std::move(this->stack.top());
-            this->stack.pop();
+            condition_result = std::move(this->stack.pop());
         }
     }
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
-        std::shared_ptr<SymbolTable<Value>> new_environment = std::make_shared<SymbolTable<Value>>();
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
-
-        this->temp_environment = this->environment;
+        this->env.push_env();
 
         if (for_stmt->initializer.has_value())
         {
             for_stmt->initializer.value()->accept(this);
         }
 
+        auto num_envs = this->env.envs.size();
+
         while (true)
         {
             if (for_stmt->condition.has_value())
             {
                 for_stmt->condition.value()->accept(this);
-                auto condition_result = std::move(this->stack.top());
-                this->stack.pop();
+                auto condition_result = std::move(this->stack.pop());
 
                 if (!as_type<bool>(condition_result.data))
                 {
@@ -346,10 +334,22 @@ public:
             }
             catch (BreakException e)
             {
+                auto previous_size = this->env.envs.size();
+                for (int i = 0; i < previous_size - num_envs; i++)
+                {
+                    this->env.pop_env();
+                }
+
                 break;
             }
             catch (ContinueException e)
             {
+                auto previous_size = this->env.envs.size();
+                for (int i = 0; i < previous_size - num_envs; i++)
+                {
+                    this->env.pop_env();
+                }
+
                 if (for_stmt->increment.has_value())
                 {
                     for_stmt->increment.value()->accept(this);
@@ -363,7 +363,7 @@ public:
             }
         }
 
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
     }
 
     void visit_binary(Binary *binary)
@@ -371,11 +371,9 @@ public:
         binary->left->accept(this);
         binary->right->accept(this);
 
-        auto right = std::move(this->stack.top());
-        this->stack.pop();
+        auto right = std::move(this->stack.pop());
 
-        auto left = std::move(this->stack.top());
-        this->stack.pop();
+        auto left = std::move(this->stack.pop());
 
         switch (binary->op.token_type)
         {
@@ -444,8 +442,7 @@ public:
     void visit_unary(Unary *unary)
     {
         unary->expr->accept(this);
-        auto expr = std::move(this->stack.top());
-        this->stack.pop();
+        auto expr = std::move(this->stack.pop());
 
         this->stack.push(-expr);
     }
@@ -472,7 +469,7 @@ public:
             break;
         case Token::Type::IDENTIFIER:
             this->stack.push(
-                this->environment->get(primary->value.lexeme));
+                this->env.get(primary->value.lexeme));
             break;
         default:
             throw BirdException("undefined primary value");
@@ -483,8 +480,7 @@ public:
     {
         ternary->condition->accept(this);
 
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         if (as_type<bool>(result))
             ternary->true_expr->accept(this);
@@ -499,15 +495,14 @@ public:
                                          std::move(func->block)),
                                      func->return_type);
 
-        this->call_table->insert(func->identifier.lexeme, std::move(callable));
+        this->call_table.declare(func->identifier.lexeme, std::move(callable));
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
     {
         if_stmt->condition->accept(this);
 
-        auto result = std::move(this->stack.top());
-        this->stack.pop();
+        auto result = std::move(this->stack.pop());
 
         if (as_type<bool>(result))
             if_stmt->then_branch->accept(this);
@@ -517,7 +512,7 @@ public:
 
     void visit_call(Call *call)
     {
-        auto callable = this->call_table->get(call->identifier.lexeme);
+        auto callable = this->call_table.get(call->identifier.lexeme);
         callable.call(this, std::move(call->args));
     }
 
@@ -533,13 +528,11 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        this->environment = this->temp_environment;
         throw BreakException();
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
-        this->environment = this->temp_environment;
         throw ContinueException();
     }
 };

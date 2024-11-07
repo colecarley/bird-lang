@@ -27,9 +27,9 @@ TEST(FunctionTest, GoodFunctionCall)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.call_table->contains("function"));
-    ASSERT_TRUE(interpreter.environment->contains("result"));
-    auto result = interpreter.environment->get("result");
+    ASSERT_TRUE(interpreter.call_table.contains("function"));
+    ASSERT_TRUE(interpreter.env.contains("result"));
+    auto result = interpreter.env.get("result");
     ASSERT_TRUE(is_type<int>(result));
     EXPECT_EQ(as_type<int>(result), 4);
 }

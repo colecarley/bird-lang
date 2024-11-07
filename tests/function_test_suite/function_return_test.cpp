@@ -30,10 +30,10 @@ TEST(FunctionTest, FunctionReturnTypeInt)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.call_table->contains("function"));
+    ASSERT_TRUE(interpreter.call_table.contains("function"));
 
-    ASSERT_TRUE(interpreter.environment->contains("result"));
-    auto result = interpreter.environment->get("result");
+    ASSERT_TRUE(interpreter.env.contains("result"));
+    auto result = interpreter.env.get("result");
     ASSERT_TRUE(is_type<int>(result));
     EXPECT_EQ(as_type<int>(result), 3);
 }
@@ -59,10 +59,10 @@ TEST(FunctionTest, FunctionReturnTypeString)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.call_table->contains("function"));
+    ASSERT_TRUE(interpreter.call_table.contains("function"));
 
-    ASSERT_TRUE(interpreter.environment->contains("result"));
-    auto result = interpreter.environment->get("result");
+    ASSERT_TRUE(interpreter.env.contains("result"));
+    auto result = interpreter.env.get("result");
     ASSERT_TRUE(is_type<std::string>(result));
     EXPECT_EQ(as_type<std::string>(result), "string");
 }
