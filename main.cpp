@@ -66,7 +66,10 @@ void repl()
 
         Lexer lexer(code, &error_tracker);
         auto tokens = lexer.lex();
+
+#ifdef DEBUG
         lexer.print_tokens();
+#endif
 
         Parser parser(tokens, &error_tracker);
         auto ast = parser.parse();
@@ -76,8 +79,10 @@ void repl()
             error_tracker.print_errors_and_exit();
         }
 
+#ifdef DEBUG
         AstPrinter printer;
         printer.print_ast(&ast);
+#endif
 
         semantic_analyzer.analyze_semantics(&ast);
         if (error_tracker.has_errors())
@@ -113,7 +118,10 @@ void compile(std::string filename)
 
     Lexer lexer(code, &error_tracker);
     auto tokens = lexer.lex();
+
+#ifdef DEBUG
     lexer.print_tokens();
+#endif
 
     Parser parser(tokens, &error_tracker);
     auto ast = parser.parse();
@@ -123,8 +131,10 @@ void compile(std::string filename)
         error_tracker.print_errors_and_exit();
     }
 
+#ifdef DEBUG
     AstPrinter printer;
     printer.print_ast(&ast);
+#endif
 
     SemanticAnalyzer semantic_analyzer(&error_tracker);
     semantic_analyzer.analyze_semantics(&ast);
@@ -150,7 +160,10 @@ void interpret(std::string filename)
 
     Lexer lexer(code, &error_tracker);
     auto tokens = lexer.lex();
+
+#ifdef DEBUG
     lexer.print_tokens();
+#endif
 
     Parser parser(tokens, &error_tracker);
     auto ast = parser.parse();
@@ -160,8 +173,10 @@ void interpret(std::string filename)
         error_tracker.print_errors_and_exit();
     }
 
+#ifdef DEBUG
     AstPrinter printer;
     printer.print_ast(&ast);
+#endif
 
     TypeChecker type_checker(&error_tracker);
     type_checker.check_types(&ast);
