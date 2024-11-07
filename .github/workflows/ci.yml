@@ -19,6 +19,7 @@ jobs:
         sudo apt-get update
         sudo apt-get clean 
         sudo apt-get install -y build-essential libzstd-dev libgtest-dev libgmock-dev
+        sudo apt-get install binaryen
 
     - name: Create a symlink to cmake
       run: |
