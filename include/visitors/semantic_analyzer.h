@@ -43,16 +43,16 @@ class SemanticAnalyzer : public Visitor
 {
 
 public:
-    std::shared_ptr<SymbolTable<SemanticValue>> environment;
-    std::shared_ptr<SymbolTable<SemanticCallable>> call_table;
+    Environment<SemanticValue> env;
+    Environment<SemanticCallable> call_table;
     UserErrorTracker *user_error_tracker;
     int loop_depth;
     int function_depth;
 
     SemanticAnalyzer(UserErrorTracker *user_error_tracker) : user_error_tracker(user_error_tracker)
     {
-        this->environment = std::make_shared<SymbolTable<SemanticValue>>();
-        this->call_table = std::make_shared<SymbolTable<SemanticCallable>>();
+        this->env.push_env();
+        this->call_table.push_env();
         this->loop_depth = 0;
         this->function_depth = 0;
     }
@@ -142,56 +142,40 @@ public:
 
     void visit_block(Block *block)
     {
-        std::shared_ptr<SymbolTable<SemanticValue>> new_environment = std::make_shared<SymbolTable<SemanticValue>>();
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
+        this->env.push_env();
 
         for (auto &stmt : block->stmts)
         {
             stmt->accept(this);
         }
 
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        std::shared_ptr<SymbolTable<SemanticValue>> current_env = this->environment;
-
-        while (current_env)
+        if (this->env.current_contains(decl_stmt->identifier.lexeme))
         {
-            if (this->environment->contains(decl_stmt->identifier.lexeme))
-            {
-                this->user_error_tracker->semantic_error("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
-                return;
-            }
-
-            current_env = current_env->get_enclosing();
+            this->user_error_tracker->semantic_error("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
+            return;
         }
 
         decl_stmt->value->accept(this);
 
         SemanticValue mutable_value;
         mutable_value.is_mutable = true;
-        this->environment->insert(decl_stmt->identifier.lexeme, mutable_value);
+        this->env.declare(decl_stmt->identifier.lexeme, mutable_value);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        std::shared_ptr<SymbolTable<SemanticValue>> current_env = this->environment;
-
-        while (current_env && !current_env->contains(assign_expr->identifier.lexeme))
-        {
-            current_env = current_env->get_enclosing();
-        }
-
-        if (!current_env)
+        if (!this->env.contains(assign_expr->identifier.lexeme))
         {
             this->user_error_tracker->semantic_error("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
             return;
         }
 
-        auto previous_value = current_env->get(assign_expr->identifier.lexeme);
+        auto previous_value = this->env.get(assign_expr->identifier.lexeme);
 
         if (!previous_value.is_mutable)
         {
@@ -217,22 +201,15 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        std::shared_ptr<SymbolTable<SemanticValue>> current_env = this->environment;
-
-        while (current_env)
+        if (this->env.current_contains(const_stmt->identifier.lexeme))
         {
-            if (this->environment->contains(const_stmt->identifier.lexeme))
-            {
-                this->user_error_tracker->semantic_error("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
-                return;
-            }
-
-            current_env = current_env->get_enclosing();
+            this->user_error_tracker->semantic_error("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
+            return;
         }
 
         const_stmt->value->accept(this);
 
-        this->environment->insert(const_stmt->identifier.lexeme, SemanticValue());
+        this->env.declare(const_stmt->identifier.lexeme, SemanticValue());
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
@@ -248,10 +225,7 @@ public:
     void visit_for_stmt(ForStmt *for_stmt)
     {
         this->loop_depth += 1;
-
-        std::shared_ptr<SymbolTable<SemanticValue>> new_environment = std::make_shared<SymbolTable<SemanticValue>>();
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
+        this->env.push_env();
 
         if (for_stmt->initializer.has_value())
         {
@@ -270,7 +244,7 @@ public:
             for_stmt->increment.value()->accept(this);
         }
 
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
 
         this->loop_depth -= 1;
     }
@@ -288,7 +262,7 @@ public:
 
     void visit_primary(Primary *primary)
     {
-        if (primary->value.token_type == Token::Type::IDENTIFIER && !this->environment->is_accessible(primary->value.lexeme))
+        if (primary->value.token_type == Token::Type::IDENTIFIER && !this->env.contains(primary->value.lexeme))
         {
             this->user_error_tracker->semantic_error("Identifier '" + primary->value.lexeme + "' is not initialized.");
             return;
@@ -306,7 +280,7 @@ public:
     {
         this->function_depth += 1;
 
-        this->call_table->insert(func->identifier.lexeme, SemanticCallable(func->param_list.size()));
+        this->call_table.declare(func->identifier.lexeme, SemanticCallable(func->param_list.size()));
 
         this->function_depth -= 1;
     }
@@ -315,7 +289,7 @@ public:
     {
         if_stmt->condition->accept(this);
         if_stmt->then_branch->accept(this);
-        
+
         if (if_stmt->else_branch.has_value())
         {
             if_stmt->else_branch.value()->accept(this);
@@ -324,13 +298,13 @@ public:
 
     void visit_call(Call *call)
     {
-        if (!this->call_table->contains(call->identifier.lexeme))
+        if (!this->call_table.contains(call->identifier.lexeme))
         {
             this->user_error_tracker->semantic_error("Function call identifier '" + call->identifier.lexeme + "' is not declared.");
             return;
         }
 
-        auto function = this->call_table->get(call->identifier.lexeme);
+        auto function = this->call_table.get(call->identifier.lexeme);
 
         if (function.param_count != call->args.size())
         {

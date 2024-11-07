@@ -33,9 +33,9 @@ TEST(IfTest, IfElseTrue)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 3);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 3);
 }
 
 TEST(IfTest, IfElseFalse)
@@ -62,7 +62,7 @@ TEST(IfTest, IfElseFalse)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 4);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 4);
 }

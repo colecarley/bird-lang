@@ -41,18 +41,17 @@
  */
 class TypeChecker : public Visitor
 {
-
 public:
-    std::shared_ptr<SymbolTable<BirdType>> environment;
-    std::shared_ptr<SymbolTable<BirdFunction>> call_table;
+    Environment<BirdType> env;
+    Environment<BirdFunction> call_table;
     Stack<BirdType> stack;
     std::optional<BirdType> return_type;
     UserErrorTracker *user_error_tracker;
 
     TypeChecker(UserErrorTracker *user_error_tracker) : user_error_tracker(user_error_tracker)
     {
-        this->environment = std::make_shared<SymbolTable<BirdType>>();
-        this->call_table = std::make_shared<SymbolTable<BirdFunction>>();
+        this->env.push_env();
+        this->call_table.push_env();
     }
 
     std::map<Token::Type, Token::Type> assign_to_binary_map = {
@@ -228,17 +227,14 @@ public:
 
     void visit_block(Block *block)
     {
-        std::shared_ptr<SymbolTable<BirdType>> new_environment =
-            std::make_shared<SymbolTable<BirdType>>();
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
+        this->env.push_env();
 
         for (auto &stmt : block->stmts)
         {
             stmt->accept(this);
         }
 
-        this->environment = new_environment->get_enclosing();
+        this->env.pop_env();
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
@@ -249,7 +245,7 @@ public:
         if (result == BirdType::VOID)
         {
             this->user_error_tracker->type_error("cannot declare void type", decl_stmt->identifier);
-            this->environment->insert(decl_stmt->identifier.lexeme, BirdType::ERROR);
+            this->env.declare(decl_stmt->identifier.lexeme, BirdType::ERROR);
             return;
         }
 
@@ -261,35 +257,37 @@ public:
             {
                 if (result == BirdType::INT && type == BirdType::FLOAT)
                 {
-                    this->environment->insert(decl_stmt->identifier.lexeme, BirdType::INT);
+                    this->env.declare(decl_stmt->identifier.lexeme, BirdType::INT);
                     return;
                 }
                 if (result == BirdType::FLOAT && type == BirdType::INT)
                 {
-                    this->environment->insert(decl_stmt->identifier.lexeme, BirdType::FLOAT);
+                    this->env.declare(decl_stmt->identifier.lexeme, BirdType::FLOAT);
                     return;
                 }
                 this->user_error_tracker->type_mismatch("in declaration", decl_stmt->type_identifier.value());
-                this->environment->insert(decl_stmt->identifier.lexeme, BirdType::ERROR);
+
+                this->env.declare(decl_stmt->identifier.lexeme, BirdType::ERROR);
                 return;
             }
         }
 
-        this->environment->insert(decl_stmt->identifier.lexeme, result);
+        this->env.declare(decl_stmt->identifier.lexeme, result);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        auto current_env = this->environment;
-        while (current_env && !current_env->contains(assign_expr->identifier.lexeme))
+        if (!this->env.contains(assign_expr->identifier.lexeme))
         {
-            current_env = current_env->get_enclosing();
+            this->user_error_tracker->type_error("identifier not declared", assign_expr->identifier);
+            this->env.set(assign_expr->identifier.lexeme, BirdType::ERROR);
+            return;
         }
 
         assign_expr->value->accept(this);
         auto result = std::move(this->stack.pop());
 
-        auto previous = current_env->get(assign_expr->identifier.lexeme);
+        auto previous = this->env.get(assign_expr->identifier.lexeme);
 
         if (assign_expr->assign_operator.token_type == Token::Type::EQUAL)
         {
@@ -297,21 +295,21 @@ public:
             {
                 if (previous == BirdType::INT && result == BirdType::FLOAT)
                 {
-                    current_env->insert(assign_expr->identifier.lexeme, BirdType::INT);
+                    this->env.set(assign_expr->identifier.lexeme, BirdType::INT);
                     return;
                 }
                 if (previous == BirdType::FLOAT && result == BirdType::INT)
                 {
-                    current_env->insert(assign_expr->identifier.lexeme, BirdType::FLOAT);
+                    this->env.set(assign_expr->identifier.lexeme, BirdType::INT);
                     return;
                 }
 
                 this->user_error_tracker->type_mismatch("in assignment", assign_expr->assign_operator);
-                current_env->insert(assign_expr->identifier.lexeme, BirdType::ERROR);
+                this->env.set(assign_expr->identifier.lexeme, BirdType::INT);
                 return;
             }
 
-            current_env->insert(assign_expr->identifier.lexeme, result);
+            this->env.set(assign_expr->identifier.lexeme, result);
             return;
         }
 
@@ -321,13 +319,12 @@ public:
         if (type_map.find({previous, result}) == type_map.end())
         {
             this->user_error_tracker->type_mismatch("in assignment", assign_expr->assign_operator);
-            current_env->insert(assign_expr->identifier.lexeme, BirdType::ERROR);
+            this->env.set(assign_expr->identifier.lexeme, BirdType::ERROR);
             return;
         }
 
         auto new_type = type_map.at({previous, result});
-
-        current_env->insert(assign_expr->identifier.lexeme, new_type);
+        this->env.set(assign_expr->identifier.lexeme, new_type);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -351,7 +348,7 @@ public:
         if (result == BirdType::VOID)
         {
             this->user_error_tracker->type_error("cannot declare void type", const_stmt->identifier);
-            this->environment->insert(const_stmt->identifier.lexeme, BirdType::ERROR);
+            this->env.declare(const_stmt->identifier.lexeme, BirdType::ERROR);
             return;
         }
 
@@ -362,12 +359,12 @@ public:
             if (type != result)
             {
                 this->user_error_tracker->type_mismatch("in declaration", const_stmt->type_identifier.value());
-                this->environment->insert(const_stmt->identifier.lexeme, BirdType::ERROR);
+                this->env.declare(const_stmt->identifier.lexeme, BirdType::ERROR);
                 return;
             }
         }
 
-        this->environment->insert(const_stmt->identifier.lexeme, result);
+        this->env.declare(const_stmt->identifier.lexeme, result);
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
@@ -386,10 +383,7 @@ public:
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
-        std::shared_ptr<SymbolTable<BirdType>> new_environment =
-            std::make_shared<SymbolTable<BirdType>>();
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
+        this->env.push_env();
 
         if (for_stmt->initializer.has_value())
         {
@@ -413,7 +407,7 @@ public:
             for_stmt->increment.value()->accept(this);
         }
 
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
     }
 
     void visit_binary(Binary *binary)
@@ -484,7 +478,7 @@ public:
         case Token::Type::IDENTIFIER:
         {
             this->stack.push(
-                this->environment->get(primary->value.lexeme));
+                this->env.get(primary->value.lexeme));
             break;
         }
         default:
@@ -564,16 +558,12 @@ public:
         auto previous_return_type = this->return_type;
         this->return_type = ret;
 
-        this->call_table->insert(func->identifier.lexeme, BirdFunction(params, ret));
-
-        std::shared_ptr<SymbolTable<BirdType>> new_environment =
-            std::make_shared<SymbolTable<BirdType>>();
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
+        this->call_table.declare(func->identifier.lexeme, BirdFunction(params, ret));
+        this->env.push_env();
 
         for (auto &param : func->param_list)
         {
-            this->environment->insert(param.first.lexeme, this->get_type_from_token(param.second));
+            this->env.declare(param.first.lexeme, this->get_type_from_token(param.second));
         }
 
         for (auto &stmt : dynamic_cast<Block *>(func->block.get())->stmts) // TODO: figure out how not to dynamic cast
@@ -582,7 +572,7 @@ public:
         }
 
         this->return_type = previous_return_type;
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -606,7 +596,7 @@ public:
 
     void visit_call(Call *call)
     {
-        auto function = this->call_table->get(call->identifier.lexeme);
+        auto function = this->call_table.get(call->identifier.lexeme);
 
         for (int i = 0; i < function.params.size(); i++)
         {

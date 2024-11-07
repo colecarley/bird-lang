@@ -30,9 +30,9 @@ TEST(ForLoopTest, ForLoopIncrement)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("z"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("z")));
-    EXPECT_EQ(as_type<int>(interpreter.environment->get("z").data), 5);
+    ASSERT_TRUE(interpreter.env.contains("z"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("z")));
+    EXPECT_EQ(as_type<int>(interpreter.env.get("z").data), 5);
 }
 
 TEST(ForLoopTest, BreakOutsideLoop)
@@ -85,9 +85,9 @@ TEST(ForLoopTest, ForLoopBreak)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("z"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("z")));
-    EXPECT_EQ(as_type<int>(interpreter.environment->get("z")), 2);
+    ASSERT_TRUE(interpreter.env.contains("z"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("z")));
+    EXPECT_EQ(as_type<int>(interpreter.env.get("z")), 2);
 }
 
 TEST(ForLoopTest, ForLoopContinue)
@@ -108,7 +108,7 @@ TEST(ForLoopTest, ForLoopContinue)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("z"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("z")));
-    EXPECT_EQ(as_type<int>(interpreter.environment->get("z").data), 3);
+    ASSERT_TRUE(interpreter.env.contains("z"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("z")));
+    EXPECT_EQ(as_type<int>(interpreter.env.get("z").data), 3);
 }

@@ -28,7 +28,7 @@ TEST(ForLoopTest, ScopedForLoopIncrement)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    EXPECT_EQ(as_type<int>(interpreter.environment->get("x").data), 5);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    EXPECT_EQ(as_type<int>(interpreter.env.get("x").data), 5);
 }

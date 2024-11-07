@@ -57,8 +57,8 @@
  */
 class CodeGen : public Visitor
 {
+    Environment<llvm::AllocaInst *> env;
     Stack<llvm::Value *> stack;
-    std::shared_ptr<SymbolTable<llvm::AllocaInst *>> environment;
     std::map<std::string, llvm::FunctionCallee> std_lib;
 
     llvm::LLVMContext context;
@@ -82,7 +82,7 @@ public:
 
     CodeGen() : builder(llvm::IRBuilder<>(this->context))
     {
-        this->environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
+        this->env.push_env();
         this->module = std::make_unique<llvm::Module>("test_module", this->context);
     }
 
@@ -271,16 +271,14 @@ public:
 
     void visit_block(Block *block)
     {
-        auto new_environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
+        this->env.push_env();
 
         for (auto &stmt : block->stmts)
         {
             stmt->accept(this);
         }
 
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
@@ -294,12 +292,12 @@ public:
         llvm::AllocaInst *alloca = this->builder.CreateAlloca(initializer_value->getType(), nullptr, decl_stmt->identifier.lexeme.c_str());
         this->builder.CreateStore(initializer_value, alloca);
 
-        this->environment->insert(decl_stmt->identifier.lexeme, alloca);
+        this->env.declare(decl_stmt->identifier.lexeme, alloca);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        auto lhs = this->environment->get(assign_expr->identifier.lexeme);
+        auto lhs = this->env.get(assign_expr->identifier.lexeme);
         auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
 
         assign_expr->value->accept(this);
@@ -436,19 +434,8 @@ public:
 
         this->builder.SetInsertPoint(stmt_block);
 
-        // try
-        // {
         while_stmt->stmt->accept(this);
         this->builder.CreateBr(condition_block);
-        // }
-        // catch (BreakException)
-        // {
-        //     this->builder.CreateBr(done_block);
-        // }
-        // catch (ContinueException)
-        // {
-        //     this->builder.CreateBr(condition_block);
-        // }
 
         this->builder.SetInsertPoint(done_block);
 
@@ -458,11 +445,7 @@ public:
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
-        std::shared_ptr<SymbolTable<llvm::AllocaInst *>> new_environment =
-            std::make_shared<SymbolTable<llvm::AllocaInst *>>();
-
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
+        this->env.push_env();
 
         auto parent_fn = this->builder.GetInsertBlock()->getParent();
 
@@ -515,7 +498,7 @@ public:
         this->builder.CreateBr(condition_block);
         this->builder.SetInsertPoint(done_block);
 
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
 
         this->current_condition_block = old_condition_block;
         this->current_done_block = old_done_block;
@@ -684,7 +667,7 @@ public:
         }
         case Token::Type::IDENTIFIER:
         {
-            auto allocation = this->environment->get(primary->value.lexeme);
+            auto allocation = this->env.get(primary->value.lexeme);
             if (allocation == nullptr)
             {
                 throw BirdException("undefined type identifier");
@@ -764,7 +747,7 @@ public:
 
         this->builder.CreateStore(initializer_value, alloca);
 
-        this->environment->insert(const_stmt->identifier.lexeme, alloca);
+        this->env.declare(const_stmt->identifier.lexeme, alloca);
     }
 
     void visit_func(Func *func)
@@ -788,9 +771,7 @@ public:
         auto old_insert_point = this->builder.GetInsertBlock();
         this->builder.SetInsertPoint(block);
 
-        auto new_environment = std::make_shared<SymbolTable<llvm::AllocaInst *>>(SymbolTable<llvm::AllocaInst *>());
-        new_environment->set_enclosing(this->environment);
-        this->environment = new_environment;
+        this->env.push_env();
 
         unsigned i = 0;
         for (auto &param : function->args())
@@ -799,12 +780,12 @@ public:
             param.setName(param_name);
             llvm::AllocaInst *alloca = this->builder.CreateAlloca(param.getType(), nullptr, param_name.c_str());
             this->builder.CreateStore(&param, alloca);
-            environment->insert(param_name, alloca);
+            this->env.declare(param_name, alloca);
         }
 
         func->block->accept(this);
 
-        this->environment = this->environment->get_enclosing();
+        this->env.pop_env();
 
         // other return types are handled in visit_return_stmt
         if (!func->return_type.has_value() || func->return_type.value().lexeme == "void")

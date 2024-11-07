@@ -27,9 +27,9 @@ TEST(ExprTest, BinaryExpr)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), -8);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), -8);
 }
 
 TEST(ExprTest, BinaryStringString)
@@ -49,9 +49,9 @@ TEST(ExprTest, BinaryStringString)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<std::string>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<std::string>(interpreter.environment->get("x")), "hellothere");
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<std::string>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<std::string>(interpreter.env.get("x")), "hellothere");
 }
 
 TEST(ExprTest, BinaryIntString)
@@ -116,9 +116,9 @@ TEST(ExprTest, CondExpr)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<bool>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
 }
 
 TEST(ExprTest, CondExprIntInt)
@@ -138,9 +138,9 @@ TEST(ExprTest, CondExprIntInt)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<bool>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
 }
 
 TEST(ExprTest, CondExprFloatIntOverflow)
@@ -160,9 +160,9 @@ TEST(ExprTest, CondExprFloatIntOverflow)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<bool>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
 }
 
 TEST(ExprTest, CondExprIntFloatOverflow)
@@ -182,9 +182,9 @@ TEST(ExprTest, CondExprIntFloatOverflow)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<bool>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
 }
 
 TEST(ExprTest, CondExprIntFloat)
@@ -204,9 +204,9 @@ TEST(ExprTest, CondExprIntFloat)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<bool>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<bool>(interpreter.environment->get("x")), true);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<bool>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
 }
 
 TEST(ExprTest, CondExprBoolString)
@@ -257,9 +257,9 @@ TEST(ExprTest, IdentifierInExpr)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 55);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 55);
 }
 
 TEST(ExprTest, BinaryDivideByZero)
@@ -298,9 +298,9 @@ TEST(ExprTest, BinaryModulus)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 4);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 4);
 }
 
 TEST(ExprTest, BinaryModulusFail)
@@ -339,7 +339,7 @@ TEST(ExprTest, AssignModulus)
     Interpreter interpreter;
     interpreter.evaluate(&ast);
 
-    ASSERT_TRUE(interpreter.environment->contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.environment->get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.environment->get("x")), 1);
+    ASSERT_TRUE(interpreter.env.contains("x"));
+    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 1);
 }

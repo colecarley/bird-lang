@@ -10,60 +10,99 @@
  * A table with key value pairs of identifiers and their respective values
  */
 template <typename T>
-class SymbolTable
+class Environment
 {
-    std::map<std::string, T> vars;
-    std::shared_ptr<SymbolTable> enclosing;
 
 public:
-    void insert(std::string identifier, T value)
+    std::vector<std::map<std::string, T>> envs;
+
+    void push_env()
     {
-        this->vars[identifier] = std::move(value);
+        envs.push_back(std::map<std::string, T>());
     }
 
-    T get(std::string identifier)
+    void pop_env()
     {
-        if (this->contains(identifier))
+        envs.pop_back();
+    }
+
+    bool current_contains(std::string identifier)
+    {
+        if (envs.empty())
         {
-            return this->vars[identifier];
+            return false;
         }
-        else
-        {
-            if (this->enclosing.get() == nullptr)
-            {
-                throw BirdException("undefined identifier in symbol table: " + identifier);
-            }
-            return this->enclosing->get(identifier);
-        }
-    }
 
-    std::shared_ptr<SymbolTable> get_enclosing() const
-    {
-        return this->enclosing;
-    }
-
-    void set_enclosing(std::shared_ptr<SymbolTable> enclosing)
-    {
-        this->enclosing = enclosing;
+        return envs.back().find(identifier) != envs.back().end();
     }
 
     bool contains(std::string identifier)
     {
-        return vars.find(identifier) != vars.end();
+        if (envs.empty())
+        {
+            return false;
+        }
+
+        for (auto it = envs.rbegin(); it != envs.rend(); it++)
+        {
+            if ((*it).find(identifier) != (*it).end())
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    bool is_accessible(std::string identifier)
+    void declare(std::string identifier, T value)
     {
-        if (this->contains(identifier))
+        if (envs.empty())
         {
-            return true;
+            throw BirdException("no environment to declare variable " + identifier + " into");
         }
-        
-        if (this->enclosing)
+
+        if (current_contains(identifier))
         {
-            return this->enclosing->is_accessible(identifier);
+            throw BirdException("variable " + identifier + " already declared in current environment");
         }
-        
-        return false;
+
+        envs.back().insert({identifier, value});
+    }
+
+    void set(std::string identifier, T value)
+    {
+        if (envs.empty())
+        {
+            throw BirdException("no environment to set variable in");
+        }
+
+        for (auto it = envs.rbegin(); it != envs.rend(); it++)
+        {
+            if ((*it).find(identifier) != (*it).end())
+            {
+                (*it)[identifier] = value;
+                return;
+            }
+        }
+
+        throw BirdException("undefined identifier in environment: " + identifier);
+    }
+
+    T get(std::string identifier)
+    {
+        if (envs.empty())
+        {
+            throw BirdException("no environment to get variable from");
+        }
+
+        for (auto it = envs.rbegin(); it != envs.rend(); it++)
+        {
+            if ((*it).find(identifier) != (*it).end())
+            {
+                return (*it)[identifier];
+            }
+        }
+
+        throw BirdException("undefined identifier in environment: " + identifier);
     }
 };
