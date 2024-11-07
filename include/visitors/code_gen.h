@@ -57,8 +57,8 @@
  */
 class CodeGen : public Visitor
 {
-    std::stack<llvm::Value *> stack;
     Environment<llvm::AllocaInst *> env;
+    Stack<llvm::Value *> stack;
     std::map<std::string, llvm::FunctionCallee> std_lib;
 
     llvm::LLVMContext context;
@@ -75,8 +75,7 @@ public:
     {
         while (!this->stack.empty())
         {
-            auto val = this->stack.top();
-            this->stack.pop();
+            auto val = this->stack.pop();
             free(val);
         }
     }
@@ -91,6 +90,7 @@ public:
     {
         // Declare the printf function (external function)
         // How can we do this better?
+
         llvm::FunctionType *printfType = llvm::FunctionType::get(this->builder.getInt32Ty(), this->builder.getPtrTy(), true);
         llvm::FunctionCallee printfFunc = this->module->getOrInsertFunction("printf", printfType);
         this->std_lib["print"] = printfFunc;
@@ -285,8 +285,7 @@ public:
     {
         decl_stmt->value->accept(this);
 
-        llvm::Value *initializer_value = this->stack.top();
-        this->stack.pop();
+        llvm::Value *initializer_value = this->stack.pop();
 
         llvm::Function *function = this->builder.GetInsertBlock()->getParent();
 
@@ -302,8 +301,7 @@ public:
         auto lhs_val = this->builder.CreateLoad(lhs->getAllocatedType(), lhs, "loadtmp");
 
         assign_expr->value->accept(this);
-        auto rhs_val = this->stack.top();
-        this->stack.pop();
+        auto rhs_val = this->stack.pop();
 
         bool float_flag = (lhs_val->getType()->isDoubleTy() || rhs_val->getType()->isDoubleTy());
 
@@ -381,8 +379,7 @@ public:
         std::vector<llvm::Value *> results;
         for (int i = 0; i < print_stmt->args.size(); i++)
         {
-            results.push_back(this->stack.top());
-            this->stack.pop();
+            results.push_back(this->stack.pop());
         }
 
         for (int i = 0; i < results.size(); i++)
@@ -431,8 +428,7 @@ public:
         this->builder.SetInsertPoint(condition_block);
 
         while_stmt->condition->accept(this);
-        auto condition = this->stack.top();
-        this->stack.pop();
+        auto condition = this->stack.pop();
 
         this->builder.CreateCondBr(condition, stmt_block, done_block);
 
@@ -479,7 +475,7 @@ public:
         if (for_stmt->condition.has_value())
         {
             for_stmt->condition.value()->accept(this);
-            auto result = this->stack.top();
+            auto result = this->stack.pop();
 
             this->builder.CreateCondBr(result, body_block, done_block);
         }
@@ -513,11 +509,9 @@ public:
         binary->left->accept(this);
         binary->right->accept(this);
 
-        auto right = this->stack.top();
-        this->stack.pop();
+        auto right = this->stack.pop();
 
-        auto left = this->stack.top();
-        this->stack.pop();
+        auto left = this->stack.pop();
 
         bool float_flag = left->getType()->isDoubleTy();
 
@@ -625,8 +619,7 @@ public:
     void visit_unary(Unary *unary)
     {
         unary->expr->accept(this);
-        auto expr = this->stack.top();
-        this->stack.pop();
+        auto expr = this->stack.pop();
 
         auto llvm_value = this->builder.CreateNeg(expr);
         this->stack.push(llvm_value);
@@ -697,8 +690,7 @@ public:
     {
         ternary->condition->accept(this);
         // condition contains LLVM IR i1 bool
-        auto condition = this->stack.top();
-        this->stack.pop();
+        auto condition = this->stack.pop();
 
         // control flow requires parent
         auto parent_fn = this->builder.GetInsertBlock()->getParent();
@@ -713,8 +705,7 @@ public:
 
         this->builder.SetInsertPoint(true_block); // set insert point to true block for true expression instuctions
         ternary->true_expr->accept(this);
-        auto true_result = this->stack.top();
-        this->stack.pop();
+        auto true_result = this->stack.pop();
 
         this->builder.CreateBr(done_block); // create branch to merge control flow
 
@@ -723,8 +714,7 @@ public:
 
         this->builder.SetInsertPoint(false_block); // set insert point for false block for false expression instructions
         ternary->false_expr->accept(this);
-        auto false_result = this->stack.top();
-        this->stack.pop();
+        auto false_result = this->stack.pop();
 
         this->builder.CreateBr(done_block);
 
@@ -749,8 +739,7 @@ public:
     {
         const_stmt->value->accept(this);
 
-        llvm::Value *initializer_value = this->stack.top();
-        this->stack.pop();
+        llvm::Value *initializer_value = this->stack.pop();
 
         llvm::Function *function = this->builder.GetInsertBlock()->getParent();
 
@@ -811,8 +800,7 @@ public:
     {
         if_stmt->condition->accept(this);
 
-        auto condition = this->stack.top();
-        this->stack.pop();
+        auto condition = this->stack.pop();
 
         auto parent_fn = this->builder.GetInsertBlock()->getParent();
         if (if_stmt->else_branch.has_value())
@@ -860,8 +848,7 @@ public:
         for (auto &arg : call->args)
         {
             arg->accept(this);
-            arguments.push_back(stack.top());
-            stack.pop();
+            arguments.push_back(stack.pop());
         }
 
         if (function->getReturnType()->isVoidTy())
@@ -875,7 +862,7 @@ public:
         if (return_stmt->expr.has_value())
         {
             return_stmt->expr->get()->accept(this);
-            this->builder.CreateRet(this->stack.top());
+            this->builder.CreateRet(this->stack.pop());
         }
         else
         {
