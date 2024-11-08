@@ -67,7 +67,10 @@ public:
                 locals.size(),
                 body);
 
-        BinaryenAddFunctionExport(mod, "main", "main");
+        BinaryenAddFunctionExport(
+            this->mod,
+            "main",
+            "main");
 
         return mainFunction;
     }
@@ -140,7 +143,7 @@ public:
             }
         }
 
-        create_entry_point(); // i think this is in the wrong place, or maybe the issue is w create_entry_point()
+        create_entry_point();
 
         BinaryenModulePrint(this->mod);
 
@@ -243,7 +246,119 @@ public:
 
     void visit_binary(Binary *binary)
     {
-        // throw BirdException("Implement visit_binary");
+        binary->left->accept(this);
+        binary->right->accept(this);
+
+        auto right = this->stack.pop();
+        auto left = this->stack.pop();
+
+        bool float_flag = (BinaryenExpressionGetType(left) == BinaryenTypeFloat64() ||
+                           BinaryenExpressionGetType(right) == BinaryenTypeFloat64());
+
+        if (float_flag && BinaryenExpressionGetType(left) == BinaryenTypeInt32())
+        {
+            left =
+                BinaryenUnary(
+                    mod,
+                    BinaryenConvertSInt32ToFloat64(),
+                    left);
+        }
+        else if (float_flag && BinaryenExpressionGetType(right) == BinaryenTypeInt32())
+        {
+            right =
+                BinaryenUnary(
+                    mod,
+                    BinaryenConvertSInt32ToFloat64(),
+                    right);
+        }
+
+        switch (binary->op.token_type)
+        {
+        case Token::Type::PLUS:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenAddFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenAddInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::MINUS:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenSubFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenSubInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::SLASH:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenDivFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenDivSInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::STAR:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenMulFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenMulInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::GREATER:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenGtFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenGtSInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::GREATER_EQUAL:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenGeFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenGeSInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::LESS:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenLtFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenLtSInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::LESS_EQUAL:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenLeFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenLeSInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::EQUAL_EQUAL:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenEqFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenEqInt32(), left, right));
+
+            break;
+        }
+        case Token::Type::BANG_EQUAL:
+        {
+            (float_flag)
+                ? this->stack.push(BinaryenBinary(mod, BinaryenNeFloat64(), left, right))
+                : this->stack.push(BinaryenBinary(mod, BinaryenNeInt32(), left, right));
+
+            break;
+        }
+        default:
+        {
+            throw BirdException("undefined binary operator for code gen");
+        }
+        }
     }
 
     void visit_unary(Unary *unary)
