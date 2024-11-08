@@ -1,6 +1,7 @@
 #pragma once
 
 #include "binaryen-c.h"
+
 class CodeGen : public Visitor
 {
     std::shared_ptr<Environment<BinaryenExpressionRef>> environment;
@@ -27,10 +28,8 @@ public:
     void init_std_lib()
     {
         // format string and pointer as param for printf
-        BinaryenType params = BinaryenTypeCreate(
-            (BinaryenType[]){BinaryenTypeInt32(),
-                             BinaryenTypeInt32()},
-            2);
+        BinaryenType params =
+            BinaryenTypeCreate((BinaryenType[]){BinaryenTypeInt32(), BinaryenTypeInt32()}, 2);
 
         BinaryenType results = BinaryenTypeNone();
 
@@ -50,21 +49,23 @@ public:
         BinaryenType params = BinaryenTypeNone();
         BinaryenType results = BinaryenTypeNone();
 
-        BinaryenExpressionRef body = BinaryenBlock(
-            this->mod,
-            nullptr,
-            fn_body.data(),
-            fn_body.size(),
-            BinaryenTypeNone());
+        BinaryenExpressionRef body =
+            BinaryenBlock(
+                this->mod,
+                nullptr,
+                fn_body.data(),
+                fn_body.size(),
+                BinaryenTypeNone());
 
-        BinaryenFunctionRef mainFunction = BinaryenAddFunction(
-            this->mod,
-            "main",
-            params,
-            results,
-            locals.data(),
-            locals.size(),
-            body);
+        BinaryenFunctionRef mainFunction =
+            BinaryenAddFunction(
+                this->mod,
+                "main",
+                params,
+                results,
+                locals.data(),
+                locals.size(),
+                body);
 
         BinaryenAddFunctionExport(mod, "main", "main");
 
@@ -213,8 +214,6 @@ public:
         environment->declare(decl_stmt->identifier.lexeme, BinaryenLocalGet(this->mod, index, type));
 
         fn_body.push_back(set_local);
-
-        BinaryenModulePrint(this->mod);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
