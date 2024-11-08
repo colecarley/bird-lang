@@ -32,7 +32,7 @@ public:
                              BinaryenTypeInt32()},
             2);
 
-        BinaryenType results = BinaryenTypeInt32();
+        BinaryenType results = BinaryenTypeNone();
 
         BinaryenAddFunctionImport(
             this->mod,
