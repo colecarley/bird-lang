@@ -2,23 +2,23 @@
 
 #include "binaryen-c.h"
 
-void test()
-{
-    BinaryenModuleRef mod = BinaryenModuleCreate();
+// void test()
+// {
+//     BinaryenModuleRef mod = BinaryenModuleCreate();
 
-    BinaryenType ii[2] = {BinaryenTypeInt32(), BinaryenTypeInt32()};
-    BinaryenType params = BinaryenTypeCreate(ii, 2);
-    BinaryenType results = BinaryenTypeInt32();
+//     BinaryenType ii[2] = {BinaryenTypeInt32(), BinaryenTypeInt32()};
+//     BinaryenType params = BinaryenTypeCreate(ii, 2);
+//     BinaryenType results = BinaryenTypeInt32();
 
-    BinaryenExpressionRef x = BinaryenLocalGet(mod, 0, BinaryenTypeInt32());
-    BinaryenExpressionRef y = BinaryenLocalGet(mod, 1, BinaryenTypeInt32());
-    BinaryenExpressionRef add = BinaryenBinary(mod, BinaryenAddInt32(), x, y);
+//     BinaryenExpressionRef x = BinaryenLocalGet(mod, 0, BinaryenTypeInt32());
+//     BinaryenExpressionRef y = BinaryenLocalGet(mod, 1, BinaryenTypeInt32());
+//     BinaryenExpressionRef add = BinaryenBinary(mod, BinaryenAddInt32(), x, y);
 
-    BinaryenFunctionRef adder = BinaryenAddFunction(mod, "adder", params, results, NULL, 0, add);
-    BinaryenAddFunctionExport(mod, "adder", "adder");
+//     BinaryenFunctionRef adder = BinaryenAddFunction(mod, "adder", params, results, NULL, 0, add);
+//     BinaryenAddFunctionExport(mod, "adder", "adder");
 
-    BinaryenModulePrint(mod);
-}
+//     BinaryenModulePrint(mod);
+// }
 
 /*
  * NOTE:
@@ -57,6 +57,113 @@ void test()
 // #include "../exceptions/break_exception.h"
 // #include "../exceptions/continue_exception.h"
 // #include "../sym_table.h"
+
+class CodeGen : public Visitor
+{
+    Stack<BinaryenExpressionRef> stack;
+    std::shared_ptr<Environment<BinaryenExpressionRef>> environment;
+    BinaryenModuleRef mod;
+
+public:
+    ~CodeGen()
+    {
+        while (!this->stack.empty())
+        {
+            auto val = this->stack.pop();
+            free(val);
+        }
+
+        BinaryenModuleDispose(this->mod);
+    }
+
+    CodeGen() : mod(BinaryenModuleCreate())
+    {
+        this->environment = std::make_shared<Environment<BinaryenExpressionRef>>(Environment<BinaryenExpressionRef>());
+    }
+
+    BinaryenFunctionRef create_entry_point()
+    {
+        BinaryenType params = BinaryenTypeNone();
+        BinaryenType results = BinaryenTypeNone();
+        BinaryenExpressionRef body = BinaryenBlock(this->mod, nullptr, nullptr, 0, BinaryenTypeNone());
+
+        BinaryenFunctionRef mainFunction = BinaryenAddFunction(this->mod, "main", params, results, nullptr, 0, body);
+
+        BinaryenAddFunctionExport(mod, "main", "entry");
+
+        return mainFunction;
+    }
+
+    void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
+    {
+        auto entry = this->create_entry_point();
+
+        for (auto &stmt : *stmts)
+        {
+            if (auto func_stmt = dynamic_cast<Func *>(stmt.get()))
+            {
+                func_stmt->accept(this);
+            }
+
+            if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
+            {
+                decl_stmt->accept(this);
+            }
+
+            if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
+            {
+                print_stmt->accept(this);
+            }
+
+            if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
+            {
+                if_stmt->accept(this);
+            }
+
+            if (auto block = dynamic_cast<Block *>(stmt.get()))
+            {
+                block->accept(this);
+            }
+
+            if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
+            {
+                expr_stmt->accept(this);
+            }
+
+            if (auto ternary_stmt = dynamic_cast<Ternary *>(stmt.get()))
+            {
+                ternary_stmt->accept(this);
+            }
+
+            if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
+            {
+                while_stmt->accept(this);
+            }
+
+            if (auto for_stmt = dynamic_cast<ForStmt *>(stmt.get()))
+            {
+                for_stmt->accept(this);
+            }
+
+            if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
+            {
+                return_stmt->accept(this);
+            }
+
+            if (auto break_stmt = dynamic_cast<BreakStmt *>(stmt.get()))
+            {
+                break_stmt->accept(this);
+            }
+
+            if (auto continue_stmt = dynamic_cast<ContinueStmt *>(stmt.get()))
+            {
+                continue_stmt->accept(this);
+            }
+        }
+
+        BinaryenModulePrint(this->mod);
+    }
+};
 
 // #include "llvm/ADT/APFloat.h"
 // #include "llvm/ADT/STLExtras.h"
