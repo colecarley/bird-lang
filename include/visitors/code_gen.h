@@ -22,7 +22,8 @@ public:
 
     CodeGen() : mod(BinaryenModuleCreate()), local_index(0)
     {
-        this->environment = std::make_shared<Environment<BinaryenExpressionRef>>(Environment<BinaryenExpressionRef>());
+        this->environment =
+            std::make_shared<Environment<BinaryenExpressionRef>>();
     }
 
     void init_std_lib()
@@ -147,11 +148,12 @@ public:
 
         BinaryenModulePrint(this->mod);
 
-        BinaryenModuleAllocateAndWriteResult result = BinaryenModuleAllocateAndWrite(this->mod, nullptr);
+        BinaryenModuleAllocateAndWriteResult result =
+            BinaryenModuleAllocateAndWrite(this->mod, nullptr);
 
         if (!result.binary || result.binaryBytes == 0)
         {
-            std::cerr << "failed to write" << std::endl;
+            std::cerr << "failed to serialize" << std::endl;
             return;
         }
 
