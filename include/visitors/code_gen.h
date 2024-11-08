@@ -26,38 +26,6 @@
  *   We will be using Binaryen instead, but this code is still useful for reference.
  *   Once the Binaryen implementation is complete, this code will be removed.
  */
-
-// #include <memory>
-// #include <vector>
-// #include <map>
-// #include <string>
-// #include "../ast_node/stmt/stmt.h"
-// #include "../ast_node/expr/expr.h"
-
-// #include "../ast_node/expr/binary.h"
-// #include "../ast_node/expr/unary.h"
-// #include "../ast_node/expr/primary.h"
-// #include "../ast_node/expr/ternary.h"
-// #include "../ast_node/expr/call.h"
-
-// #include "../ast_node/stmt/decl_stmt.h"
-// #include "../ast_node/expr/assign_expr.h"
-// #include "../ast_node/stmt/expr_stmt.h"
-// #include "../ast_node/stmt/print_stmt.h"
-// #include "../ast_node/stmt/while_stmt.h"
-// #include "../ast_node/stmt/for_stmt.h"
-// #include "../ast_node/stmt/return_stmt.h"
-// #include "../ast_node/stmt/break_stmt.h"
-// #include "../ast_node/stmt/continue_stmt.h"
-// #include "../ast_node/stmt/if_stmt.h"
-// #include "../ast_node/stmt/block.h"
-
-// #include "../exceptions/bird_exception.h"
-// #include "../exceptions/return_exception.h"
-// #include "../exceptions/break_exception.h"
-// #include "../exceptions/continue_exception.h"
-// #include "../sym_table.h"
-
 class CodeGen : public Visitor
 {
     Stack<BinaryenExpressionRef> stack;
@@ -158,10 +126,21 @@ public:
         BinaryenModulePrint(this->mod);
     }
 
-    // BinaryenType from_bird_type(Token token)
-    // {
-
-    // }
+    BinaryenType from_bird_type(Token token)
+    {
+        if (token.lexeme == "bool")
+            return BinaryenTypeInt32(); // no i1?
+        else if (token.lexeme == "int")
+            return BinaryenTypeInt32();
+        else if (token.lexeme == "float")
+            return BinaryenTypeFloat64();
+        else if (token.lexeme == "void")
+            return BinaryenTypeNone();
+        else if (token.lexeme == "str")
+            return BinaryenTypeInt32(); // ptr
+        else
+            throw BirdException("invalid type");
+    }
 
     void visit_block(Block *block)
     {
@@ -253,6 +232,37 @@ public:
         // throw BirdException("Implement Continue Statement");
     }
 };
+
+// #include <memory>
+// #include <vector>
+// #include <map>
+// #include <string>
+// #include "../ast_node/stmt/stmt.h"
+// #include "../ast_node/expr/expr.h"
+
+// #include "../ast_node/expr/binary.h"
+// #include "../ast_node/expr/unary.h"
+// #include "../ast_node/expr/primary.h"
+// #include "../ast_node/expr/ternary.h"
+// #include "../ast_node/expr/call.h"
+
+// #include "../ast_node/stmt/decl_stmt.h"
+// #include "../ast_node/expr/assign_expr.h"
+// #include "../ast_node/stmt/expr_stmt.h"
+// #include "../ast_node/stmt/print_stmt.h"
+// #include "../ast_node/stmt/while_stmt.h"
+// #include "../ast_node/stmt/for_stmt.h"
+// #include "../ast_node/stmt/return_stmt.h"
+// #include "../ast_node/stmt/break_stmt.h"
+// #include "../ast_node/stmt/continue_stmt.h"
+// #include "../ast_node/stmt/if_stmt.h"
+// #include "../ast_node/stmt/block.h"
+
+// #include "../exceptions/bird_exception.h"
+// #include "../exceptions/return_exception.h"
+// #include "../exceptions/break_exception.h"
+// #include "../exceptions/continue_exception.h"
+// #include "../sym_table.h"
 
 // #include "llvm/ADT/APFloat.h"
 // #include "llvm/ADT/STLExtras.h"
