@@ -67,12 +67,6 @@ class CodeGen : public Visitor
 public:
     ~CodeGen()
     {
-        while (!this->stack.empty())
-        {
-            auto val = this->stack.pop();
-            free(val);
-        }
-
         BinaryenModuleDispose(this->mod);
     }
 
@@ -89,7 +83,7 @@ public:
 
         BinaryenFunctionRef mainFunction = BinaryenAddFunction(this->mod, "main", params, results, nullptr, 0, body);
 
-        BinaryenAddFunctionExport(mod, "main", "entry");
+        BinaryenAddFunctionExport(mod, "main", "main");
 
         return mainFunction;
     }
@@ -162,6 +156,101 @@ public:
         }
 
         BinaryenModulePrint(this->mod);
+    }
+
+    // BinaryenType from_bird_type(Token token)
+    // {
+
+    // }
+
+    void visit_block(Block *block)
+    {
+        // throw BirdException("Implement visit_block");
+    }
+
+    void visit_decl_stmt(DeclStmt *decl_stmt)
+    {
+        // throw BirdException("Implement Decl Statement");
+    }
+
+    void visit_assign_expr(AssignExpr *assign_expr)
+    {
+        // throw BirdException("Implement Assign Expression");
+    }
+
+    void visit_print_stmt(PrintStmt *print_stmt)
+    {
+        // throw BirdException("Implement Print Statement");
+    }
+
+    void visit_expr_stmt(ExprStmt *expr_stmt)
+    {
+        // throw BirdException("Implement Expr Statement");
+    }
+
+    void visit_while_stmt(WhileStmt *while_stmt)
+    {
+        // throw BirdException("Implement While Statement");
+    }
+
+    void visit_for_stmt(ForStmt *for_stmt)
+    {
+        // throw BirdException("Implement For Statement");
+    }
+
+    void visit_binary(Binary *binary)
+    {
+        // throw BirdException("Implement visit_binary");
+    }
+
+    void visit_unary(Unary *unary)
+    {
+        // throw BirdException("Implement visit_unary");
+    }
+
+    void visit_primary(Primary *primary)
+    {
+        // throw BirdException("Implement visit_primary");
+    }
+
+    void visit_ternary(Ternary *ternary)
+    {
+        // throw BirdException("Implement Ternart Statement");
+    }
+
+    void visit_const_stmt(ConstStmt *const_stmt)
+    {
+        // throw BirdException("Implement Const Statement");
+    }
+
+    void visit_func(Func *func)
+    {
+        // throw BirdException("Implement visit_func");
+    }
+
+    void visit_if_stmt(IfStmt *if_stmt)
+    {
+        // throw BirdException("Implement If Statement");
+    }
+
+    void visit_call(Call *call)
+    {
+        // throw BirdException("Implement visit_call");
+    }
+
+    void visit_return_stmt(ReturnStmt *return_stmt)
+    {
+        // throw BirdException("Implement Return Statement");
+    }
+
+    void visit_break_stmt(BreakStmt *break_stmt)
+    {
+        // throw BirdException("Implement Break Statement");
+    }
+
+    void visit_continue_stmt(ContinueStmt *continue_stmt)
+    {
+        // throw BirdException("Implement Continue Statement");
     }
 };
 
