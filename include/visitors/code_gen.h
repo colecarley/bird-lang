@@ -1,36 +1,17 @@
 #pragma once
 
 #include "binaryen-c.h"
-
-// void test()
-// {
-//     BinaryenModuleRef mod = BinaryenModuleCreate();
-
-//     BinaryenType ii[2] = {BinaryenTypeInt32(), BinaryenTypeInt32()};
-//     BinaryenType params = BinaryenTypeCreate(ii, 2);
-//     BinaryenType results = BinaryenTypeInt32();
-
-//     BinaryenExpressionRef x = BinaryenLocalGet(mod, 0, BinaryenTypeInt32());
-//     BinaryenExpressionRef y = BinaryenLocalGet(mod, 1, BinaryenTypeInt32());
-//     BinaryenExpressionRef add = BinaryenBinary(mod, BinaryenAddInt32(), x, y);
-
-//     BinaryenFunctionRef adder = BinaryenAddFunction(mod, "adder", params, results, NULL, 0, add);
-//     BinaryenAddFunctionExport(mod, "adder", "adder");
-
-//     BinaryenModulePrint(mod);
-// }
-
-/*
- * NOTE:
- *   This has been commented out because LLVM was removed as a dependency from the project.
- *   We will be using Binaryen instead, but this code is still useful for reference.
- *   Once the Binaryen implementation is complete, this code will be removed.
- */
 class CodeGen : public Visitor
 {
-    Stack<BinaryenExpressionRef> stack;
     std::shared_ptr<Environment<BinaryenExpressionRef>> environment;
+    std::map<std::string, std::string> std_lib;
+    Stack<BinaryenExpressionRef> stack;
+
+    std::vector<BinaryenExpressionRef> fn_body;
+    std::vector<BinaryenType> locals;
+
     BinaryenModuleRef mod;
+    int local_index;
 
 public:
     ~CodeGen()
@@ -38,18 +19,52 @@ public:
         BinaryenModuleDispose(this->mod);
     }
 
-    CodeGen() : mod(BinaryenModuleCreate())
+    CodeGen() : mod(BinaryenModuleCreate()), local_index(0)
     {
         this->environment = std::make_shared<Environment<BinaryenExpressionRef>>(Environment<BinaryenExpressionRef>());
+    }
+
+    void init_std_lib()
+    {
+        // format string and pointer as param for printf
+        BinaryenType params = BinaryenTypeCreate(
+            (BinaryenType[]){BinaryenTypeInt32(),
+                             BinaryenTypeInt32()},
+            2);
+
+        BinaryenType results = BinaryenTypeInt32();
+
+        BinaryenAddFunctionImport(
+            this->mod,
+            "printf",
+            "env",
+            "printf",
+            params,
+            results);
+
+        this->std_lib["print"] = "printf";
     }
 
     BinaryenFunctionRef create_entry_point()
     {
         BinaryenType params = BinaryenTypeNone();
         BinaryenType results = BinaryenTypeNone();
-        BinaryenExpressionRef body = BinaryenBlock(this->mod, nullptr, nullptr, 0, BinaryenTypeNone());
 
-        BinaryenFunctionRef mainFunction = BinaryenAddFunction(this->mod, "main", params, results, nullptr, 0, body);
+        BinaryenExpressionRef body = BinaryenBlock(
+            this->mod,
+            nullptr,
+            fn_body.data(),
+            fn_body.size(),
+            BinaryenTypeNone());
+
+        BinaryenFunctionRef mainFunction = BinaryenAddFunction(
+            this->mod,
+            "main",
+            params,
+            results,
+            locals.data(),
+            locals.size(),
+            body);
 
         BinaryenAddFunctionExport(mod, "main", "main");
 
@@ -58,7 +73,8 @@ public:
 
     void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
-        auto entry = this->create_entry_point();
+        this->init_std_lib();
+        this->environment->push_env();
 
         for (auto &stmt : *stmts)
         {
@@ -123,7 +139,40 @@ public:
             }
         }
 
+        create_entry_point(); // i think this is in the wrong place, or maybe the issue is w create_entry_point()
+
         BinaryenModulePrint(this->mod);
+
+        BinaryenModuleAllocateAndWriteResult result = BinaryenModuleAllocateAndWrite(this->mod, nullptr);
+
+        if (!result.binary || result.binaryBytes == 0)
+        {
+            std::cerr << "failed to write" << std::endl;
+            return;
+        }
+
+        std::string filename = "output.wasm";
+        std::ofstream file(filename, std::ios::binary);
+        if (file.is_open())
+        {
+            file.write(static_cast<char *>(result.binary), result.binaryBytes);
+            file.close();
+            std::cout << "wasm module written to " << filename << std::endl;
+        }
+        else
+        {
+            std::cerr << "failed to open file" << filename << std::endl;
+        }
+
+        free(result.binary);
+
+        this->environment->pop_env();
+    }
+
+    int allocate_local()
+    {
+        int index = this->local_index++;
+        return index;
     }
 
     BinaryenType from_bird_type(Token token)
@@ -149,7 +198,23 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        // throw BirdException("Implement Decl Statement");
+        decl_stmt->value->accept(this);
+        BinaryenExpressionRef initializer_value = this->stack.pop();
+
+        BinaryenType type = decl_stmt->type_identifier.has_value()
+                                ? from_bird_type(decl_stmt->type_identifier.value())
+                                : BinaryenExpressionGetType(initializer_value);
+
+        int index = allocate_local(); // locals defined by index instead of name
+        locals.push_back(type);
+
+        BinaryenExpressionRef set_local = BinaryenLocalSet(this->mod, index, initializer_value);
+
+        environment->declare(decl_stmt->identifier.lexeme, BinaryenLocalGet(this->mod, index, type));
+
+        fn_body.push_back(set_local);
+
+        BinaryenModulePrint(this->mod);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
@@ -189,7 +254,49 @@ public:
 
     void visit_primary(Primary *primary)
     {
-        // throw BirdException("Implement visit_primary");
+        switch (primary->value.token_type)
+        {
+        case Token::Type::INT_LITERAL:
+        {
+            int value = std::stoi(primary->value.lexeme);
+            BinaryenExpressionRef int_literal = BinaryenConst(this->mod, BinaryenLiteralInt32(value));
+            this->stack.push(int_literal);
+            break;
+        }
+
+        case Token::Type::FLOAT_LITERAL:
+        {
+            double value = std::stod(primary->value.lexeme);
+            BinaryenExpressionRef float_literal = BinaryenConst(this->mod, BinaryenLiteralFloat64(value));
+            this->stack.push(float_literal);
+            break;
+        }
+
+        case Token::Type::BOOL_LITERAL:
+        {
+            BinaryenExpressionRef bool_literal = BinaryenConst(
+                this->mod,
+                primary->value.lexeme == "true"
+                    ? BinaryenLiteralInt32(1)
+                    : BinaryenLiteralInt32(0));
+
+            this->stack.push(bool_literal);
+            break;
+        }
+
+        case Token::Type::STR_LITERAL:
+        {
+            break;
+        }
+
+        case Token::Type::IDENTIFIER:
+        {
+            break;
+        }
+
+        default:
+            throw BirdException("undefined primary value: " + primary->value.lexeme);
+        }
     }
 
     void visit_ternary(Ternary *ternary)
