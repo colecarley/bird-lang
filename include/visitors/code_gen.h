@@ -363,9 +363,40 @@ public:
         }
     }
 
+    /*
+     * Binaryen doesnt support integer negation for some reason,
+     * only float32 and 64, so i guess the work around would be
+     * to subtract it from zero.
+     */
     void visit_unary(Unary *unary)
     {
-        // throw BirdException("Implement visit_unary");
+        unary->expr->accept(this);
+        auto expr = this->stack.pop();
+
+        BinaryenType expr_type = BinaryenExpressionGetType(expr);
+
+        if (expr_type == BinaryenTypeFloat32())
+        {
+            this->stack.push(BinaryenUnary(mod, BinaryenNegFloat32(), expr));
+        }
+        else if (expr_type == BinaryenTypeFloat64())
+        {
+            this->stack.push(BinaryenUnary(mod, BinaryenNegFloat64(), expr));
+        }
+        else if (expr_type == BinaryenTypeInt32() || expr_type == BinaryenTypeInt64())
+        {
+            BinaryenExpressionRef zero =
+                (expr_type == BinaryenTypeInt32())
+                    ? BinaryenConst(mod, BinaryenLiteralInt32(0))
+                    : BinaryenConst(mod, BinaryenLiteralInt64(0));
+
+            this->stack.push(
+                BinaryenBinary(
+                    mod,
+                    expr_type == BinaryenTypeInt32() ? BinaryenSubInt32() : BinaryenSubInt64(),
+                    zero,
+                    expr));
+        }
     }
 
     void visit_primary(Primary *primary)
@@ -407,6 +438,8 @@ public:
 
         case Token::Type::IDENTIFIER:
         {
+            BinaryenExpressionRef var = this->environment->get(primary->value.lexeme);
+            this->stack.push(var);
             break;
         }
 

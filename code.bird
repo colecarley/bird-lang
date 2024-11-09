@@ -178,3 +178,5 @@ print r;
 var x: int = 1;
 
 var y = 1 + 3 / 2;
+
+var z = -x;
