@@ -435,25 +435,18 @@ public:
 
         BinaryenType expr_type = BinaryenExpressionGetType(expr);
 
-        if (expr_type == BinaryenTypeFloat32())
-        {
-            this->stack.push(BinaryenUnary(mod, BinaryenNegFloat32(), expr));
-        }
-        else if (expr_type == BinaryenTypeFloat64())
+        if (expr_type == BinaryenTypeFloat64())
         {
             this->stack.push(BinaryenUnary(mod, BinaryenNegFloat64(), expr));
         }
-        else if (expr_type == BinaryenTypeInt32() || expr_type == BinaryenTypeInt64())
+        else if (expr_type == BinaryenTypeInt32())
         {
-            BinaryenExpressionRef zero =
-                (expr_type == BinaryenTypeInt32())
-                    ? BinaryenConst(mod, BinaryenLiteralInt32(0))
-                    : BinaryenConst(mod, BinaryenLiteralInt64(0));
+            BinaryenExpressionRef zero = BinaryenConst(mod, BinaryenLiteralInt32(0));
 
             this->stack.push(
                 BinaryenBinary(
                     mod,
-                    expr_type == BinaryenTypeInt32() ? BinaryenSubInt32() : BinaryenSubInt64(),
+                    BinaryenSubInt32(),
                     zero,
                     expr));
         }
