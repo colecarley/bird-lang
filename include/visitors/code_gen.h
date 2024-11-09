@@ -226,9 +226,69 @@ public:
         // throw BirdException("Implement Assign Expression");
     }
 
+    /*
+     * this doesnt work, not sure if i fully understand
+     * how to fill in the format strings. apparently there is no
+     * CreateGlobalString equivalent.
+     *
+     * INPUT:
+     * var x = 1;
+     * print x;
+     *
+     * OUTPUT:
+     * (module
+     *  (type $none_=>_none (func))
+     *  (type $i32_=>_none (func (param i32)))
+     *  (import "env" "printf" (func $printf (param i32)))
+     *  (export "main" (func $main))
+     *  (func $main
+     *   (local $0 i32)
+     *   (local.set $0
+     *    (i32.const 1)
+     *   )
+     *   (call $printf
+     *    (local.get $0)
+     *   )
+     *  )
+     * )
+     */
     void visit_print_stmt(PrintStmt *print_stmt)
     {
-        // throw BirdException("Implement Print Statement");
+        for (auto &arg : print_stmt->args)
+        {
+            arg->accept(this);
+        }
+
+        auto printfFunc = this->std_lib["print"];
+
+        std::vector<BinaryenExpressionRef> results;
+        for (int i = 0; i < print_stmt->args.size(); i++)
+        {
+            results.push_back(this->stack.pop());
+        }
+
+        std::vector<BinaryenExpressionRef> printf_args;
+        for (int i = 0; i < results.size(); ++i)
+        {
+            auto result = results[results.size() - 1];
+
+            if (BinaryenExpressionGetType(result) == BinaryenTypeInt32())
+            {
+                // auto formatString = ...;
+                // printf_args.push_back(BinaryenConst(this->mod, BinaryenLiteralInt32(formatString)));
+                printf_args.push_back(result);
+            }
+        }
+
+        BinaryenExpressionRef printfCall =
+            BinaryenCall(
+                this->mod,
+                printfFunc.c_str(),
+                printf_args.data(),
+                printf_args.size(),
+                BinaryenTypeNone());
+
+        this->fn_body.push_back(printfCall);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
