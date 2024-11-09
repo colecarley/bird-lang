@@ -8,7 +8,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread") # needed by binaryen
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
@@ -16,10 +16,8 @@ find_package(FLEX REQUIRED)
 BISON_TARGET(Parser ${PROJECT_SOURCE_DIR}/src/parser.y ${PROJECT_SOURCE_DIR}/src/parser2.cpp DEFINES_FILE ${PROJECT_SOURCE_DIR}/include/parser2.hpp)
 FLEX_TARGET(Lexer ${PROJECT_SOURCE_DIR}/src/lexer.l ${PROJECT_SOURCE_DIR}/src/lexer2.cpp)
 
-include_directories("/usr/include/")
-link_directories("/usr/lib/x86_64-linux-gnu/")
-
-add_definitions(-DGTEST_HAS_CXXABI_H_=0) # dont touch this
+include_directories("/usr/include/") # needed by binaryen, includes binaryen-c.h
+link_directories("/usr/lib/x86_64-linux-gnu/") # needed by binaryen, includes libbinaryen.so
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/tests)
@@ -27,6 +25,13 @@ include_directories(${PROJECT_SOURCE_DIR}/tests)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 add_executable(compiler main.cpp ${SOURCES} ${BISON_Parser_OUTPUTS} ${FLEX_Lexer_OUTPUTS})
+
+
+option(DEBUG "Build with debug flags" OFF)
+
+if (DEBUG)
+  target_compile_definitions(compiler PRIVATE DEBUG)
+endif()
 
 
 target_link_libraries(compiler binaryen)
