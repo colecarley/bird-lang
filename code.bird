@@ -5,7 +5,6 @@ fn add(x: int, y: int) -> int {
 }
 
 fn double(x: int) -> int {
-    print "hello";
     return x * 2;
 }
 

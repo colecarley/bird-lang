@@ -15,6 +15,8 @@ class CodeGen : public Visitor
     std::vector<BinaryenExpressionRef> current_function_body;
     std::string current_function_name;
 
+    BinaryenIndex next_free_byte = 0; // for memory allocation
+
     BinaryenModuleRef mod;
     int local_index;
 
@@ -345,6 +347,7 @@ public:
             }
         }
 
+        // TODO: this only takes one argument
         BinaryenExpressionRef printfCall =
             BinaryenCall(
                 this->mod,
@@ -553,12 +556,7 @@ public:
 
         case Token::Type::STR_LITERAL:
         {
-            BinaryenExpressionRef str_literal = BinaryenConst(
-                this->mod,
-                BinaryenLiteralInt32(0));
-
-            auto foo = BinaryenFeatureAll();
-
+            // TODO: figure out how to store strings
             break;
         }
 
