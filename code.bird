@@ -12,6 +12,14 @@ fn quadruple(x: int) -> int {
     return double(double(x));
 }
 
+fn print_if(input: bool) -> void {
+    if (input) {
+        print 1;
+    } else {
+        print 0;
+    }
+}
+
 print 1 + 1;
 
 
@@ -28,7 +36,7 @@ print x;
 x/= 2;
 print x;
 
-x %= 2;
+x %= 2; // this isn't working
 print x;
 
 x = 1;

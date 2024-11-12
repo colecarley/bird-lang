@@ -1,24 +1,20 @@
 #pragma once
-
 #include "binaryen-c.h"
 
 class CodeGen : public Visitor
 {
-    Environment<BinaryenIndex> environment;
+    Environment<BinaryenIndex> environment; // tracks the index of local variables
+    Stack<BinaryenExpressionRef> stack;     // for returning values
 
     std::map<std::string, std::string> std_lib;
-    Stack<BinaryenExpressionRef> stack;
 
+    // we need the function return types when calling functions
     std::unordered_map<std::string, BinaryenType> function_return_types;
+    // allows us to track the local variables of a function
     std::unordered_map<std::string, std::vector<BinaryenType>> function_locals;
-
-    std::vector<BinaryenExpressionRef> current_function_body;
-    std::string current_function_name;
-
-    BinaryenIndex next_free_byte = 0; // for memory allocation
+    std::string current_function_name; // for indexing into maps
 
     BinaryenModuleRef mod;
-    int local_index;
 
 public:
     ~CodeGen()
@@ -26,7 +22,7 @@ public:
         BinaryenModuleDispose(this->mod);
     }
 
-    CodeGen() : mod(BinaryenModuleCreate()), local_index(0)
+    CodeGen() : mod(BinaryenModuleCreate())
     {
         this->environment = Environment<BinaryenIndex>();
     }
@@ -42,44 +38,13 @@ public:
             BinaryenTypeNone());
     }
 
-    BinaryenFunctionRef create_entry_point()
-    {
-        // BinaryenType params = BinaryenTypeNone();
-        // BinaryenType results = BinaryenTypeNone();
-
-        // BinaryenExpressionRef body =
-        //     BinaryenBlock(
-        //         this->mod,
-        //         nullptr,
-        //         fn_body.data(),
-        //         fn_body.size(),
-        //         BinaryenTypeNone());
-
-        // BinaryenFunctionRef mainFunction =
-        //     BinaryenAddFunction(
-        //         this->mod,
-        //         "main",
-        //         params,
-        //         results,
-        //         locals.data(),
-        //         locals.size(),
-        //         nullptr);
-
-        // BinaryenAddFunctionExport(
-        //     this->mod,
-        //     "main",
-        //     "main");
-
-        // return mainFunction;
-    }
-
     void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
         this->init_std_lib();
         this->environment.push_env();
 
         this->current_function_name = "main";
-        this->current_function_body = std::vector<BinaryenExpressionRef>();
+        auto main_function_body = std::vector<BinaryenExpressionRef>();
         this->function_locals[this->current_function_name] = std::vector<BinaryenType>();
 
         for (auto &stmt : *stmts)
@@ -87,61 +52,84 @@ public:
             if (auto func_stmt = dynamic_cast<Func *>(stmt.get()))
             {
                 func_stmt->accept(this);
+                // no stack push here, automatically added
             }
 
             if (auto decl_stmt = dynamic_cast<DeclStmt *>(stmt.get()))
             {
                 decl_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
                 print_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto if_stmt = dynamic_cast<IfStmt *>(stmt.get()))
             {
                 if_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto block = dynamic_cast<Block *>(stmt.get()))
             {
                 block->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto expr_stmt = dynamic_cast<ExprStmt *>(stmt.get()))
             {
                 expr_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto ternary_stmt = dynamic_cast<Ternary *>(stmt.get()))
             {
                 ternary_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto while_stmt = dynamic_cast<WhileStmt *>(stmt.get()))
             {
                 while_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto for_stmt = dynamic_cast<ForStmt *>(stmt.get()))
             {
                 for_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto return_stmt = dynamic_cast<ReturnStmt *>(stmt.get()))
             {
                 return_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto break_stmt = dynamic_cast<BreakStmt *>(stmt.get()))
             {
                 break_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
 
             if (auto continue_stmt = dynamic_cast<ContinueStmt *>(stmt.get()))
             {
                 continue_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
             }
         }
 
@@ -152,8 +140,8 @@ public:
             BinaryenBlock(
                 this->mod,
                 nullptr,
-                this->current_function_body.data(),
-                this->current_function_body.size(),
+                main_function_body.data(),
+                main_function_body.size(),
                 BinaryenTypeNone());
 
         BinaryenFunctionRef mainFunction =
@@ -254,22 +242,13 @@ public:
                                 ? from_bird_type(decl_stmt->type_identifier.value())
                                 : BinaryenExpressionGetType(initializer_value);
 
-        // int index = allocate_local(); // locals defined by index instead of name
-        // locals.push_back(type);
-
-        // int index = this->function_locals[this->current_function_name]++;
         BinaryenIndex index = this->function_locals[this->current_function_name].size();
         this->function_locals[this->current_function_name].push_back(type);
 
         BinaryenExpressionRef set_local = BinaryenLocalSet(this->mod, index, initializer_value);
-
-        // BinaryenExpressionRef get_local = BinaryenLocalGet(this->mod, index, type);
-
         environment.declare(decl_stmt->identifier.lexeme, index);
 
-        // fn_body.push_back(set_local);
-
-        this->current_function_body.push_back(set_local);
+        this->stack.push(set_local);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
@@ -314,6 +293,7 @@ public:
         }
         case Token::Type::PLUS_EQUAL:
         {
+            // TODO: figure out string conatenation
             result = (float_flag)
                          ? BinaryenBinary(this->mod, BinaryenAddFloat64(), lhs_val, rhs_val)
                          : BinaryenBinary(this->mod, BinaryenAddInt32(), lhs_val, rhs_val);
@@ -362,7 +342,7 @@ public:
             index,
             result);
 
-        this->current_function_body.push_back(assign_stmt);
+        this->stack.push(assign_stmt);
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)
@@ -395,22 +375,21 @@ public:
                 console_log_args.size(),
                 BinaryenTypeNone());
 
-        this->current_function_body.push_back(consoleLogCall);
+        this->stack.push(consoleLogCall);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
     {
         expr_stmt->expr->accept(this);
+        // pop and push it back to the stack
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
-        // throw BirdException("Implement While Statement");
     }
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
-        // throw BirdException("Implement For Statement");
     }
 
     void visit_binary(Binary *binary)
@@ -636,7 +615,20 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        // throw BirdException("Implement Const Statement");
+        const_stmt->value->accept(this);
+        BinaryenExpressionRef initializer_value = this->stack.pop();
+
+        BinaryenType type = const_stmt->type_identifier.has_value()
+                                ? from_bird_type(const_stmt->type_identifier.value())
+                                : BinaryenExpressionGetType(initializer_value);
+
+        BinaryenIndex index = this->function_locals[this->current_function_name].size();
+        this->function_locals[this->current_function_name].push_back(type);
+
+        BinaryenExpressionRef set_local = BinaryenLocalSet(this->mod, index, initializer_value);
+        environment.declare(const_stmt->identifier.lexeme, index);
+
+        this->stack.push(set_local);
     }
 
     void visit_func(Func *func)
@@ -653,10 +645,9 @@ public:
         }
 
         auto old_function_name = this->current_function_name;
-        auto old_function_body = this->current_function_body;
 
         this->current_function_name = func_name;
-        this->current_function_body = std::vector<BinaryenExpressionRef>();
+        auto current_function_body = std::vector<BinaryenExpressionRef>();
         this->function_locals[func_name] = std::vector<BinaryenType>();
 
         std::vector<BinaryenType> param_types;
@@ -679,16 +670,35 @@ public:
         for (auto &param : func->param_list)
         {
             this->environment.declare(param.first.lexeme, index);
-            this->current_function_body.push_back(
+            current_function_body.push_back(
                 BinaryenLocalGet(
                     this->mod,
                     index++,
                     from_bird_type(param.second)));
         }
 
+        auto found_return = false;
         for (auto &stmt : dynamic_cast<Block *>(func->block.get())->stmts)
         {
-            stmt->accept(this);
+            try
+            {
+                stmt->accept(this);
+            }
+            catch (ReturnException _)
+            {
+                found_return = true;
+            }
+            auto result = this->stack.pop();
+
+            current_function_body.push_back(result);
+        }
+
+        if (!found_return)
+        {
+            current_function_body.push_back(
+                BinaryenReturn(
+                    this->mod,
+                    nullptr));
         }
 
         this->environment.pop_env();
@@ -696,8 +706,8 @@ public:
         BinaryenExpressionRef body = BinaryenBlock(
             this->mod,
             nullptr,
-            this->current_function_body.data(),
-            this->current_function_body.size(),
+            current_function_body.data(),
+            current_function_body.size(),
             BinaryenTypeNone());
 
         std::vector<BinaryenType> vars = std::vector<BinaryenType>(this->function_locals[func_name].begin() + param_types.size(), this->function_locals[func_name].end());
@@ -717,14 +727,40 @@ public:
             func_name.c_str());
 
         this->current_function_name = old_function_name;
-        this->current_function_body = old_function_body;
-
         this->function_locals.erase(func_name);
+
+        // no stack push here, automatically added
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
     {
-        // throw BirdException("Implement If Statement");
+        if_stmt->condition->accept(this);
+        auto condition = this->stack.pop();
+
+        if_stmt->then_branch->accept(this);
+        auto then_branch = this->stack.pop();
+
+        if (if_stmt->else_branch.has_value())
+        {
+            if_stmt->else_branch.value()->accept(this);
+            auto else_branch = this->stack.pop();
+
+            this->stack.push(
+                BinaryenIf(
+                    this->mod,
+                    condition,
+                    then_branch,
+                    else_branch));
+        }
+        else
+        {
+            this->stack.push(
+                BinaryenIf(
+                    this->mod,
+                    condition,
+                    then_branch,
+                    nullptr));
+        }
     }
 
     void visit_call(Call *call)
@@ -752,28 +788,28 @@ public:
         if (return_stmt->expr.has_value())
         {
             return_stmt->expr.value()->accept(this);
-            this->current_function_body.push_back(
+            this->stack.push(
                 BinaryenReturn(
                     this->mod,
                     this->stack.pop()));
         }
         else
         {
-            this->current_function_body.push_back(
+            this->stack.push(
                 BinaryenReturn(
                     this->mod,
                     nullptr));
         }
+
+        throw ReturnException();
     }
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
-        // throw BirdException("Implement Break Statement");
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
-        // throw BirdException("Implement Continue Statement");
     }
 };
 
