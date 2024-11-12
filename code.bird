@@ -15,3 +15,21 @@ fn quadruple(x: int) -> int {
 print 1 + 1;
 
 
+var x = 20;
+x += 2;
+print x;
+
+x -= 2;
+print x;
+
+x *= 2;
+print x;
+
+x/= 2;
+print x;
+
+x %= 2;
+print x;
+
+x = 1;
+print x;

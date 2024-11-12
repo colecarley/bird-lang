@@ -274,7 +274,95 @@ public:
 
     void visit_assign_expr(AssignExpr *assign_expr)
     {
-        // throw BirdException("Implement Assign Expression");
+        BinaryenIndex index = this->environment.get(assign_expr->identifier.lexeme);
+
+        auto lhs_val = BinaryenLocalGet(
+            this->mod,
+            index,
+            this->function_locals[this->current_function_name][index]);
+
+        assign_expr->value->accept(this);
+        auto rhs_val = this->stack.pop();
+
+        bool float_flag = (BinaryenExpressionGetType(lhs_val) == BinaryenTypeFloat64() ||
+                           BinaryenExpressionGetType(rhs_val) == BinaryenTypeFloat64());
+
+        if (float_flag && BinaryenExpressionGetType(lhs_val) == BinaryenTypeInt32())
+        {
+            rhs_val =
+                BinaryenUnary(
+                    mod,
+                    BinaryenTruncSatSFloat64ToInt32(),
+                    rhs_val);
+        }
+        else if (float_flag && BinaryenExpressionGetType(rhs_val) == BinaryenTypeInt32())
+        {
+            rhs_val =
+                BinaryenUnary(
+                    mod,
+                    BinaryenConvertSInt32ToFloat64(),
+                    rhs_val);
+        }
+
+        BinaryenExpressionRef result;
+        switch (assign_expr->assign_operator.token_type)
+        {
+        case Token::Type::EQUAL:
+        {
+            result = rhs_val;
+            break;
+        }
+        case Token::Type::PLUS_EQUAL:
+        {
+            result = (float_flag)
+                         ? BinaryenBinary(this->mod, BinaryenAddFloat64(), lhs_val, rhs_val)
+                         : BinaryenBinary(this->mod, BinaryenAddInt32(), lhs_val, rhs_val);
+
+            break;
+        }
+        case Token::Type::MINUS_EQUAL:
+        {
+            result = (float_flag)
+                         ? BinaryenBinary(this->mod, BinaryenSubFloat64(), lhs_val, rhs_val)
+                         : BinaryenBinary(this->mod, BinaryenSubInt32(), lhs_val, rhs_val);
+
+            break;
+        }
+        case Token::Type::STAR_EQUAL:
+        {
+            result = (float_flag)
+                         ? BinaryenBinary(this->mod, BinaryenMulFloat64(), lhs_val, rhs_val)
+                         : BinaryenBinary(this->mod, BinaryenMulInt32(), lhs_val, rhs_val);
+
+            break;
+        }
+        case Token::Type::SLASH_EQUAL:
+        {
+            result = (float_flag)
+                         ? BinaryenBinary(this->mod, BinaryenDivFloat64(), lhs_val, rhs_val)
+                         : BinaryenBinary(this->mod, BinaryenDivSInt32(), lhs_val, rhs_val);
+
+            break;
+        }
+        case Token::Type::PERCENT_EQUAL:
+        {
+            result = (float_flag)
+                         ? throw BirdException("Modular operation requires integer values")
+                         : BinaryenBinary(this->mod, BinaryenRemSInt32(), lhs_val, rhs_val);
+
+            break;
+        }
+        default:
+            throw BirdException("Unidentified assignment operator " + assign_expr->assign_operator.lexeme);
+            break;
+        }
+
+        BinaryenExpressionRef assign_stmt = BinaryenLocalSet(
+            this->mod,
+            index,
+            result);
+
+        this->current_function_body.push_back(assign_stmt);
     }
 
     void visit_print_stmt(PrintStmt *print_stmt)
