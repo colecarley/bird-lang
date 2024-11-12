@@ -4,12 +4,16 @@
 
 class CodeGen : public Visitor
 {
-    std::shared_ptr<Environment<BinaryenExpressionRef>> environment;
+    Environment<BinaryenIndex> environment;
+
     std::map<std::string, std::string> std_lib;
     Stack<BinaryenExpressionRef> stack;
 
-    std::vector<BinaryenExpressionRef> fn_body;
-    std::vector<BinaryenType> locals;
+    std::unordered_map<std::string, BinaryenType> function_return_types;
+    std::unordered_map<std::string, std::vector<BinaryenType>> function_locals;
+
+    std::vector<BinaryenExpressionRef> current_function_body;
+    std::string current_function_name;
 
     BinaryenModuleRef mod;
     int local_index;
@@ -22,64 +26,75 @@ public:
 
     CodeGen() : mod(BinaryenModuleCreate()), local_index(0)
     {
-        this->environment =
-            std::make_shared<Environment<BinaryenExpressionRef>>();
+        this->environment = Environment<BinaryenIndex>();
     }
 
     void init_std_lib()
     {
-        // format string and pointer as param for printf
-        BinaryenType params =
-            BinaryenTypeCreate((BinaryenType[]){BinaryenTypeInt32(), BinaryenTypeInt32()}, 2);
+        BinaryenAddFunctionImport(this->mod,
+                                  "print",
+                                  "env",
+                                  "print",
+                                  BinaryenTypeCreate((BinaryenType[]){BinaryenTypeInt32()}, 1),
+                                  BinaryenTypeNone());
 
-        BinaryenType results = BinaryenTypeNone();
+        // // format string and pointer as param for printf
+        // BinaryenType params =
+        //     BinaryenTypeCreate((BinaryenType[]){BinaryenTypeInt32(), BinaryenTypeInt32()}, 2);
 
-        BinaryenAddFunctionImport(
-            this->mod,
-            "printf",
-            "env",
-            "printf",
-            params,
-            results);
+        // BinaryenType results = BinaryenTypeNone();
 
-        this->std_lib["print"] = "printf";
+        // BinaryenAddFunctionImport(
+        //     this->mod,
+        //     "printf",
+        //     "env",
+        //     "printf",
+        //     params,
+        //     results);
+
+        // // TODO: we don't need to store the function name anymore
+        // this->std_lib["print"] = "printf";
     }
 
     BinaryenFunctionRef create_entry_point()
     {
-        BinaryenType params = BinaryenTypeNone();
-        BinaryenType results = BinaryenTypeNone();
+        // BinaryenType params = BinaryenTypeNone();
+        // BinaryenType results = BinaryenTypeNone();
 
-        BinaryenExpressionRef body =
-            BinaryenBlock(
-                this->mod,
-                nullptr,
-                fn_body.data(),
-                fn_body.size(),
-                BinaryenTypeNone());
+        // BinaryenExpressionRef body =
+        //     BinaryenBlock(
+        //         this->mod,
+        //         nullptr,
+        //         fn_body.data(),
+        //         fn_body.size(),
+        //         BinaryenTypeNone());
 
-        BinaryenFunctionRef mainFunction =
-            BinaryenAddFunction(
-                this->mod,
-                "main",
-                params,
-                results,
-                locals.data(),
-                locals.size(),
-                body);
+        // BinaryenFunctionRef mainFunction =
+        //     BinaryenAddFunction(
+        //         this->mod,
+        //         "main",
+        //         params,
+        //         results,
+        //         locals.data(),
+        //         locals.size(),
+        //         nullptr);
 
-        BinaryenAddFunctionExport(
-            this->mod,
-            "main",
-            "main");
+        // BinaryenAddFunctionExport(
+        //     this->mod,
+        //     "main",
+        //     "main");
 
-        return mainFunction;
+        // return mainFunction;
     }
 
     void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
         this->init_std_lib();
-        this->environment->push_env();
+        this->environment.push_env();
+
+        this->current_function_name = "main";
+        this->current_function_body = std::vector<BinaryenExpressionRef>();
+        this->function_locals[this->current_function_name] = std::vector<BinaryenType>();
 
         for (auto &stmt : *stmts)
         {
@@ -144,7 +159,31 @@ public:
             }
         }
 
-        create_entry_point();
+        BinaryenType params = BinaryenTypeNone();
+        BinaryenType results = BinaryenTypeNone();
+
+        BinaryenExpressionRef body =
+            BinaryenBlock(
+                this->mod,
+                nullptr,
+                this->current_function_body.data(),
+                this->current_function_body.size(),
+                BinaryenTypeNone());
+
+        BinaryenFunctionRef mainFunction =
+            BinaryenAddFunction(
+                this->mod,
+                "main",
+                params,
+                results,
+                this->function_locals["main"].data(),
+                this->function_locals["main"].size(),
+                body);
+
+        BinaryenAddFunctionExport(
+            this->mod,
+            "main",
+            "main");
 
         BinaryenModulePrint(this->mod);
 
@@ -172,19 +211,13 @@ public:
 
         free(result.binary);
 
-        this->environment->pop_env();
-    }
-
-    int allocate_local()
-    {
-        int index = this->local_index++;
-        return index;
+        this->environment.pop_env();
     }
 
     BinaryenType from_bird_type(Token token)
     {
         if (token.lexeme == "bool")
-            return BinaryenTypeInt32(); // no i1?
+            return BinaryenTypeInt32(); // bool is represented as i32
         else if (token.lexeme == "int")
             return BinaryenTypeInt32();
         else if (token.lexeme == "float")
@@ -192,14 +225,38 @@ public:
         else if (token.lexeme == "void")
             return BinaryenTypeNone();
         else if (token.lexeme == "str")
-            return BinaryenTypeInt32(); // ptr
+            return BinaryenTypeInt32();
         else
             throw BirdException("invalid type");
     }
 
     void visit_block(Block *block)
     {
-        // throw BirdException("Implement visit_block");
+        std::vector<BinaryenExpressionRef> children;
+        this->environment.push_env();
+
+        for (auto &stmt : block->stmts)
+        {
+            stmt->accept(this);
+            auto result = this->stack.pop();
+
+            if (result)
+            {
+                children.push_back(result);
+            }
+        }
+
+        this->environment.pop_env();
+
+        BinaryenExpressionRef block_expr =
+            BinaryenBlock(
+                this->mod,
+                nullptr,
+                children.data(),
+                children.size(),
+                BinaryenTypeNone());
+
+        this->stack.push(block_expr);
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
@@ -211,14 +268,22 @@ public:
                                 ? from_bird_type(decl_stmt->type_identifier.value())
                                 : BinaryenExpressionGetType(initializer_value);
 
-        int index = allocate_local(); // locals defined by index instead of name
-        locals.push_back(type);
+        // int index = allocate_local(); // locals defined by index instead of name
+        // locals.push_back(type);
+
+        // int index = this->function_locals[this->current_function_name]++;
+        BinaryenIndex index = this->function_locals[this->current_function_name].size();
+        this->function_locals[this->current_function_name].push_back(type);
 
         BinaryenExpressionRef set_local = BinaryenLocalSet(this->mod, index, initializer_value);
 
-        environment->declare(decl_stmt->identifier.lexeme, BinaryenLocalGet(this->mod, index, type));
+        // BinaryenExpressionRef get_local = BinaryenLocalGet(this->mod, index, type);
 
-        fn_body.push_back(set_local);
+        environment.declare(decl_stmt->identifier.lexeme, index);
+
+        // fn_body.push_back(set_local);
+
+        this->current_function_body.push_back(set_local);
     }
 
     void visit_assign_expr(AssignExpr *assign_expr)
@@ -259,7 +324,7 @@ public:
             arg->accept(this);
         }
 
-        auto printfFunc = this->std_lib["print"];
+        // auto printfFunc = this->std_lib["print"];
 
         std::vector<BinaryenExpressionRef> results;
         for (int i = 0; i < print_stmt->args.size(); i++)
@@ -283,17 +348,19 @@ public:
         BinaryenExpressionRef printfCall =
             BinaryenCall(
                 this->mod,
-                printfFunc.c_str(),
+                "print",
                 printf_args.data(),
                 printf_args.size(),
                 BinaryenTypeNone());
 
-        this->fn_body.push_back(printfCall);
+        // // this->fn_body.push_back(printfCall);
+
+        this->current_function_body.push_back(printfCall);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
     {
-        // throw BirdException("Implement Expr Statement");
+        expr_stmt->expr->accept(this);
     }
 
     void visit_while_stmt(WhileStmt *while_stmt)
@@ -486,13 +553,24 @@ public:
 
         case Token::Type::STR_LITERAL:
         {
+            BinaryenExpressionRef str_literal = BinaryenConst(
+                this->mod,
+                BinaryenLiteralInt32(0));
+
+            auto foo = BinaryenFeatureAll();
+
             break;
         }
 
         case Token::Type::IDENTIFIER:
         {
-            BinaryenExpressionRef var = this->environment->get(primary->value.lexeme);
-            this->stack.push(var);
+            BinaryenIndex index = this->environment.get(primary->value.lexeme);
+
+            this->stack.push(
+                BinaryenLocalGet(
+                    this->mod,
+                    index,
+                    this->function_locals[this->current_function_name][index]));
             break;
         }
 
@@ -503,7 +581,22 @@ public:
 
     void visit_ternary(Ternary *ternary)
     {
-        // throw BirdException("Implement Ternart Statement");
+        ternary->condition->accept(this);
+        auto condition = this->stack.pop();
+
+        ternary->true_expr->accept(this);
+        auto true_expr = this->stack.pop();
+
+        ternary->false_expr->accept(this);
+        auto false_expr = this->stack.pop();
+
+        this->stack.push(
+            BinaryenSelect(
+                this->mod,
+                condition,
+                true_expr,
+                false_expr,
+                BinaryenExpressionGetType(true_expr)));
     }
 
     void visit_const_stmt(ConstStmt *const_stmt)
@@ -513,7 +606,85 @@ public:
 
     void visit_func(Func *func)
     {
-        // throw BirdException("Implement visit_func");
+        auto func_name = func->identifier.lexeme;
+
+        if (func->return_type.has_value())
+        {
+            this->function_return_types[func_name] = from_bird_type(func->return_type.value());
+        }
+        else
+        {
+            this->function_return_types[func_name] = BinaryenTypeNone();
+        }
+
+        auto old_function_name = this->current_function_name;
+        auto old_function_body = this->current_function_body;
+
+        this->current_function_name = func_name;
+        this->current_function_body = std::vector<BinaryenExpressionRef>();
+        this->function_locals[func_name] = std::vector<BinaryenType>();
+
+        std::vector<BinaryenType> param_types;
+
+        for (auto &param : func->param_list)
+        {
+            param_types.push_back(from_bird_type(param.second));
+            this->function_locals[func_name].push_back(from_bird_type(param.second));
+        }
+
+        BinaryenType params = BinaryenTypeCreate(param_types.data(), param_types.size());
+
+        BinaryenType result_type = func->return_type.has_value()
+                                       ? from_bird_type(func->return_type.value())
+                                       : BinaryenTypeNone();
+
+        this->environment.push_env();
+
+        auto index = 0;
+        for (auto &param : func->param_list)
+        {
+            this->environment.declare(param.first.lexeme, index);
+            this->current_function_body.push_back(
+                BinaryenLocalGet(
+                    this->mod,
+                    index++,
+                    from_bird_type(param.second)));
+        }
+
+        for (auto &stmt : dynamic_cast<Block *>(func->block.get())->stmts)
+        {
+            stmt->accept(this);
+        }
+
+        this->environment.pop_env();
+
+        BinaryenExpressionRef body = BinaryenBlock(
+            this->mod,
+            nullptr,
+            this->current_function_body.data(),
+            this->current_function_body.size(),
+            BinaryenTypeNone());
+
+        std::vector<BinaryenType> vars = std::vector<BinaryenType>(this->function_locals[func_name].begin() + param_types.size(), this->function_locals[func_name].end());
+
+        BinaryenFunctionRef func_type = BinaryenAddFunction(
+            this->mod,
+            func_name.c_str(),
+            params,
+            result_type,
+            vars.data(),
+            vars.size(),
+            body);
+
+        BinaryenAddFunctionExport(
+            this->mod,
+            func_name.c_str(),
+            func_name.c_str());
+
+        this->current_function_name = old_function_name;
+        this->current_function_body = old_function_body;
+
+        this->function_locals.erase(func_name);
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -523,12 +694,41 @@ public:
 
     void visit_call(Call *call)
     {
-        // throw BirdException("Implement visit_call");
+        auto func_name = call->identifier.lexeme;
+
+        std::vector<BinaryenExpressionRef> args;
+
+        for (auto &arg : call->args)
+        {
+            arg->accept(this);
+            args.push_back(this->stack.pop());
+        }
+
+        this->stack.push(BinaryenCall(
+            this->mod,
+            func_name.c_str(),
+            args.data(),
+            args.size(),
+            this->function_return_types[func_name]));
     }
 
     void visit_return_stmt(ReturnStmt *return_stmt)
     {
-        // throw BirdException("Implement Return Statement");
+        if (return_stmt->expr.has_value())
+        {
+            return_stmt->expr.value()->accept(this);
+            this->current_function_body.push_back(
+                BinaryenReturn(
+                    this->mod,
+                    this->stack.pop()));
+        }
+        else
+        {
+            this->current_function_body.push_back(
+                BinaryenReturn(
+                    this->mod,
+                    nullptr));
+        }
     }
 
     void visit_break_stmt(BreakStmt *break_stmt)
