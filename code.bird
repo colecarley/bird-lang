@@ -12,6 +12,6 @@ fn quadruple(x: int) -> int {
     return double(double(x));
 }
 
-1 + 1;
+print 1 + 1;
 
 

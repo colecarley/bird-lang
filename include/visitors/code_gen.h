@@ -33,29 +33,13 @@ public:
 
     void init_std_lib()
     {
-        BinaryenAddFunctionImport(this->mod,
-                                  "print",
-                                  "env",
-                                  "print",
-                                  BinaryenTypeCreate((BinaryenType[]){BinaryenTypeInt32()}, 1),
-                                  BinaryenTypeNone());
-
-        // // format string and pointer as param for printf
-        // BinaryenType params =
-        //     BinaryenTypeCreate((BinaryenType[]){BinaryenTypeInt32(), BinaryenTypeInt32()}, 2);
-
-        // BinaryenType results = BinaryenTypeNone();
-
-        // BinaryenAddFunctionImport(
-        //     this->mod,
-        //     "printf",
-        //     "env",
-        //     "printf",
-        //     params,
-        //     results);
-
-        // // TODO: we don't need to store the function name anymore
-        // this->std_lib["print"] = "printf";
+        BinaryenAddFunctionImport(
+            this->mod,
+            "print",
+            "env",
+            "print",
+            BinaryenTypeCreate((BinaryenType[]){BinaryenTypeInt32()}, 1),
+            BinaryenTypeNone());
     }
 
     BinaryenFunctionRef create_entry_point()
@@ -293,32 +277,6 @@ public:
         // throw BirdException("Implement Assign Expression");
     }
 
-    /*
-     * this doesnt work, not sure if i fully understand
-     * how to fill in the format strings. apparently there is no
-     * CreateGlobalString equivalent.
-     *
-     * INPUT:
-     * var x = 1;
-     * print x;
-     *
-     * OUTPUT:
-     * (module
-     *  (type $none_=>_none (func))
-     *  (type $i32_=>_none (func (param i32)))
-     *  (import "env" "printf" (func $printf (param i32)))
-     *  (export "main" (func $main))
-     *  (func $main
-     *   (local $0 i32)
-     *   (local.set $0
-     *    (i32.const 1)
-     *   )
-     *   (call $printf
-     *    (local.get $0)
-     *   )
-     *  )
-     * )
-     */
     void visit_print_stmt(PrintStmt *print_stmt)
     {
         for (auto &arg : print_stmt->args)
@@ -326,39 +284,30 @@ public:
             arg->accept(this);
         }
 
-        // auto printfFunc = this->std_lib["print"];
-
         std::vector<BinaryenExpressionRef> results;
         for (int i = 0; i < print_stmt->args.size(); i++)
         {
             results.push_back(this->stack.pop());
         }
 
-        std::vector<BinaryenExpressionRef> printf_args;
-        for (int i = 0; i < results.size(); ++i)
+        std::vector<BinaryenExpressionRef> console_log_args;
+        for (auto &result : results)
         {
-            auto result = results[results.size() - 1];
-
             if (BinaryenExpressionGetType(result) == BinaryenTypeInt32())
             {
-                // auto formatString = ...;
-                // printf_args.push_back(BinaryenConst(this->mod, BinaryenLiteralInt32(formatString)));
-                printf_args.push_back(result);
+                console_log_args.push_back(result);
             }
         }
 
-        // TODO: this only takes one argument
-        BinaryenExpressionRef printfCall =
+        BinaryenExpressionRef consoleLogCall =
             BinaryenCall(
                 this->mod,
                 "print",
-                printf_args.data(),
-                printf_args.size(),
+                console_log_args.data(),
+                console_log_args.size(),
                 BinaryenTypeNone());
 
-        // // this->fn_body.push_back(printfCall);
-
-        this->current_function_body.push_back(printfCall);
+        this->current_function_body.push_back(consoleLogCall);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
