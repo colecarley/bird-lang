@@ -4,6 +4,10 @@ while (x < 10) {
     x += 1;
 }
 
+var z = 0;
 for (var x = 0; x <= 5; x += 1) do {
     print x;
+    z = x;
 }
+
+print z;
