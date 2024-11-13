@@ -390,6 +390,38 @@ public:
 
     void visit_while_stmt(WhileStmt *while_stmt)
     {
+        std::vector<BinaryenExpressionRef> children;
+
+        while_stmt->stmt->accept(this);
+        BinaryenExpressionRef body = this->stack.pop();
+
+        while_stmt->condition->accept(this);
+        BinaryenExpressionRef condition = this->stack.pop();
+
+        children.push_back(body);
+        children.push_back(
+            BinaryenBreak(
+                this->mod,
+                "LOOP",
+                condition,
+                nullptr));
+
+        auto while_body = BinaryenBlock(
+            this->mod,
+            "while_body",
+            children.data(),
+            children.size(),
+            BinaryenTypeNone());
+
+        this->stack.push(
+            BinaryenIf(
+                this->mod,
+                condition,
+                BinaryenLoop(
+                    this->mod,
+                    "LOOP",
+                    while_body),
+                nullptr));
     }
 
     void visit_for_stmt(ForStmt *for_stmt)
