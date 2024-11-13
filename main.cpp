@@ -14,7 +14,6 @@
 #include "include/exceptions/user_error_tracker.h"
 
 #include "include/visitors/code_gen.h"
-#include "binaryen-c.h"
 #include "include/parser2.hpp" // TODO: change this name
 
 extern int bird_parse(const char *input);

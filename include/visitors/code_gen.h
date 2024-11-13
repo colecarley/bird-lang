@@ -29,12 +29,14 @@ public:
 
     void init_std_lib()
     {
+        std::vector<BinaryenType> arr = {BinaryenTypeInt32()};
+        auto type = BinaryenTypeCreate(arr.data(), arr.size());
         BinaryenAddFunctionImport(
             this->mod,
             "print",
             "env",
             "print",
-            BinaryenTypeCreate((BinaryenType[]){BinaryenTypeInt32()}, 1),
+            type,
             BinaryenTypeNone());
     }
 
