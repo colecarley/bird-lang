@@ -244,6 +244,11 @@ std::unique_ptr<Stmt> Parser::for_stmt()
         throw BirdException("expected 'for' at the beginning of for statement");
     }
 
+    if (this->peek().token_type == Token::Type::LPAREN)
+    {
+        this->advance();
+    }
+
     std::optional<std::unique_ptr<Stmt>> initializer;
     if (this->peek().token_type != Token::Type::SEMICOLON)
     {
@@ -270,6 +275,11 @@ std::unique_ptr<Stmt> Parser::for_stmt()
     if (this->peek().token_type != Token::Type::DO)
     {
         increment = this->expr();
+    }
+
+    if (this->peek().token_type == Token::Type::RPAREN)
+    {
+        this->advance();
     }
 
     if (this->advance().token_type != Token::Type::DO)

@@ -1,3 +1,4 @@
+/*
 fn add(x: int, y: int) -> int {
     var a = x + 3;
     var b = y;
@@ -36,8 +37,27 @@ print x;
 x/= 2;
 print x;
 
-x %= 2; // this isn't working
+x %= 2;
 print x;
 
 x = 1;
 print x;
+
+var y = 0;
+
+{
+    y += 1;
+}
+
+print y;
+
+var z = 47;
+
+z %= 43;
+
+print z;
+
+*/
+for (var x = 0; x <= 5; x += 1) do {
+    print x;
+}

@@ -358,6 +358,10 @@ public:
             results.push_back(this->stack.pop());
         }
 
+        // i think we need to reverse it again
+        // probably not the most computationally efficient
+        std::reverse(results.begin(), results.end());
+
         std::vector<BinaryenExpressionRef> console_log_args;
         for (auto &result : results)
         {
@@ -390,6 +394,69 @@ public:
 
     void visit_for_stmt(ForStmt *for_stmt)
     {
+        this->environment.push_env();
+
+        BinaryenExpressionRef initializer;
+        if (for_stmt->initializer.has_value())
+        {
+            for_stmt->initializer.value()->accept(this);
+            initializer = this->stack.pop();
+        }
+
+        BinaryenExpressionRef condition;
+        if (for_stmt->condition.has_value())
+        {
+            for_stmt->condition.value()->accept(this);
+            condition = this->stack.pop();
+        }
+
+        for_stmt->body->accept(this);
+        BinaryenExpressionRef body = this->stack.pop();
+
+        BinaryenExpressionRef increment;
+        if (for_stmt->increment.has_value())
+        {
+            for_stmt->increment.value()->accept(this);
+            increment = this->stack.pop();
+        }
+
+        std::vector<BinaryenExpressionRef> body_expr;
+        body_expr.push_back(body);
+
+        if (increment)
+        {
+            body_expr.push_back(increment);
+        }
+
+        body_expr.push_back(BinaryenBreak(this->mod, "loop", nullptr, nullptr));
+
+        BinaryenExpressionRef loop_body = BinaryenBlock(
+            this->mod,
+            nullptr,
+            body_expr.data(),
+            body_expr.size(),
+            BinaryenTypeNone());
+
+        BinaryenExpressionRef for_loop = BinaryenLoop(
+            this->mod,
+            "loop",
+            BinaryenIf(this->mod, condition, loop_body, nullptr));
+
+        std::vector<BinaryenExpressionRef> initializer_and_loop;
+        if (initializer)
+        {
+            initializer_and_loop.push_back(initializer);
+        }
+        initializer_and_loop.push_back(for_loop);
+
+        this->stack.push(BinaryenBlock(
+            this->mod,
+            nullptr,
+            initializer_and_loop.data(),
+            initializer_and_loop.size(),
+            BinaryenTypeNone()));
+
+        this->environment.pop_env();
     }
 
     void visit_binary(Binary *binary)
