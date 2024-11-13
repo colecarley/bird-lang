@@ -482,18 +482,18 @@ public:
             body_expr.push_back(increment);
         }
 
-        body_expr.push_back(BinaryenBreak(this->mod, "loop", nullptr, nullptr));
+        body_expr.push_back(BinaryenBreak(this->mod, "LOOP", nullptr, nullptr));
 
         BinaryenExpressionRef loop_body = BinaryenBlock(
             this->mod,
-            nullptr,
+            "for_body",
             body_expr.data(),
             body_expr.size(),
             BinaryenTypeNone());
 
         BinaryenExpressionRef for_loop = BinaryenLoop(
             this->mod,
-            "loop",
+            "LOOP",
             BinaryenIf(this->mod, condition, loop_body, nullptr));
 
         if (initializer)
@@ -940,17 +940,10 @@ public:
     void flatten_block(BinaryenExpressionRef expr,
                        std::vector<BinaryenExpressionRef> &children)
     {
-        if (BinaryenExpressionGetId(expr) == BinaryenBlockId())
+        int child_count = BinaryenBlockGetNumChildren(expr);
+        for (int i = 0; i < child_count; ++i)
         {
-            int child_count = BinaryenBlockGetNumChildren(expr);
-            for (int i = 0; i < child_count; ++i)
-            {
-                children.push_back(BinaryenBlockGetChildAt(expr, i));
-            }
-        }
-        else
-        {
-            children.push_back(expr);
+            children.push_back(BinaryenBlockGetChildAt(expr, i));
         }
     }
 };
