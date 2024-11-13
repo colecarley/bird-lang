@@ -224,15 +224,23 @@ public:
 
         this->environment.pop_env();
 
-        BinaryenExpressionRef block_expr =
-            BinaryenBlock(
-                this->mod,
-                nullptr,
-                children.data(),
-                children.size(),
-                BinaryenTypeNone());
+        // avoid putting block on stack if possible
+        if (children.size() == 1)
+        {
+            this->stack.push(children[0]);
+        }
+        else
+        {
+            BinaryenExpressionRef block_expr =
+                BinaryenBlock(
+                    this->mod,
+                    nullptr,
+                    children.data(),
+                    children.size(),
+                    BinaryenTypeNone());
 
-        this->stack.push(block_expr);
+            this->stack.push(block_expr);
+        }
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
@@ -483,12 +491,13 @@ public:
         }
         initializer_and_loop.push_back(for_loop);
 
-        this->stack.push(BinaryenBlock(
-            this->mod,
-            nullptr,
-            initializer_and_loop.data(),
-            initializer_and_loop.size(),
-            BinaryenTypeNone()));
+        this->stack.push(
+            BinaryenBlock(
+                this->mod,
+                nullptr,
+                initializer_and_loop.data(),
+                initializer_and_loop.size(),
+                BinaryenTypeNone()));
 
         this->environment.pop_env();
     }
