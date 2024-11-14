@@ -224,23 +224,15 @@ public:
 
         this->environment.pop_env();
 
-        // avoid putting block on stack if possible
-        if (children.size() == 1)
-        {
-            this->stack.push(children[0]);
-        }
-        else
-        {
-            BinaryenExpressionRef block_expr =
-                BinaryenBlock(
-                    this->mod,
-                    nullptr,
-                    children.data(),
-                    children.size(),
-                    BinaryenTypeNone());
+        BinaryenExpressionRef block_expr =
+            BinaryenBlock(
+                this->mod,
+                nullptr,
+                children.data(),
+                children.size(),
+                BinaryenTypeNone());
 
-            this->stack.push(block_expr);
-        }
+        this->stack.push(block_expr);
     }
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
