@@ -13,8 +13,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
-BISON_TARGET(Parser ${PROJECT_SOURCE_DIR}/src/parser.y ${PROJECT_SOURCE_DIR}/src/parser2.cpp)
-FLEX_TARGET(Lexer ${PROJECT_SOURCE_DIR}/src/lexer.l ${PROJECT_SOURCE_DIR}/src/lexer2.cpp)
+BISON_TARGET(Parser ${PROJECT_SOURCE_DIR}/src/parser.yy ${PROJECT_SOURCE_DIR}/build/parser.tab.cc)
+FLEX_TARGET(Lexer ${PROJECT_SOURCE_DIR}/src/lexer.l ${PROJECT_SOURCE_DIR}/build/lexer.yy.cc)
+ADD_FLEX_BISON_DEPENDENCY(Lexer Parser)
 
 include_directories("/usr/include/")
 link_directories("/usr/lib/x86_64-linux-gnu/")
@@ -26,7 +27,7 @@ include_directories(${PROJECT_SOURCE_DIR}/tests)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-add_executable(compiler main.cpp ${SOURCES} ${BISON_Parser_OUTPUTS} ${FLEX_Lexer_OUTPUTS})
+add_executable(compiler main.cpp ${SOURCES} ${FLEX_Lexer_OUTPUTS} ${BISON_Parser_OUTPUTS})
 
 
 target_link_libraries(compiler binaryen)
