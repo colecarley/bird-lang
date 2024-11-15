@@ -393,6 +393,7 @@ public:
     void visit_while_stmt(WhileStmt *while_stmt)
     {
         std::vector<BinaryenExpressionRef> children;
+        std::vector<BinaryenExpressionRef> children_and_condition;
 
         while_stmt->stmt->accept(this);
         BinaryenExpressionRef body = this->stack.pop();
@@ -409,7 +410,7 @@ public:
         while_stmt->condition->accept(this);
         BinaryenExpressionRef condition = this->stack.pop();
 
-        children.push_back(
+        children_and_condition.push_back(
             BinaryenBreak(
                 this->mod,
                 "LOOP",
@@ -437,6 +438,7 @@ public:
     void visit_for_stmt(ForStmt *for_stmt)
     {
         this->environment.push_env();
+        std::vector<BinaryenExpressionRef> children;
 
         BinaryenExpressionRef initializer;
         if (for_stmt->initializer.has_value())
@@ -455,14 +457,13 @@ public:
         for_stmt->body->accept(this);
         BinaryenExpressionRef body = this->stack.pop();
 
-        std::vector<BinaryenExpressionRef> body_expr;
         if (BinaryenExpressionGetId(body) == BinaryenBlockId())
         {
-            flatten_block(body, body_expr);
+            flatten_block(body, children);
         }
         else
         {
-            body_expr.push_back(body);
+            children.push_back(body);
         }
 
         BinaryenExpressionRef increment;
@@ -470,41 +471,49 @@ public:
         {
             for_stmt->increment.value()->accept(this);
             increment = this->stack.pop();
-
-            body_expr.push_back(increment);
         }
 
-        body_expr.push_back(BinaryenBreak(this->mod, "LOOP", nullptr, nullptr));
+        if (increment)
+        {
+            children.push_back(increment);
+        }
 
-        BinaryenExpressionRef loop_body = BinaryenBlock(
-            this->mod,
-            "for_body",
-            body_expr.data(),
-            body_expr.size(),
-            BinaryenTypeNone());
+        children.push_back(
+            BinaryenBreak(
+                this->mod,
+                "LOOP",
+                condition,
+                nullptr));
 
-        BinaryenExpressionRef for_loop = BinaryenLoop(
-            this->mod,
-            "LOOP",
-            BinaryenIf(this->mod, condition, loop_body, nullptr));
+        auto for_body =
+            BinaryenBlock(
+                this->mod,
+                "BODY",
+                children.data(),
+                children.size(),
+                BinaryenTypeNone());
+
+        auto for_loop =
+            BinaryenLoop(
+                this->mod,
+                "LOOP",
+                for_body);
+
+        std::vector<BinaryenExpressionRef> initializer_and_loop;
 
         if (initializer)
         {
-            std::vector<BinaryenExpressionRef> initializer_and_loop;
             initializer_and_loop.push_back(initializer);
             initializer_and_loop.push_back(for_loop);
+        }
 
-            this->stack.push(BinaryenBlock(
+        this->stack.push(
+            BinaryenBlock(
                 this->mod,
-                nullptr,
+                "EXIT",
                 initializer_and_loop.data(),
                 initializer_and_loop.size(),
                 BinaryenTypeNone()));
-        }
-        else
-        {
-            this->stack.push(for_loop);
-        }
 
         this->environment.pop_env();
     }
@@ -923,10 +932,22 @@ public:
 
     void visit_break_stmt(BreakStmt *break_stmt)
     {
+        this->stack.push(
+            BinaryenBreak(
+                this->mod,
+                "EXIT",
+                nullptr,
+                nullptr));
     }
 
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
+        this->stack.push(
+            BinaryenBreak(
+                this->mod,
+                "CONTINUE",
+                nullptr,
+                nullptr));
     }
 
     void flatten_block(BinaryenExpressionRef expr,
