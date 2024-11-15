@@ -21,6 +21,7 @@ class Call;
 class ReturnStmt;
 class BreakStmt;
 class ContinueStmt;
+class TypeStmt;
 
 /*
  * the interface for all visitors,
@@ -48,4 +49,5 @@ public:
     virtual void visit_return_stmt(ReturnStmt *) = 0;
     virtual void visit_break_stmt(BreakStmt *) = 0;
     virtual void visit_continue_stmt(ContinueStmt *) = 0;
+    virtual void visit_type_stmt(TypeStmt *) = 0;
 };

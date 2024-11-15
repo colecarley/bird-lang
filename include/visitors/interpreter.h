@@ -26,6 +26,7 @@
 #include "../ast_node/stmt/func.h"
 #include "../ast_node/stmt/break_stmt.h"
 #include "../ast_node/stmt/continue_stmt.h"
+#include "../ast_node/stmt/type_stmt.h"
 
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
@@ -35,6 +36,7 @@
 #include "../value.h"
 #include "../callable.h"
 #include "../stack.h"
+#include "../type.h"
 
 /*
  * Visitor that interprets and evaluates the AST
@@ -45,12 +47,14 @@ class Interpreter : public Visitor
 public:
     Environment<Value> env;
     Environment<Callable> call_table;
+    Environment<Type> type_table;
     Stack<Value> stack;
 
     Interpreter()
     {
         this->env.push_env();
         this->call_table.push_env();
+        this->type_table.push_env();
     }
 
     void evaluate(std::vector<std::unique_ptr<Stmt>> *stmts)
@@ -134,6 +138,12 @@ public:
                 continue_stmt->accept(this);
                 continue;
             }
+
+            if (auto type_stmt = dynamic_cast<TypeStmt *>(stmt.get()))
+            {
+                type_stmt->accept(this);
+                continue;
+            }
         }
 
         while (!this->stack.empty())
@@ -160,9 +170,17 @@ public:
         auto result = std::move(this->stack.pop());
         result.is_mutable = true;
 
-        if (decl_stmt->type_identifier.has_value())
+        if (decl_stmt->type_token.has_value())
         {
-            std::string type_lexeme = decl_stmt->type_identifier.value().lexeme;
+            std::string type_lexeme;
+            if (decl_stmt->type_is_literal)
+            {
+                type_lexeme = decl_stmt->type_token.value().lexeme;
+            }
+            else
+            {
+                type_lexeme = this->type_table.get(decl_stmt->type_token.value().lexeme).type.lexeme;
+            }
 
             if (type_lexeme == "int")
             {
@@ -246,9 +264,17 @@ public:
 
         auto result = std::move(this->stack.pop());
 
-        if (const_stmt->type_identifier.has_value())
+        if (const_stmt->type_token.has_value())
         {
-            std::string type_lexeme = const_stmt->type_identifier.value().lexeme;
+            std::string type_lexeme;
+            if (const_stmt->type_is_literal)
+            {
+                type_lexeme = const_stmt->type_token.value().lexeme;
+            }
+            else
+            {
+                type_lexeme = this->type_table.get(const_stmt->type_token.value().lexeme).type.lexeme;
+            }
 
             if (type_lexeme == "int")
             {
@@ -534,5 +560,17 @@ public:
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
         throw ContinueException();
+    }
+
+    void visit_type_stmt(TypeStmt *type_stmt)
+    {
+        if (type_stmt->type_is_literal)
+        {
+            this->type_table.declare(type_stmt->type_identifier.lexeme, Type(type_stmt->type_token));
+        }
+        else
+        {
+            this->type_table.declare(type_stmt->type_identifier.lexeme, Type(this->type_table.get(type_stmt->type_token.lexeme)));
+        }
     }
 };

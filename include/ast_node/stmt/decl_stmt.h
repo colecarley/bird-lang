@@ -20,13 +20,15 @@ class DeclStmt : public Stmt
 {
 public:
     Token identifier;
-    std::optional<Token> type_identifier;
+    std::optional<Token> type_token;
+    bool type_is_literal;
     std::unique_ptr<Expr> value;
 
-    DeclStmt(Token identifier, std::optional<Token> type_identifier, std::unique_ptr<Expr> value)
+    DeclStmt(Token identifier, std::optional<Token> type_token, bool type_is_literal, std::unique_ptr<Expr> value)
     {
         this->identifier = identifier;
-        this->type_identifier = type_identifier;
+        this->type_token = type_token;
+        this->type_is_literal = type_is_literal;
         this->value = std::move(value);
     }
 

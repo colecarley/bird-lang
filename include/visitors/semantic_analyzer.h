@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <variant>
+#include <set>
 
 #include "../ast_node/stmt/stmt.h"
 #include "../ast_node/expr/expr.h"
@@ -26,6 +27,7 @@
 #include "../ast_node/stmt/func.h"
 #include "../ast_node/stmt/break_stmt.h"
 #include "../ast_node/stmt/continue_stmt.h"
+#include "../ast_node/stmt/type_stmt.h"
 
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
@@ -45,6 +47,8 @@ class SemanticAnalyzer : public Visitor
 public:
     Environment<SemanticValue> env;
     Environment<SemanticCallable> call_table;
+    Environment<SemanticType> type_table;
+    std::set<std::string> identifier_set;
     UserErrorTracker *user_error_tracker;
     int loop_depth;
     int function_depth;
@@ -53,6 +57,7 @@ public:
     {
         this->env.push_env();
         this->call_table.push_env();
+        this->type_table.push_env();
         this->loop_depth = 0;
         this->function_depth = 0;
     }
@@ -154,7 +159,7 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        if (this->env.current_contains(decl_stmt->identifier.lexeme))
+        if (identifier_set.find(decl_stmt->identifier.lexeme) != identifier_set.end())
         {
             this->user_error_tracker->semantic_error("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
             return;
@@ -201,7 +206,7 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        if (this->env.current_contains(const_stmt->identifier.lexeme))
+        if (identifier_set.find(const_stmt->identifier.lexeme) != identifier_set.end())
         {
             this->user_error_tracker->semantic_error("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
             return;
@@ -343,5 +348,10 @@ public:
             this->user_error_tracker->semantic_error("Continue statement is declared outside of a loop.");
             return;
         }
+    }
+
+    void visit_type_stmt(TypeStmt *type_stmt)
+    {
+        this->type_table.declare(type_stmt->type_identifier.lexeme, SemanticType());
     }
 };
