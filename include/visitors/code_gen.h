@@ -393,7 +393,6 @@ public:
     void visit_while_stmt(WhileStmt *while_stmt)
     {
         std::vector<BinaryenExpressionRef> children;
-        std::vector<BinaryenExpressionRef> children_and_condition;
 
         while_stmt->stmt->accept(this);
         BinaryenExpressionRef body = this->stack.pop();
@@ -410,7 +409,7 @@ public:
         while_stmt->condition->accept(this);
         BinaryenExpressionRef condition = this->stack.pop();
 
-        children_and_condition.push_back(
+        children.push_back(
             BinaryenBreak(
                 this->mod,
                 "LOOP",
@@ -475,7 +474,13 @@ public:
 
         if (increment)
         {
-            children.push_back(increment);
+            children.push_back(
+                BinaryenBlock(
+                    this->mod,
+                    "INCREMENT",
+                    &increment,
+                    1,
+                    BinaryenTypeNone()));
         }
 
         children.push_back(
