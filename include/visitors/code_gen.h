@@ -416,22 +416,27 @@ public:
                 condition,
                 nullptr));
 
-        auto while_body = BinaryenBlock(
-            this->mod,
-            "while_body",
-            children.data(),
-            children.size(),
-            BinaryenTypeNone());
+        auto while_body =
+            BinaryenBlock(
+                this->mod,
+                "while_body",
+                children.data(),
+                children.size(),
+                BinaryenTypeNone());
+
+        auto loop =
+            BinaryenLoop(
+                this->mod,
+                "LOOP",
+                while_body);
 
         this->stack.push(
-            BinaryenIf(
+            BinaryenBlock(
                 this->mod,
-                condition,
-                BinaryenLoop(
-                    this->mod,
-                    "LOOP",
-                    while_body),
-                nullptr));
+                "EXIT",
+                &loop,
+                1,
+                BinaryenTypeNone()));
     }
 
     void visit_for_stmt(ForStmt *for_stmt)
@@ -472,45 +477,46 @@ public:
             increment = this->stack.pop();
         }
 
+        std::vector<BinaryenExpressionRef> continue_block;
         if (increment)
         {
-            children.push_back(
-                BinaryenBlock(
-                    this->mod,
-                    "INCREMENT",
-                    &increment,
-                    1,
-                    BinaryenTypeNone()));
+            continue_block.push_back(increment);
         }
 
-        children.push_back(
+        continue_block.push_back(
             BinaryenBreak(
                 this->mod,
                 "LOOP",
                 condition,
                 nullptr));
 
-        auto for_body =
+        children.push_back(
             BinaryenBlock(
                 this->mod,
-                "BODY",
-                children.data(),
-                children.size(),
-                BinaryenTypeNone());
+                "CONTINUE",
+                continue_block.data(),
+                continue_block.size(),
+                BinaryenTypeNone()));
 
-        auto for_loop =
-            BinaryenLoop(
-                this->mod,
-                "LOOP",
-                for_body);
+        auto for_body = BinaryenBlock(
+            this->mod,
+            "BODY",
+            children.data(),
+            children.size(),
+            BinaryenTypeNone());
+
+        auto for_loop = BinaryenLoop(
+            this->mod,
+            "LOOP",
+            for_body);
 
         std::vector<BinaryenExpressionRef> initializer_and_loop;
-
         if (initializer)
         {
             initializer_and_loop.push_back(initializer);
-            initializer_and_loop.push_back(for_loop);
         }
+
+        initializer_and_loop.push_back(for_loop);
 
         this->stack.push(
             BinaryenBlock(
@@ -841,7 +847,9 @@ public:
             current_function_body.size(),
             BinaryenTypeNone());
 
-        std::vector<BinaryenType> vars = std::vector<BinaryenType>(this->function_locals[func_name].begin() + param_types.size(), this->function_locals[func_name].end());
+        std::vector<BinaryenType> vars = std::vector<BinaryenType>(
+            this->function_locals[func_name].begin() + param_types.size(),
+            this->function_locals[func_name].end());
 
         BinaryenFunctionRef func_type = BinaryenAddFunction(
             this->mod,
