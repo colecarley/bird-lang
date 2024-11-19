@@ -221,6 +221,12 @@ public:
                 continue_stmt->accept(this);
                 continue;
             }
+
+            if (auto type_stmt = dynamic_cast<TypeStmt *>(stmt.get()))
+            {
+                type_stmt->accept(this);
+                continue;
+            }
         }
 
         while (!this->stack.empty())
@@ -258,7 +264,7 @@ public:
             BirdType type;
             if (decl_stmt->type_is_literal)
             {
-                this->get_type_from_token(decl_stmt->type_token.value());
+                type = this->get_type_from_token(decl_stmt->type_token.value());
             }
             else
             {
@@ -369,7 +375,7 @@ public:
             BirdType type;
             if (const_stmt->type_is_literal)
             {
-                this->get_type_from_token(const_stmt->type_token.value());
+                type = this->get_type_from_token(const_stmt->type_token.value());
             }
             else
             {
@@ -669,11 +675,11 @@ public:
     {
         if (type_stmt->type_is_literal)
         {
-            this->type_table.declare(type_stmt->type_identifier.lexeme, Type(type_stmt->type_token));
+            this->type_table.declare(type_stmt->identifier.lexeme, Type(type_stmt->type_token));
         }
         else
         {
-            this->type_table.declare(type_stmt->type_identifier.lexeme, Type(this->type_table.get(type_stmt->type_token.lexeme)));
+            this->type_table.declare(type_stmt->identifier.lexeme, Type(this->type_table.get(type_stmt->type_token.lexeme).type));
         }
     }
 };

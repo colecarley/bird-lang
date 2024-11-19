@@ -19,13 +19,13 @@ class Expr;
 class TypeStmt : public Stmt
 {
 public:
-    Token type_identifier;
-    Token type_token;
+    Token identifier;
+    Token type_token; // TODO: Create an ast node class for type tokens to categorize type literals, type identifiers, and type blocks. This class will be like stmt or expr.
     bool type_is_literal;
 
-    TypeStmt(Token type_identifier, Token type_token, bool type_is_literal)
+    TypeStmt(Token identifier, Token type_token, bool type_is_literal)
     {
-        this->type_identifier = type_identifier;
+        this->identifier = identifier;
         this->type_token = type_token;
         this->type_is_literal = type_is_literal;
     }

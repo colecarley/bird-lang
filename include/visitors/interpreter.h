@@ -566,11 +566,11 @@ public:
     {
         if (type_stmt->type_is_literal)
         {
-            this->type_table.declare(type_stmt->type_identifier.lexeme, Type(type_stmt->type_token));
+            this->type_table.declare(type_stmt->identifier.lexeme, Type(type_stmt->type_token));
         }
         else
         {
-            this->type_table.declare(type_stmt->type_identifier.lexeme, Type(this->type_table.get(type_stmt->type_token.lexeme)));
+            this->type_table.declare(type_stmt->identifier.lexeme, Type(this->type_table.get(type_stmt->type_token.lexeme).type));
         }
     }
 };

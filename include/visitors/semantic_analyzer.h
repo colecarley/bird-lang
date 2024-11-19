@@ -48,7 +48,6 @@ public:
     Environment<SemanticValue> env;
     Environment<SemanticCallable> call_table;
     Environment<SemanticType> type_table;
-    std::set<std::string> identifier_set;
     UserErrorTracker *user_error_tracker;
     int loop_depth;
     int function_depth;
@@ -142,6 +141,12 @@ public:
                 continue_stmt->accept(this);
                 continue;
             }
+
+            if (auto type_stmt = dynamic_cast<TypeStmt *>(stmt.get()))
+            {
+                type_stmt->accept(this);
+                continue;
+            }
         }
     }
 
@@ -159,7 +164,7 @@ public:
 
     void visit_decl_stmt(DeclStmt *decl_stmt)
     {
-        if (identifier_set.find(decl_stmt->identifier.lexeme) != identifier_set.end())
+        if (this->identifer_in_any_environment(decl_stmt->identifier.lexeme))
         {
             this->user_error_tracker->semantic_error("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
             return;
@@ -206,7 +211,7 @@ public:
 
     void visit_const_stmt(ConstStmt *const_stmt)
     {
-        if (identifier_set.find(const_stmt->identifier.lexeme) != identifier_set.end())
+        if (this->identifer_in_any_environment(const_stmt->identifier.lexeme))
         {
             this->user_error_tracker->semantic_error("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
             return;
@@ -284,6 +289,12 @@ public:
     void visit_func(Func *func)
     {
         this->function_depth += 1;
+        
+        if (this->identifer_in_any_environment(func->identifier.lexeme))
+        {
+            this->user_error_tracker->semantic_error("Identifier '" + func->identifier.lexeme + "' is already declared.");
+            return;
+        }
 
         this->call_table.declare(func->identifier.lexeme, SemanticCallable(func->param_list.size()));
 
@@ -352,6 +363,20 @@ public:
 
     void visit_type_stmt(TypeStmt *type_stmt)
     {
-        this->type_table.declare(type_stmt->type_identifier.lexeme, SemanticType());
+        if (this->identifer_in_any_environment(type_stmt->identifier.lexeme))
+        {
+            this->user_error_tracker->semantic_error("Identifier '" + type_stmt->identifier.lexeme + "' is already declared.");
+            return;
+        }
+
+        this->type_table.declare(type_stmt->identifier.lexeme, SemanticType());
+    }
+
+
+    bool identifer_in_any_environment(std::string identifer) {
+        return
+            this->env.current_contains(identifer) ||
+            this->call_table.current_contains(identifer) ||
+            this->type_table.current_contains(identifer);
     }
 };

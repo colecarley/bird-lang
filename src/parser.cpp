@@ -124,13 +124,13 @@ std::unique_ptr<Stmt> Parser::const_decl()
         throw UserException();
     }
 
-    this->consume(Token::Type::IDENTIFIER, "identifier", "after const", this->peek());
-
     std::optional<Token> type_token = std::nullopt;
-    bool type_is_literal = this->peek().token_type == Token::Type::TYPE_LITERAL ? true : false;
+    bool type_is_literal;
     if (this->peek().token_type == Token::Type::COLON)
     {
         this->advance();
+        type_is_literal = this->peek().token_type == Token::Type::TYPE_LITERAL ? true : false;
+
         if (this->peek().token_type == Token::Type::TYPE_LITERAL || this->peek().token_type == Token::Type::IDENTIFIER)
         {
             type_token = std::make_optional<Token>(this->advance());
@@ -320,10 +320,12 @@ std::unique_ptr<Stmt> Parser::var_decl()
     }
 
     std::optional<Token> type_token = std::nullopt;
-    bool type_is_literal = this->peek().token_type == Token::Type::TYPE_LITERAL ? true : false;
+    bool type_is_literal;
     if (this->peek().token_type == Token::Type::COLON)
     {
         this->advance();
+        type_is_literal = this->peek().token_type == Token::Type::TYPE_LITERAL ? true : false;
+        
         if (this->peek().token_type == Token::Type::TYPE_LITERAL || this->peek().token_type == Token::Type::IDENTIFIER)
         {
             type_token = std::make_optional<Token>(this->advance());
