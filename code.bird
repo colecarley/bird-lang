@@ -1,11 +1,7 @@
 
-var i = 0;
-while i < 10 {
-    if (i == 2) {
-        i += 1;
-        continue;
-    }
 
-    print i;
-    i += 1;
+fn foobar(x: int, y: int) {
+    x + y;
 }
+
+foobar(1, 2);

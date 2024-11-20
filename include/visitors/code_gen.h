@@ -808,25 +808,10 @@ public:
         auto found_return = false;
         for (auto &stmt : dynamic_cast<Block *>(func->block.get())->stmts)
         {
-            try
-            {
-                stmt->accept(this);
-            }
-            catch (ReturnException _)
-            {
-                found_return = true;
-            }
+            stmt->accept(this);
             auto result = this->stack.pop();
 
             current_function_body.push_back(result);
-        }
-
-        if (!found_return)
-        {
-            current_function_body.push_back(
-                BinaryenReturn(
-                    this->mod,
-                    nullptr));
         }
 
         this->environment.pop_env();
@@ -930,8 +915,6 @@ public:
                     this->mod,
                     nullptr));
         }
-
-        throw ReturnException();
     }
 
     void visit_break_stmt(BreakStmt *break_stmt)
