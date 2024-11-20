@@ -1,15 +1,11 @@
-var x = 0;
-while (x < 5) {
-    print x;
-    if (x == 2) {
-        break;
-    }
-    x += 1;
-}
 
-for (var x = 0; x <= 5; x += 1) do {
-    print x;
-    if (x == 3) {
-        break;
+var i = 0;
+while i < 10 {
+    if (i == 2) {
+        i += 1;
+        continue;
     }
+
+    print i;
+    i += 1;
 }
