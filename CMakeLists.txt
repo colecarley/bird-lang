@@ -16,6 +16,7 @@ find_package(FLEX REQUIRED)
 BISON_TARGET(Parser ${PROJECT_SOURCE_DIR}/src/parser.yy ${PROJECT_SOURCE_DIR}/build/parser.tab.cc)
 FLEX_TARGET(Lexer ${PROJECT_SOURCE_DIR}/src/lexer.l ${PROJECT_SOURCE_DIR}/build/lexer.yy.cc)
 ADD_FLEX_BISON_DEPENDENCY(Lexer Parser)
+set_property(DIRECTORY build APPEND PROPERTY ADDITIONAL_CLEAN_FILES location.hh)
 
 include_directories("/usr/include/")
 link_directories("/usr/lib/x86_64-linux-gnu/")
