@@ -1,3 +1,4 @@
+var x = 0;
 
 
 fn foobar(x: int, y: int) {
@@ -5,3 +6,12 @@ fn foobar(x: int, y: int) {
 }
 
 foobar(1, 2);
+
+while x <= 10 {
+    if x % 2 == 0 {
+        x += 1;
+        continue;
+    }
+    print x;
+    x += 1;
+}

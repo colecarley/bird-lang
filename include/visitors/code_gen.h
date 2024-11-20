@@ -590,6 +590,14 @@ public:
 
             break;
         }
+        case Token::Type::PERCENT:
+        {
+            (float_flag)
+                ? throw BirdException("Modular operation requires integer values")
+                : this->stack.push(BinaryenBinary(mod, BinaryenRemSInt32(), left, right));
+
+            break;
+        }
         case Token::Type::GREATER_EQUAL:
         {
             (float_flag)
