@@ -266,6 +266,8 @@ std::unique_ptr<Stmt> Parser::for_stmt()
         throw BirdException("expected 'for' at the beginning of for statement");
     }
 
+    auto for_token = this->advance();
+
     if (this->peek().token_type == Token::Type::LPAREN)
     {
         this->advance();
@@ -312,6 +314,7 @@ std::unique_ptr<Stmt> Parser::for_stmt()
     auto body = this->stmt();
 
     return std::make_unique<ForStmt>(
+        for_token,
         std::move(initializer),
         std::move(condition),
         std::move(increment),

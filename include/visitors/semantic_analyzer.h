@@ -289,10 +289,10 @@ public:
     void visit_func(Func *func)
     {
         this->function_depth += 1;
-        
+
         if (this->identifer_in_any_environment(func->identifier.lexeme))
         {
-            this->user_error_tracker->semantic_error("Identifier '" + func->identifier.lexeme + "' is already declared.");
+            this->user_error_tracker->semantic_error("Identifier '" + func->identifier.lexeme + "' is already declared.", func->identifier);
             return;
         }
 
@@ -365,18 +365,17 @@ public:
     {
         if (this->identifer_in_any_environment(type_stmt->identifier.lexeme))
         {
-            this->user_error_tracker->semantic_error("Identifier '" + type_stmt->identifier.lexeme + "' is already declared.");
+            this->user_error_tracker->semantic_error("Identifier '" + type_stmt->identifier.lexeme + "' is already declared.", type_stmt->identifier);
             return;
         }
 
         this->type_table.declare(type_stmt->identifier.lexeme, SemanticType());
     }
 
-
-    bool identifer_in_any_environment(std::string identifer) {
-        return
-            this->env.current_contains(identifer) ||
-            this->call_table.current_contains(identifer) ||
-            this->type_table.current_contains(identifer);
+    bool identifer_in_any_environment(std::string identifer)
+    {
+        return this->env.current_contains(identifer) ||
+               this->call_table.current_contains(identifer) ||
+               this->type_table.current_contains(identifer);
     }
 };
