@@ -26,9 +26,10 @@ public:
         BREAK,
         CONTINUE,
         CONST,
+        TYPE,
 
         // types
-        TYPE_IDENTIFIER,
+        TYPE_LITERAL,
 
         // single character
         STAR,

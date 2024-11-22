@@ -24,6 +24,7 @@
 #include "../ast_node/stmt/const_stmt.h"
 #include "../ast_node/stmt/break_stmt.h"
 #include "../ast_node/stmt/continue_stmt.h"
+#include "../ast_node/stmt/type_stmt.h"
 
 /*
  * Visitor that prints the Abstract Syntax Tree
@@ -124,6 +125,13 @@ public:
             if (auto continue_stmt = dynamic_cast<ContinueStmt *>(stmt.get()))
             {
                 continue_stmt->accept(this);
+                std::cout << std::endl;
+                continue;
+            }
+
+            if (auto type_stmt = dynamic_cast<TypeStmt *>(stmt.get()))
+            {
+                type_stmt->accept(this);
                 std::cout << std::endl;
                 continue;
             }
@@ -301,8 +309,13 @@ public:
         std::cout << "break";
     }
 
-    void visit_continue_stmt(ContinueStmt *break_stmt)
+    void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
         std::cout << "continue";
+    }
+
+    void visit_type_stmt(TypeStmt *type_stmt)
+    {
+        std::cout << "type " << type_stmt->identifier.lexeme << " = " << type_stmt->type_token.lexeme;
     }
 };

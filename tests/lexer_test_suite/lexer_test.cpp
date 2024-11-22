@@ -15,7 +15,7 @@ TEST(LexerTest, TokenizeBlockStmt)
     EXPECT_EQ(tokens[2].token_type, Token::Type::IDENTIFIER);
     EXPECT_EQ(tokens[2].lexeme, "x");
     EXPECT_EQ(tokens[3].token_type, Token::Type::COLON);
-    EXPECT_EQ(tokens[4].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[4].token_type, Token::Type::TYPE_LITERAL);
     EXPECT_EQ(tokens[4].lexeme, "int");
     EXPECT_EQ(tokens[5].token_type, Token::Type::EQUAL);
     EXPECT_EQ(tokens[6].token_type, Token::Type::INT_LITERAL);
@@ -25,7 +25,7 @@ TEST(LexerTest, TokenizeBlockStmt)
     EXPECT_EQ(tokens[9].token_type, Token::Type::IDENTIFIER);
     EXPECT_EQ(tokens[9].lexeme, "y");
     EXPECT_EQ(tokens[10].token_type, Token::Type::COLON);
-    EXPECT_EQ(tokens[11].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[11].token_type, Token::Type::TYPE_LITERAL);
     EXPECT_EQ(tokens[11].lexeme, "int");
     EXPECT_EQ(tokens[12].token_type, Token::Type::EQUAL);
     EXPECT_EQ(tokens[13].token_type, Token::Type::INT_LITERAL);
@@ -45,7 +45,7 @@ TEST(LexerTest, TokenizeConstStmt)
     EXPECT_EQ(tokens[1].token_type, Token::Type::IDENTIFIER);
     EXPECT_EQ(tokens[1].lexeme, "z");
     EXPECT_EQ(tokens[2].token_type, Token::Type::COLON);
-    EXPECT_EQ(tokens[3].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[3].token_type, Token::Type::TYPE_LITERAL);
     EXPECT_EQ(tokens[3].lexeme, "str");
     EXPECT_EQ(tokens[4].token_type, Token::Type::EQUAL);
     EXPECT_EQ(tokens[5].token_type, Token::Type::STR_LITERAL);
@@ -65,7 +65,7 @@ TEST(LexerTest, TokenizeDeclStmt)
     EXPECT_EQ(tokens[1].token_type, Token::Type::IDENTIFIER);
     EXPECT_EQ(tokens[1].lexeme, "x");
     EXPECT_EQ(tokens[2].token_type, Token::Type::COLON);
-    EXPECT_EQ(tokens[3].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[3].token_type, Token::Type::TYPE_LITERAL);
     EXPECT_EQ(tokens[3].lexeme, "int");
     EXPECT_EQ(tokens[4].token_type, Token::Type::EQUAL);
     EXPECT_EQ(tokens[5].token_type, Token::Type::INT_LITERAL);
@@ -115,17 +115,17 @@ TEST(LexerTest, TokenizeFuncStmt)
     EXPECT_EQ(tokens[3].token_type, Token::Type::IDENTIFIER);
     EXPECT_EQ(tokens[3].lexeme, "first");
     EXPECT_EQ(tokens[4].token_type, Token::Type::COLON);
-    EXPECT_EQ(tokens[5].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[5].token_type, Token::Type::TYPE_LITERAL);
     EXPECT_EQ(tokens[5].lexeme, "int");
     EXPECT_EQ(tokens[6].token_type, Token::Type::COMMA);
     EXPECT_EQ(tokens[7].token_type, Token::Type::IDENTIFIER);
     EXPECT_EQ(tokens[7].lexeme, "second");
     EXPECT_EQ(tokens[8].token_type, Token::Type::COLON);
-    EXPECT_EQ(tokens[9].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[9].token_type, Token::Type::TYPE_LITERAL);
     EXPECT_EQ(tokens[9].lexeme, "int");
     EXPECT_EQ(tokens[10].token_type, Token::Type::RPAREN);
     EXPECT_EQ(tokens[11].token_type, Token::Type::ARROW);
-    EXPECT_EQ(tokens[12].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[12].token_type, Token::Type::TYPE_LITERAL);
     EXPECT_EQ(tokens[12].lexeme, "int");
     EXPECT_EQ(tokens[13].token_type, Token::Type::LBRACE);
     EXPECT_EQ(tokens[14].token_type, Token::Type::RETURN);
@@ -272,7 +272,7 @@ TEST(LexerTest, TokenizeForLoop)
     EXPECT_EQ(tokens[2].token_type, Token::Type::IDENTIFIER);
     EXPECT_EQ(tokens[2].lexeme, "x");
     EXPECT_EQ(tokens[3].token_type, Token::Type::COLON);
-    EXPECT_EQ(tokens[4].token_type, Token::Type::TYPE_IDENTIFIER);
+    EXPECT_EQ(tokens[4].token_type, Token::Type::TYPE_LITERAL);
     EXPECT_EQ(tokens[5].token_type, Token::Type::EQUAL);
     EXPECT_EQ(tokens[6].token_type, Token::Type::INT_LITERAL);
     EXPECT_EQ(tokens[6].lexeme, "0");

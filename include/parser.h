@@ -48,6 +48,8 @@ public:
 
     std::unique_ptr<Stmt> continue_stmt();
 
+    std::unique_ptr<Stmt> type_stmt();
+
     std::unique_ptr<Stmt> if_stmt();
 
     std::unique_ptr<Stmt> print_stmt();

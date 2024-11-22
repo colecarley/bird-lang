@@ -2,6 +2,8 @@
 
 #include <string>
 #include <memory>
+#include <optional>
+
 #include "stmt.h"
 #include "../../lexer.h"
 #include "../../visitors/visitor.h"
@@ -10,28 +12,26 @@
 class Expr;
 
 /*
- * Const Declaration statement AST Node that represents variable declarations
+ * Type statement AST Node that represents type declarations
  * ex:
- * const x: int = 4;
+ * type x = int;
  */
-class ConstStmt : public Stmt
+class TypeStmt : public Stmt
 {
 public:
     Token identifier;
-    std::optional<Token> type_token;
+    Token type_token; // TODO: Create an ast node class for type tokens to categorize type literals, type identifiers, and type blocks. This class will be like stmt or expr.
     bool type_is_literal;
-    std::unique_ptr<Expr> value;
 
-    ConstStmt(Token identifier, std::optional<Token> type_token, bool type_is_literal, std::unique_ptr<Expr> value)
+    TypeStmt(Token identifier, Token type_token, bool type_is_literal)
     {
         this->identifier = identifier;
         this->type_token = type_token;
         this->type_is_literal = type_is_literal;
-        this->value = std::move(value);
     }
 
     void accept(Visitor *visitor)
     {
-        visitor->visit_const_stmt(this);
+        visitor->visit_type_stmt(this);
     }
 };
