@@ -4,7 +4,9 @@
 class CodeGen : public Visitor
 {
     Environment<BinaryenIndex> environment; // tracks the index of local variables
-    Stack<BinaryenExpressionRef> stack;     // for returning values
+    Environment<Type> type_table;
+
+    Stack<BinaryenExpressionRef> stack; // for returning values
 
     std::map<std::string, std::string> std_lib;
 
@@ -24,7 +26,8 @@ public:
 
     CodeGen() : mod(BinaryenModuleCreate())
     {
-        this->environment = Environment<BinaryenIndex>();
+        this->environment.push_env();
+        this->type_table.push_env();
     }
 
     void init_std_lib()
@@ -49,7 +52,6 @@ public:
     void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
         this->init_std_lib();
-        this->environment.push_env();
 
         this->current_function_name = "main";
         auto main_function_body = std::vector<BinaryenExpressionRef>();
@@ -139,6 +141,12 @@ public:
                 auto result = this->stack.pop();
                 main_function_body.push_back(result);
             }
+
+            if (auto type_stmt = dynamic_cast<TypeStmt *>(stmt.get()))
+            {
+                type_stmt->accept(this);
+                // no stack push here, only type table
+            }
         }
 
         BinaryenType params = BinaryenTypeNone();
@@ -196,6 +204,11 @@ public:
         this->environment.pop_env();
     }
 
+    bool is_bird_type(Token token)
+    {
+        return token.lexeme == "bool" || token.lexeme == "int" || token.lexeme == "float" || token.lexeme == "void" || token.lexeme == "str";
+    }
+
     BinaryenType from_bird_type(Token token)
     {
         if (token.lexeme == "bool")
@@ -209,7 +222,14 @@ public:
         else if (token.lexeme == "str")
             return BinaryenTypeInt32();
         else
+        {
+            if (this->type_table.contains(token.lexeme))
+            {
+                return from_bird_type(this->type_table.get(token.lexeme).type);
+            }
+
             throw BirdException("invalid type");
+        }
     }
 
     void visit_block(Block *block)
@@ -246,9 +266,22 @@ public:
         decl_stmt->value->accept(this);
         BinaryenExpressionRef initializer_value = this->stack.pop();
 
-        BinaryenType type = decl_stmt->type_identifier.has_value()
-                                ? from_bird_type(decl_stmt->type_identifier.value())
-                                : BinaryenExpressionGetType(initializer_value);
+        BinaryenType type;
+        if (decl_stmt->type_token.has_value())
+        {
+            if (!is_bird_type(decl_stmt->type_token.value()))
+            {
+                type = from_bird_type(this->type_table.get(decl_stmt->type_token.value().lexeme).type);
+            }
+            else
+            {
+                type = from_bird_type(decl_stmt->type_token.value());
+            }
+        }
+        else
+        {
+            type = BinaryenExpressionGetType(initializer_value);
+        }
 
         BinaryenIndex index = this->function_locals[this->current_function_name].size();
         this->function_locals[this->current_function_name].push_back(type);
@@ -770,9 +803,22 @@ public:
         const_stmt->value->accept(this);
         BinaryenExpressionRef initializer_value = this->stack.pop();
 
-        BinaryenType type = const_stmt->type_identifier.has_value()
-                                ? from_bird_type(const_stmt->type_identifier.value())
-                                : BinaryenExpressionGetType(initializer_value);
+        BinaryenType type;
+        if (const_stmt->type_token.has_value())
+        {
+            if (!is_bird_type(const_stmt->type_token.value()))
+            {
+                type = from_bird_type(this->type_table.get(const_stmt->type_token.value().lexeme).type);
+            }
+            else
+            {
+                type = from_bird_type(const_stmt->type_token.value());
+            }
+        }
+        else
+        {
+            type = BinaryenExpressionGetType(initializer_value);
+        }
 
         BinaryenIndex index = this->function_locals[this->current_function_name].size();
         this->function_locals[this->current_function_name].push_back(type);
@@ -986,5 +1032,17 @@ public:
         //     0);
 
         // current_offset += str.size() + 1;
+    }
+
+    void visit_type_stmt(TypeStmt *type_stmt)
+    {
+        if (type_stmt->type_is_literal)
+        {
+            this->type_table.declare(type_stmt->identifier.lexeme, Type(type_stmt->type_token));
+        }
+        else
+        {
+            this->type_table.declare(type_stmt->identifier.lexeme, Type(this->type_table.get(type_stmt->type_token.lexeme).type));
+        }
     }
 };
