@@ -944,6 +944,16 @@ public:
             stmt->accept(this);
             auto result = this->stack.pop();
 
+            /*
+             * drop unused result if the function does not return a value
+             * pushing to wasm stack causes:
+             *     "error: type mismatch at end of function, expected [] but got [i32]"
+             */
+            if (result_type == BinaryenTypeNone())
+            {
+                result = BinaryenDrop(this->mod, result);
+            }
+
             current_function_body.push_back(result);
         }
 
