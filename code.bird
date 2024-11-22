@@ -46,3 +46,22 @@ var z: int = 7;
 const y: float = -9.2;
 var x: float = (z * y);
 print x;
+
+var z = x + y;
+
+print z;
+
+print 1;
+var first: number = 3;
+var second: int = 5;
+
+print first + second;
+
+fn add(x: number, y: number) -> number {
+    return x + y;
+}
+
+print add(60, 9);
+
+print "hello, world!";
+print "goodbye, world!";

@@ -70,7 +70,9 @@ class CodeGen : public Visitor
 
     std::vector<MemorySegment> memory_segments; // store memory segments to add at once
 
-    uint32_t current_offset = 0;
+    uint32_t current_offset = 1024; // current offset is set high to allow
+                                    // js to identify a string by a higher
+                                    // offset, will fix tomorrow
     BinaryenModuleRef mod;
 
 public:
@@ -159,6 +161,50 @@ public:
             0);
     }
 
+    void add_memory_segment(BinaryenModuleRef mod, const std::string &str, uint32_t &str_offset)
+    {
+        str_offset = current_offset;
+        this->current_offset += str.size() + 1;
+
+        MemorySegment segment = {
+            str.c_str(),
+            static_cast<BinaryenIndex>(str.size() + 1), // + 1 for '\0'
+            BinaryenConst(mod, BinaryenLiteralInt32(str_offset))};
+
+        this->memory_segments.push_back(segment);
+    }
+
+    void init_static_memory(BinaryenModuleRef mod)
+    {
+        std::vector<const char *> segments;
+        std::vector<BinaryenIndex> sizes;
+        std::vector<int8_t> passive;
+        std::vector<BinaryenExpressionRef> offsets;
+
+        // add all memory segment information to
+        // vectors to set at once
+        for (const auto &segment : memory_segments)
+        {
+            segments.push_back(segment.data);
+            sizes.push_back(segment.size);
+            passive.push_back(0);
+            offsets.push_back(segment.offset);
+        }
+
+        // call to create memory with all segments
+        BinaryenSetMemory(
+            mod,
+            1, // initial pages
+            1, // maximum pages
+            "memory",
+            segments.data(),
+            passive.data(),
+            offsets.data(),
+            sizes.data(),
+            segments.size(),
+            0);
+    }
+
     void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
     {
         this->init_std_lib();
@@ -186,7 +232,7 @@ public:
             {
                 const_stmt->accept(this);
                 auto result = this->stack.pop();
-                main_function_body.push_back(result);
+                main_function_body.push_back(result.expression);
             }
 
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
@@ -438,21 +484,21 @@ public:
                 type = to_code_gen_type(decl_stmt->type_token.value());
             }
 
-            if (type == BinaryenTypeInt32() && BinaryenExpressionGetType(initializer_value) == BinaryenTypeFloat64())
+            if (type == BinaryenTypeInt32() && BinaryenExpressionGetType(initializer_value.expression) == BinaryenTypeFloat64())
             {
                 initializer_value =
                     BinaryenUnary(
                         mod,
                         BinaryenTruncSatSFloat64ToInt32(),
-                        initializer_value);
+                        initializer_value.expression);
             }
-            else if (type == BinaryenTypeFloat64() && BinaryenExpressionGetType(initializer_value) == BinaryenTypeInt32())
+            else if (type == BinaryenTypeFloat64() && BinaryenExpressionGetType(initializer_value.expression) == BinaryenTypeInt32())
             {
                 initializer_value =
                     BinaryenUnary(
                         mod,
                         BinaryenConvertSInt32ToFloat64(),
-                        initializer_value);
+                        initializer_value.expression);
             }
         }
         else
@@ -1126,7 +1172,6 @@ public:
             BinaryenExpressionRef str_literal = BinaryenConst(this->mod, BinaryenLiteralInt32(str_ptr));
 
             this->stack.push(TaggedExpression(str_literal, CodeGenPtr));
-            break;
         }
 
         case Token::Type::IDENTIFIER:
