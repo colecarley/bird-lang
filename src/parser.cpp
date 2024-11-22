@@ -84,10 +84,12 @@ std::unique_ptr<Stmt> Parser::stmt()
 
 std::unique_ptr<Stmt> Parser::return_stmt()
 {
-    if (this->advance().token_type != Token::Type::RETURN)
+    if (this->peek().token_type != Token::Type::RETURN)
     {
         throw BirdException("Expected 'return' at the beginning of return stmt");
     }
+
+    Token return_token = this->advance();
 
     if (this->peek().token_type == Token::Type::SEMICOLON)
     {
@@ -99,7 +101,7 @@ std::unique_ptr<Stmt> Parser::return_stmt()
 
     this->consume(Token::Type::SEMICOLON, ";", "after const statement", this->peek());
 
-    return std::make_unique<ReturnStmt>(ReturnStmt(std::move(expr)));
+    return std::make_unique<ReturnStmt>(ReturnStmt(return_token, std::move(expr)));
 }
 
 std::unique_ptr<Stmt> Parser::const_decl()
@@ -162,10 +164,12 @@ std::unique_ptr<Stmt> Parser::block()
 
 std::unique_ptr<Stmt> Parser::if_stmt()
 {
-    if (this->advance().token_type != Token::Type::IF)
+    if (this->peek().token_type != Token::Type::IF)
     {
         throw BirdException("Expected 'if' at the beginning of if statement");
     }
+
+    auto if_token = this->advance();
 
     auto condition = this->expr();
 
@@ -175,12 +179,14 @@ std::unique_ptr<Stmt> Parser::if_stmt()
     {
         this->advance();
         return std::make_unique<IfStmt>(
+            if_token,
             std::move(condition),
             std::move(statement),
             std::make_optional<std::unique_ptr<Stmt>>(std::move(this->stmt())));
     }
 
     return std::make_unique<IfStmt>(
+        if_token,
         std::move(condition),
         std::move(statement),
         std::nullopt);
@@ -225,24 +231,28 @@ std::unique_ptr<Stmt> Parser::print_stmt()
 
 std::unique_ptr<Stmt> Parser::while_stmt()
 {
-    if (this->advance().token_type != Token::Type::WHILE)
+    if (this->peek().token_type != Token::Type::WHILE)
     {
         throw BirdException("Expected 'while' at the beginning of while statement");
     }
+
+    auto while_token = this->advance();
 
     auto condition = this->expr();
 
     auto stmt = this->stmt();
 
-    return std::make_unique<WhileStmt>(WhileStmt(std::move(condition), std::move(stmt)));
+    return std::make_unique<WhileStmt>(WhileStmt(while_token, std::move(condition), std::move(stmt)));
 }
 
 std::unique_ptr<Stmt> Parser::for_stmt()
 {
-    if (this->advance().token_type != Token::Type::FOR)
+    if (this->peek().token_type != Token::Type::FOR)
     {
         throw BirdException("expected 'for' at the beginning of for statement");
     }
+
+    Token for_token = this->advance();
 
     std::optional<std::unique_ptr<Stmt>> initializer;
     if (this->peek().token_type != Token::Type::SEMICOLON)
@@ -280,6 +290,7 @@ std::unique_ptr<Stmt> Parser::for_stmt()
     auto body = this->stmt();
 
     return std::make_unique<ForStmt>(
+        for_token,
         std::move(initializer),
         std::move(condition),
         std::move(increment),
@@ -364,26 +375,30 @@ std::unique_ptr<Expr> Parser::assign_expr()
 
 std::unique_ptr<Stmt> Parser::break_stmt()
 {
-    if (this->advance().token_type != Token::Type::BREAK)
+    if (this->peek().token_type != Token::Type::BREAK)
     {
         throw BirdException("Expected 'break' at the beginning of break stmt");
     }
 
+    Token break_token = this->advance();
+
     this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
 
-    return std::make_unique<BreakStmt>();
+    return std::make_unique<BreakStmt>(break_token);
 }
 
 std::unique_ptr<Stmt> Parser::continue_stmt()
 {
-    if (this->advance().token_type != Token::Type::CONTINUE)
+    if (this->peek().token_type != Token::Type::CONTINUE)
     {
         throw BirdException("Expected 'continue' at the beginning of continue stmt");
     }
 
+    Token continue_token = this->advance();
+
     this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
 
-    return std::make_unique<ContinueStmt>();
+    return std::make_unique<ContinueStmt>(continue_token);
 }
 
 std::unique_ptr<Expr> Parser::expr()
@@ -397,7 +412,7 @@ std::unique_ptr<Expr> Parser::ternary()
 
     if (this->peek().token_type == Token::Type::QUESTION)
     {
-        this->advance();
+        Token ternary_token = this->advance();
 
         auto true_expr = this->expr();
 
@@ -407,6 +422,7 @@ std::unique_ptr<Expr> Parser::ternary()
 
         return std::make_unique<Ternary>(
             std::move(condition),
+            ternary_token,
             std::move(true_expr),
             std::move(false_expr));
     }

@@ -156,7 +156,7 @@ public:
     {
         if (this->env.current_contains(decl_stmt->identifier.lexeme))
         {
-            this->user_error_tracker->semantic_error("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.");
+            this->user_error_tracker->semantic_error("Identifier '" + decl_stmt->identifier.lexeme + "' is already declared.", decl_stmt->identifier);
             return;
         }
 
@@ -171,7 +171,7 @@ public:
     {
         if (!this->env.contains(assign_expr->identifier.lexeme))
         {
-            this->user_error_tracker->semantic_error("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.");
+            this->user_error_tracker->semantic_error("Identifier '" + assign_expr->identifier.lexeme + "' is not initialized.", assign_expr->identifier);
             return;
         }
 
@@ -179,7 +179,7 @@ public:
 
         if (!previous_value.is_mutable)
         {
-            this->user_error_tracker->semantic_error("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.");
+            this->user_error_tracker->semantic_error("Identifier '" + assign_expr->identifier.lexeme + "' is not mutable.", assign_expr->identifier);
             return;
         }
 
@@ -203,7 +203,7 @@ public:
     {
         if (this->env.current_contains(const_stmt->identifier.lexeme))
         {
-            this->user_error_tracker->semantic_error("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.");
+            this->user_error_tracker->semantic_error("Identifier '" + const_stmt->identifier.lexeme + "' is already declared.", const_stmt->identifier);
             return;
         }
 
@@ -264,7 +264,7 @@ public:
     {
         if (primary->value.token_type == Token::Type::IDENTIFIER && !this->env.contains(primary->value.lexeme))
         {
-            this->user_error_tracker->semantic_error("Identifier '" + primary->value.lexeme + "' is not initialized.");
+            this->user_error_tracker->semantic_error("Identifier '" + primary->value.lexeme + "' is not initialized.", primary->value);
             return;
         }
     }
@@ -300,7 +300,7 @@ public:
     {
         if (!this->call_table.contains(call->identifier.lexeme))
         {
-            this->user_error_tracker->semantic_error("Function call identifier '" + call->identifier.lexeme + "' is not declared.");
+            this->user_error_tracker->semantic_error("Function call identifier '" + call->identifier.lexeme + "' is not declared.", call->identifier);
             return;
         }
 
@@ -308,7 +308,7 @@ public:
 
         if (function.param_count != call->args.size())
         {
-            this->user_error_tracker->semantic_error("Function call identifer '" + call->identifier.lexeme + "' does not use the correct number of arguments.");
+            this->user_error_tracker->semantic_error("Function call identifer '" + call->identifier.lexeme + "' does not use the correct number of arguments.", call->identifier);
             return;
         }
     }
@@ -317,7 +317,7 @@ public:
     {
         if (this->function_depth == 0)
         {
-            this->user_error_tracker->semantic_error("Return statement is declared outside of a function.");
+            this->user_error_tracker->semantic_error("Return statement is declared outside of a function.", return_stmt->return_token);
             return;
         }
 
@@ -331,7 +331,7 @@ public:
     {
         if (this->loop_depth == 0)
         {
-            this->user_error_tracker->semantic_error("Break statement is declared outside of a loop.");
+            this->user_error_tracker->semantic_error("Break statement is declared outside of a loop.", break_stmt->break_token);
             return;
         }
     }
@@ -340,7 +340,7 @@ public:
     {
         if (this->loop_depth == 0)
         {
-            this->user_error_tracker->semantic_error("Continue statement is declared outside of a loop.");
+            this->user_error_tracker->semantic_error("Continue statement is declared outside of a loop.", continue_stmt->continue_token);
             return;
         }
     }
