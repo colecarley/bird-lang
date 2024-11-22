@@ -568,9 +568,19 @@ public:
         }
         else
         {
+            if (this->type_table.contains(type))
+            {
+                return this->get_type_from_token(this->type_table.get(type).type);
+            }
+
             this->user_error_tracker->type_error("unknown type", token);
             return BirdType::ERROR;
         }
+    }
+
+    bool is_bird_type(Token token)
+    {
+        return token.lexeme == "int" || token.lexeme == "float" || token.lexeme == "bool" || token.lexeme == "str" || token.lexeme == "void";
     }
 
     void visit_func(Func *func)
@@ -589,6 +599,12 @@ public:
 
         for (auto &param : func->param_list)
         {
+            if (!this->is_bird_type(param.second))
+            {
+                this->env.declare(param.first.lexeme, this->get_type_from_token(this->type_table.get(param.second.lexeme).type));
+                continue;
+            }
+
             this->env.declare(param.first.lexeme, this->get_type_from_token(param.second));
         }
 

@@ -325,7 +325,7 @@ std::unique_ptr<Stmt> Parser::var_decl()
     {
         this->advance();
         type_is_literal = this->peek().token_type == Token::Type::TYPE_LITERAL ? true : false;
-        
+
         if (this->peek().token_type == Token::Type::TYPE_LITERAL || this->peek().token_type == Token::Type::IDENTIFIER)
         {
             type_token = std::make_optional<Token>(this->advance());
@@ -686,6 +686,11 @@ std::pair<Token, Token> Parser::param_decl()
 
     auto type_identifier = this->peek();
 
+    if (type_identifier.token_type == Token::Type::IDENTIFIER)
+    {
+        this->consume(Token::Type::IDENTIFIER, "type", "after \':\' in parameter declaration", this->peek_previous());
+        return {identifier, type_identifier};
+    }
     this->consume(Token::Type::TYPE_LITERAL, "type", "after \':\' in parameter declaration", this->peek_previous());
 
     return {identifier, type_identifier};
@@ -701,6 +706,12 @@ std::optional<Token> Parser::fn_return_type()
     this->advance();
 
     auto return_type = this->peek();
+
+    if (return_type.token_type == Token::Type::IDENTIFIER)
+    {
+        this->consume(Token::Type::IDENTIFIER, "type", "after arrow", this->peek_previous());
+        return return_type;
+    }
 
     this->consume(Token::Type::TYPE_LITERAL, "type", "after arrow", this->peek_previous());
 
