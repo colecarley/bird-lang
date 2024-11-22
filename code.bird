@@ -17,3 +17,6 @@ fn add(x: number, y: number) -> number {
 }
 
 print add(60, 9);
+
+print "hello, world!";
+print "goodbye, world!";
