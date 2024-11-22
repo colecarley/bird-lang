@@ -26,14 +26,17 @@ class Expr;
 class IfStmt : public Stmt
 {
 public:
+    Token if_token;
     std::unique_ptr<Expr> condition;
     std::unique_ptr<Stmt> then_branch;
     std::optional<std::unique_ptr<Stmt>> else_branch;
 
-    IfStmt(std::unique_ptr<Expr> condition,
+    IfStmt(Token if_token,
+           std::unique_ptr<Expr> condition,
            std::unique_ptr<Stmt> then_branch,
            std::optional<std::unique_ptr<Stmt>> else_branch)
-        : condition(std::move(condition)),
+        : if_token(if_token),
+          condition(std::move(condition)),
           then_branch(std::move(then_branch))
     {
         if (else_branch.has_value())

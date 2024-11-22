@@ -18,16 +18,19 @@ class Expr;
 class ForStmt : public Stmt
 {
 public:
+    Token for_token;
     std::optional<std::unique_ptr<Stmt>> initializer;
     std::optional<std::unique_ptr<Expr>> condition;
     std::optional<std::unique_ptr<Expr>> increment;
     std::unique_ptr<Stmt> body;
 
-    ForStmt(std::optional<std::unique_ptr<Stmt>> initializer,
+    ForStmt(Token for_token,
+            std::optional<std::unique_ptr<Stmt>> initializer,
             std::optional<std::unique_ptr<Expr>> condition,
             std::optional<std::unique_ptr<Expr>> increment,
             std::unique_ptr<Stmt> body)
-        : initializer(std::move(initializer)),
+        : for_token(for_token),
+          initializer(std::move(initializer)),
           condition(std::move(condition)),
           increment(std::move(increment)),
           body(std::move(body)) {}
