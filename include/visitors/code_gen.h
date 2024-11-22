@@ -724,7 +724,7 @@ public:
             // create_static_memory(this->mod, str_value, str_ptr);
 
             // this->stack.push(BinaryenConst(this->mod, BinaryenLiteralInt32(str_ptr)));
-            //
+            throw BirdException("implement strings");
             break;
         }
 
