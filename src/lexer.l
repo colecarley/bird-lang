@@ -2,14 +2,18 @@
 #include <string>
 
 #include "../src/scanner.hpp"
+#include "token.h"
 
 using token = Bird::Parser::token;
+using T = Token::Type;
 
 #define yyterminate() return token::END
 
 #define YY_NO_UNISTD_H
 
 #define YY_USER_ACTION location->step(); location->columns(yyleng);
+
+#define make_token(type) new Token(type, yytext, location->begin.line, location->begin.column)
 
 %}
 
@@ -29,34 +33,62 @@ TYPE_IDENT      "int"|"float"|"bool"|"string"|"void"
     // code to run at the start of the lexer
 %}
 
-"var"                     {return token:: VAR;} 
-"const"                   {return token::CONST;} 
-"print"                   {return token::PRINT;} 
-"if"                      {return token::IF;} 
-"else"                    {return token::ELSE;} 
-"while"                   {return token::WHILE;} 
-"for"                     {return token::FOR;} 
-"do"                      {return token::DO;} 
-"fn"                      {return token::FN;} 
-"return"                  {return token::RETURN;} 
-"break"                   {return token::BREAK;} 
-"continue"                {return token::CONTINUE;} 
+"var"           { yylval.token_ptr = make_token(T::VAR);
+                  return token::VAR; }
 
-{TYPE_IDENT}              {yylval.identifier = yytext;
+"const"         { yylval.token_ptr = make_token(T::CONST);
+                  return token::CONST; }
+
+"print"         { yylval.token_ptr = make_token(T::PRINT);
+                  return token::PRINT; }
+
+"if"            { yylval.token_ptr = make_token(T::IF);
+                  return token::IF; }
+
+"else"          { yylval.token_ptr = make_token(T::ELSE);
+                  return token::ELSE; }
+
+"while"         { yylval.token_ptr = make_token(T::WHILE);
+                  return token::WHILE; }
+
+"for"           { yylval.token_ptr = make_token(T::FOR);
+                  return token::FOR; }
+
+"do"            { yylval.token_ptr = make_token(T::DO);
+                  return token::DO; }
+
+"fn"            { yylval.token_ptr = make_token(T::FN);
+                  return token::FN; }
+
+"return"        { yylval.token_ptr = make_token(T::RETURN);
+                  return token::RETURN; }
+
+"break"         { yylval.token_ptr = make_token(T::BREAK);
+                  return token::BREAK; }
+
+"continue"      { yylval.token_ptr = make_token(T::CONTINUE);
+                  return token::CONTINUE; }
+
+
+{TYPE_IDENT}              { yylval.token_ptr = make_token(T::TYPE_IDENTIFIER);
                            return token::TYPE_IDENTIFIER;} 
 
-[0-9]+"."[0-9]+{EXP}?     {yylval.double_val = atof(yytext);
+[0-9]+"."[0-9]+{EXP}?     {yylval.token_ptr = make_token(T::FLOAT_LITERAL);
                             return token::FLOAT_LITERAL;} 
-[0-9]+                    {yylval.int_val = atoi(yytext);
+
+[0-9]+                    {yylval.token_ptr = make_token(T::INT_LITERAL);
                            return token::INT_LITERAL;} 
-"true"                    {yylval.bool_val = true;
+
+"true"                    {yylval.token_ptr = make_token(T::BOOL_LITERAL);
                            return token::BOOL_LITERAL;} 
-"false"                   {yylval.bool_val = false;
+
+"false"                   {yylval.token_ptr = make_token(T::BOOL_LITERAL);
                            return token::BOOL_LITERAL;}
-\".*\"                    {yylval.string_val = yytext;
+
+\".*\"                    {yylval.token_ptr = make_token(T::STR_LITERAL);
                            return token::STR_LITERAL;} 
 
-{IDENT}                 {yylval.identifier = yytext;
+{IDENT}                 {yylval.token_ptr = make_token(T::IDENTIFIER);
                          return token::IDENTIFIER;} 
 
 ","                     {return token::COMMA;} 

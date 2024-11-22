@@ -1,6 +1,5 @@
 %skeleton "lalr1.cc"
 %require  "3.2"
-%debug 
 %defines 
 %define api.namespace {Bird}
 %define api.parser.class {Parser}
@@ -37,6 +36,8 @@
    #include "../include/exceptions/user_exception.h"
    #include "../include/exceptions/user_error_tracker.h"
 
+   #include "../include/token.h"
+
 
    #define YYDEBUG 1
 
@@ -55,101 +56,115 @@
    { return scanner.next_token(value, location); }
 }
 
-/* %define api.value.type variant */
 %define parse.assert
 
 %union {
-   int int_val;
-   double double_val;
-   int bool_val;
-   char* string_val;
-   char* identifier;
-
+   Token* token_ptr;
    Stmt* stmt_ptr;
    Expr* expr_ptr;
-   // DeclStmt* decl_stmt_ptr;
-   // IfStmt* if_stmt_ptr;
-   // ConstStmt* const_stmt_ptr;
-   // PrintStmt* print_stmt_ptr;
-   // Block* block_ptr;
-   // Func* func_ptr;
-   // WhileStmt* while_stmt_ptr;
-   // ForStmt* for_stmt_ptr;
-   // ReturnStmt* return_stmt_ptr;
-   // BreakStmt* break_stmt_ptr;
-   // ContinueStmt* continue_stmt_ptr;
+
+   std::vector<Token> *token_vec;
 }
 
 %token END 0 _("end of file")
-%token VAR "var"
-%token CONST "const"
-%token MINUS "-"
-%token PERCENT "%"
-%token PLUS "+"
-%token SLASH "/"
-%token STAR "*"
-%token SEMICOLON ";"
-%token QUESTION "?"
-%token EQUAL "="
-%token PRINT "print"
-%token COMMA ","
-%token RBRACE "]"
-%token LBRACE "["
-%token RPAREN ")"
-%token LPAREN "("
-%token <identifier> IDENTIFIER _("identifier")
-%token <identifier> TYPE_IDENTIFIER _("type identifier")
-%token <int_val> INT_LITERAL _("int literal")
-%token <double_val> FLOAT_LITERAL _("float literal")
-%token <bool_val> BOOL_LITERAL _("bool literal")
-%token <string_val> STR_LITERAL _("string literal")
-%token COLON ":"
-%token IF "if"
-%token ELSE "else"
-%token WHILE "while"
-%token FOR "for"
-%token DO "do"
-%token GREATER ">"
-%token LESS "<"
-%token BANG "!"
-%token ARROW "->"
-%token GREATER_EQUAL ">="
-%token LESS_EQUAL "<="
-%token EQUAL_EQUAL "=="
-%token BANG_EQUAL "!="
-%token PLUS_EQUAL "+="
-%token MINUS_EQUAL "-="
-%token STAR_EQUAL "*="
-%token SLASH_EQUAL "/="
-%token PERCENT_EQUAL "%="
-%token RETURN "return"
-%token BREAK "break"
-%token CONTINUE "continue"
-%token FN "fn"
 
 
-/* %type <stmt_ptr> stmt
-%type <stmt_ptr> decl_stmt
-%type <stmt_ptr> if_stmt
-%type <stmt_ptr> const_stmt
-%type <stmt_ptr> print_stmt
-%type <stmt_ptr> block
-%type <stmt_ptr> func
-%type <stmt_ptr> while_stmt
-%type <stmt_ptr> for_stmt
-%type <stmt_ptr> return_stmt
-%type <stmt_ptr> break_stmt
-%type <stmt_ptr> continue_stmt
-%type <stmt_ptr> expr_stmt
+%token <token_ptr> 
+VAR "var"
+CONST "const"
+IDENTIFIER _("identifier")
+TYPE_IDENTIFIER _("type identifier")
+INT_LITERAL _("int literal")
+FLOAT_LITERAL _("float literal")
+BOOL_LITERAL _("bool literal")
+STR_LITERAL _("string literal")
+IF "if"
+ELSE "else"
+WHILE "while"
+FOR "for"
+DO "do"
+RETURN "return"
+BREAK "break"
+CONTINUE "continue"
+FN "fn"
+PRINT "print"
 
-%type <expr_ptr> expr */
+EQUAL "="
+PLUS_EQUAL "+="
+MINUS_EQUAL "-="
+STAR_EQUAL "*="
+SLASH_EQUAL "/="
+PERCENT_EQUAL "%="
+EQUAL_EQUAL "=="
+BANG_EQUAL "!="
+GREATER ">"
+GREATER_EQUAL ">="
+LESS "<"
+LESS_EQUAL "<="
+MINUS "-"
+PERCENT "%"
+PLUS "+"
+SLASH "/"
+STAR "*"
+
+%token 
+SEMICOLON ";"
+QUESTION "?"
+COMMA ","
+RBRACE "]"
+LBRACE "["
+RPAREN ")"
+LPAREN "("
+COLON ":"
+BANG "!"
+ARROW "->"
+
+
+%type <stmt_ptr> 
+stmt
+decl_stmt
+if_stmt
+const_stmt
+print_stmt
+block
+func
+while_stmt
+for_stmt
+return_stmt
+break_stmt
+continue_stmt
+expr_stmt
+
+%type <expr_ptr> 
+expr
+assign_expr
+ternary_expr
+equality_expr
+comparison_expr
+term_expr
+factor_expr
+unary_expr
+call_expr
+
+%type <expr_ptr> grouping
+%type <token_ptr> primary
+
+%type <token_ptr>
+ASSIGN_OP
+COMPARISON_OP
+TERM_OP
+FACTOR_OP
+UNARY_OP
+EQUALITY_OP
+
+%type <token_vec> arg_list
 
 %right ASSIGN
 %right TERNARY
 %left EQUALITY
 %left COMPARISON
-%left ADD SUBTRACT
-%left MULTIPLY DIVIDE
+%left TERM
+%left FACTOR
 %right UNARY
 %left CALL
 %nonassoc PRIMARY GROUPING
@@ -230,10 +245,8 @@ expr: assign_expr %prec ASSIGN
    | ternary_expr %prec TERNARY
    | equality_expr %prec EQUALITY
    | comparison_expr %prec COMPARISON
-   | add_expr %prec ADD
-   | subtract_expr %prec SUBTRACT
-   | multiply_expr %prec MULTIPLY
-   | divide_expr %prec DIVIDE
+   | term_expr %prec TERM
+   | factor_expr %prec FACTOR
    | unary_expr %prec UNARY
    | call_expr %prec CALL
    | primary %prec PRIMARY
@@ -246,13 +259,11 @@ ternary_expr: expr QUESTION expr COLON expr
 
 equality_expr: expr EQUALITY_OP expr
 
-comparison_expr: expr COMP_OP expr
+comparison_expr: expr COMPARISON_OP expr
 
-add_expr: expr PLUS expr
-subtract_expr: expr MINUS expr
+term_expr: expr TERM_OP expr
 
-multiply_expr: expr STAR expr
-divide_expr: expr SLASH expr
+factor_expr: expr FACTOR_OP expr
 
 unary_expr: UNARY_OP expr
 
@@ -266,8 +277,6 @@ primary: IDENTIFIER
 
 grouping: LPAREN expr RPAREN
 
-EQUALITY_OP: EQUAL_EQUAL
-   | BANG_EQUAL
 
 ASSIGN_OP: EQUAL
    | PLUS_EQUAL
@@ -276,10 +285,20 @@ ASSIGN_OP: EQUAL
    | SLASH_EQUAL
    | PERCENT_EQUAL
 
-COMP_OP: GREATER
+EQUALITY_OP: EQUAL_EQUAL
+   | BANG_EQUAL
+
+COMPARISON_OP: GREATER
    | GREATER_EQUAL
    | LESS
    | LESS_EQUAL
+
+FACTOR_OP: STAR
+   | SLASH
+   | PERCENT
+
+TERM_OP: PLUS
+   | MINUS
 
 UNARY_OP: MINUS
 
@@ -288,6 +307,4 @@ UNARY_OP: MINUS
 void Bird::Parser::error( const location_type &loc, const std::string &err_message )
 {
    std::cerr << "Error: " << err_message << " at line " << loc << "\n";
-   /* std::cerr << "[Tried to parse token " << yylloc.token_kind_type << "]\n"; */
-   /* std::cout << "Error with parsing " << std::endl; */
 }
