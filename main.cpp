@@ -14,7 +14,6 @@
 #include "include/exceptions/user_error_tracker.h"
 
 #include "include/visitors/code_gen.h"
-#include "binaryen-c.h"
 #include "include/parser2.hpp" // TODO: change this name
 
 extern int bird_parse(const char *input);
@@ -151,6 +150,9 @@ void compile(std::string filename)
     {
         error_tracker.print_errors_and_exit();
     }
+
+    CodeGen codegen;
+    codegen.generate(&ast);
 }
 
 void interpret(std::string filename)
@@ -223,6 +225,5 @@ std::string read_file(std::string filename)
             code += line += '\n';
         }
     }
-
     return code;
 }

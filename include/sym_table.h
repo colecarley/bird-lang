@@ -85,7 +85,7 @@ public:
             }
         }
 
-        throw BirdException("undefined identifier in environment: " + identifier);
+        throw BirdException("cannot set undefined identifier in environment: " + identifier);
     }
 
     T get(std::string identifier)
@@ -103,6 +103,6 @@ public:
             }
         }
 
-        throw BirdException("undefined identifier in environment: " + identifier);
+        throw BirdException("cannot get undefined identifier in environment: " + identifier);
     }
 };

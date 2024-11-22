@@ -1,6 +1,12 @@
+var x = 1.2;
+var y = 45.7;
 type number = int;
 
+var z = x + y;
 
+print z;
+
+print 1;
 var first: number = 3;
 var second: int = 5;
 
