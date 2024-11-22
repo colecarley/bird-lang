@@ -29,14 +29,20 @@ public:
 
     void init_std_lib()
     {
-        std::vector<BinaryenType> arr = {BinaryenTypeInt32(), BinaryenTypeFloat64()};
-        auto type = BinaryenTypeCreate(arr.data(), arr.size());
         BinaryenAddFunctionImport(
             this->mod,
-            "print",
+            "print_i32",
             "env",
-            "print",
-            type,
+            "print_i32",
+            BinaryenTypeInt32(),
+            BinaryenTypeNone());
+
+        BinaryenAddFunctionImport(
+            this->mod,
+            "print_f64",
+            "env",
+            "print_f64",
+            BinaryenTypeFloat64(),
             BinaryenTypeNone());
     }
 
@@ -352,38 +358,38 @@ public:
         for (auto &arg : print_stmt->args)
         {
             arg->accept(this);
-        }
+            auto result = this->stack.pop();
 
-        std::vector<BinaryenExpressionRef> results;
-        for (int i = 0; i < print_stmt->args.size(); i++)
-        {
-            results.push_back(this->stack.pop());
-        }
-
-        // i think we need to reverse it again
-        // probably not the most computationally efficient
-        std::reverse(results.begin(), results.end());
-
-        std::vector<BinaryenExpressionRef> console_log_args;
-        for (auto &result : results)
-        {
             // TODO: print strings
-            if (BinaryenExpressionGetType(result) == BinaryenTypeInt32() ||
-                BinaryenExpressionGetType(result) == BinaryenTypeFloat64())
+            if (BinaryenExpressionGetType(result) == BinaryenTypeInt32())
             {
-                console_log_args.push_back(result);
+                BinaryenExpressionRef consoleLogCall =
+                    BinaryenCall(
+                        this->mod,
+                        "print_i32",
+                        &result,
+                        1,
+                        BinaryenTypeNone());
+
+                this->stack.push(consoleLogCall);
+            }
+            else if (BinaryenExpressionGetType(result) == BinaryenTypeFloat64())
+            {
+                BinaryenExpressionRef consoleLogCall =
+                    BinaryenCall(
+                        this->mod,
+                        "print_f64",
+                        &result,
+                        1,
+                        BinaryenTypeNone());
+
+                this->stack.push(consoleLogCall);
+            }
+            else
+            {
+                throw BirdException("usupported print datatype");
             }
         }
-
-        BinaryenExpressionRef consoleLogCall =
-            BinaryenCall(
-                this->mod,
-                "print",
-                console_log_args.data(),
-                console_log_args.size(),
-                BinaryenTypeNone());
-
-        this->stack.push(consoleLogCall);
     }
 
     void visit_expr_stmt(ExprStmt *expr_stmt)
@@ -958,17 +964,14 @@ public:
     void create_static_memory(BinaryenModuleRef mod, const std::string &str, uint32_t &str_offset)
     {
         // TODO: make this work
-        // static uint32_t current_offset;
-        // str_offset = 1024;
-        // current_offset += str.size() + 1;
+        // static uint32_t current_offset = 1024;
+        // str_offset = current_offset;
 
         // const char *segments[] = {str.c_str()};
-        // BinaryenIndex segment_sizes[] = {static_cast<char>(str.size())};
+        // BinaryenIndex segment_sizes[] = {static_cast<BinaryenIndex>(str.size() + 1)};
         // int8_t segment_passive[] = {0};
         // BinaryenExpressionRef segment_offsets[] = {
-        //     BinaryenConst(
-        //         mod,
-        //         BinaryenLiteralInt32(str_offset))};
+        //     BinaryenConst(mod, BinaryenLiteralInt32(current_offset))};
 
         // BinaryenSetMemory(
         //     mod,
@@ -981,5 +984,7 @@ public:
         //     segment_sizes,
         //     1,
         //     0);
+
+        // current_offset += str.size() + 1;
     }
 };

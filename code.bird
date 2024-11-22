@@ -1,5 +1,8 @@
 var x = 1.2;
-var y = 2.4;
+var y = 45.7;
+
 var z = x + y;
 
 print z;
+
+print 1;
