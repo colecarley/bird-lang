@@ -47,21 +47,29 @@ const y: float = -9.2;
 var x: float = (z * y);
 print x;
 
-var z = x + y;
+fn ret_str(s: str) -> str {
+    return s;
+}
 
-print z;
+fn print_str(s: str) -> void {
+    print s;
+}
 
-print 1;
-var first: number = 3;
-var second: int = 5;
+var s: str = "hello, world!";
 
-print first + second;
+print ret_str(s);
 
-fn add(x: number, y: number) -> number {
+print_str(s);
+
+fn add(x: int, y: int) -> int {
     return x + y;
 }
 
-print add(60, 9);
+fn print_add(x: int, y: int) { 
+    var z = x + y;
+    print z;
+}
 
-print "hello, world!";
-print "goodbye, world!";
+print add(1,2);
+
+print_add(1,2);

@@ -1293,6 +1293,12 @@ public:
         {
             stmt->accept(this);
             auto result = this->stack.pop();
+
+            if (result_type == BinaryenTypeNone())
+            {
+                result = BinaryenDrop(this->mod, result.expression);
+            }
+
             current_function_body.push_back(result.expression);
         }
 
