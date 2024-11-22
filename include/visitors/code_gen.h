@@ -29,7 +29,7 @@ public:
 
     void init_std_lib()
     {
-        std::vector<BinaryenType> arr = {BinaryenTypeInt32()};
+        std::vector<BinaryenType> arr = {BinaryenTypeInt32(), BinaryenTypeFloat64()};
         auto type = BinaryenTypeCreate(arr.data(), arr.size());
         BinaryenAddFunctionImport(
             this->mod,
@@ -367,7 +367,9 @@ public:
         std::vector<BinaryenExpressionRef> console_log_args;
         for (auto &result : results)
         {
-            if (BinaryenExpressionGetType(result) == BinaryenTypeInt32())
+            // TODO: print strings
+            if (BinaryenExpressionGetType(result) == BinaryenTypeInt32() ||
+                BinaryenExpressionGetType(result) == BinaryenTypeFloat64())
             {
                 console_log_args.push_back(result);
             }
@@ -709,6 +711,14 @@ public:
         case Token::Type::STR_LITERAL:
         {
             // TODO: figure out how to store strings
+
+            // const std::string &str_value = primary->value.lexeme;
+            // uint32_t str_ptr;
+
+            // create_static_memory(this->mod, str_value, str_ptr);
+
+            // this->stack.push(BinaryenConst(this->mod, BinaryenLiteralInt32(str_ptr)));
+            //
             break;
         }
 
@@ -943,5 +953,33 @@ public:
                 "BODY",
                 nullptr,
                 nullptr));
+    }
+
+    void create_static_memory(BinaryenModuleRef mod, const std::string &str, uint32_t &str_offset)
+    {
+        // TODO: make this work
+        // static uint32_t current_offset;
+        // str_offset = 1024;
+        // current_offset += str.size() + 1;
+
+        // const char *segments[] = {str.c_str()};
+        // BinaryenIndex segment_sizes[] = {static_cast<char>(str.size())};
+        // int8_t segment_passive[] = {0};
+        // BinaryenExpressionRef segment_offsets[] = {
+        //     BinaryenConst(
+        //         mod,
+        //         BinaryenLiteralInt32(str_offset))};
+
+        // BinaryenSetMemory(
+        //     mod,
+        //     1,
+        //     1,
+        //     "memory",
+        //     segments,
+        //     segment_passive,
+        //     segment_offsets,
+        //     segment_sizes,
+        //     1,
+        //     0);
     }
 };

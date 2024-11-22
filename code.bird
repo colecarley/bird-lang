@@ -1,17 +1,5 @@
-var x = 0;
+var x = 1.2;
+var y = 2.4;
+var z = x + y;
 
-
-fn foobar(x: int, y: int) {
-    x + y;
-}
-
-foobar(1, 2);
-
-while x <= 10 {
-    if x % 2 == 0 {
-        x += 1;
-        continue;
-    }
-    print x;
-    x += 1;
-}
+print z;
