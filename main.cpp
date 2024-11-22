@@ -2,6 +2,9 @@
 #include "src/scanner.hpp"
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <memory>
+#include "ast_node/stmt/stmt.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,7 +15,8 @@ int main(int argc, char *argv[])
         return -1;
     }
     Bird::Scanner scanner(&file);
-    Bird::Parser parser(scanner);
+    std::vector<std::unique_ptr<Stmt>> stmts;
+    Bird::Parser parser(scanner, stmts);
     // parser.set_debug_level(1);
     parser.parse();
 }

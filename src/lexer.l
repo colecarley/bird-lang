@@ -19,6 +19,10 @@ using token = Bird::Parser::token;
 %option yyclass = "Bird::Scanner"
 %option c++
 
+EXP             ([Ee][-+]?[0-9]+)
+IDENT           [a-zA-Z][a-zA-Z0-9_\-]*
+TYPE_IDENT      "int"|"float"|"bool"|"string"|"void"
+
 %%
 
 %{
@@ -38,11 +42,11 @@ using token = Bird::Parser::token;
 "break"                   {return token::BREAK;} 
 "continue"                {return token::CONTINUE;} 
 
-int|float|boolstring      {yylval.identifier = yytext;
+{TYPE_IDENT}              {yylval.identifier = yytext;
                            return token::TYPE_IDENTIFIER;} 
 
-[0-9]+\.[0-9]+            {yylval.double_val = atof(yytext);
-                           return token::FLOAT_LITERAL;} 
+[0-9]+"."[0-9]+{EXP}?     {yylval.double_val = atof(yytext);
+                            return token::FLOAT_LITERAL;} 
 [0-9]+                    {yylval.int_val = atoi(yytext);
                            return token::INT_LITERAL;} 
 "true"                    {yylval.bool_val = true;
@@ -52,7 +56,7 @@ int|float|boolstring      {yylval.identifier = yytext;
 \".*\"                    {yylval.string_val = yytext;
                            return token::STR_LITERAL;} 
 
-[a-zA-z][a-zA-Z0-9\-\_]* {yylval.identifier = yytext;
+{IDENT}                 {yylval.identifier = yytext;
                          return token::IDENTIFIER;} 
 
 ","                     {return token::COMMA;} 
@@ -83,7 +87,7 @@ int|float|boolstring      {yylval.identifier = yytext;
 "!"                     {return token::BANG;} 
 "->"                    {return token::ARROW;} 
 
-\n                      {location->step();}
+\n                      {location->lines();}
 
 [ \t\r]*                {}
 
