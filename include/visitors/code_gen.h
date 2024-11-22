@@ -95,12 +95,15 @@ public:
             passive.push_back(0);
             offsets.push_back(segment.offset);
         }
+        // since static memory is added at once we can
+        // calculate the exact memory in pages to allocate
+        BinaryenIndex max_pages = (current_offset / 65536) + 1;
 
         // call to create memory with all segments
         BinaryenSetMemory(
             mod,
-            1, // initial pages
-            1, // maximum pages
+            1,         // initial pages
+            max_pages, // maximum pages
             "memory",
             segments.data(),
             passive.data(),
