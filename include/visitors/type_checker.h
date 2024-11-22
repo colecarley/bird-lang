@@ -641,6 +641,16 @@ public:
             call->args[i]->accept(this);
             auto arg = std::move(this->stack.pop());
 
+            if (arg == BirdType::INT && function.params[i] == BirdType::FLOAT)
+            {
+                continue;
+            }
+
+            if (arg == BirdType::FLOAT && function.params[i] == BirdType::INT)
+            {
+                continue;
+            }
+
             if (arg != function.params[i])
             {
                 this->user_error_tracker->type_mismatch("in function call", call->identifier);
@@ -656,6 +666,18 @@ public:
         {
             return_stmt->expr.value()->accept(this);
             auto result = std::move(this->stack.pop());
+
+            if (result == BirdType::INT && this->return_type == BirdType::FLOAT)
+            {
+                this->stack.push(BirdType::FLOAT);
+                return;
+            }
+
+            if (result == BirdType::FLOAT && this->return_type == BirdType::INT)
+            {
+                this->stack.push(BirdType::INT);
+                return;
+            }
 
             if (result != this->return_type)
             {

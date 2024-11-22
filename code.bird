@@ -1,22 +1,6 @@
-var x = 1.2;
-var y = 45.7;
-type number = int;
-
-var z = x + y;
-
-print z;
-
-print 1;
-var first: number = 3;
-var second: int = 5;
-
-print first + second;
-
-fn add(x: number, y: number) -> number {
+fn add(x: float, y: int) -> int {
     return x + y;
 }
 
-print add(60, 9);
 
-print "hello, world!";
-print "goodbye, world!";
+print add(4.5, 3.4);
