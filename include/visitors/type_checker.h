@@ -400,8 +400,7 @@ public:
 
         if (condition_result != BirdType::BOOL)
         {
-            // TODO: figure out how to track the token
-            this->user_error_tracker->type_error("expected bool in while statement condition", Token());
+            this->user_error_tracker->type_error("expected bool in while statement condition", while_stmt->while_token);
         }
 
         while_stmt->stmt->accept(this);
@@ -423,8 +422,7 @@ public:
 
             if (condition_result != BirdType::BOOL)
             {
-                // TODO: figure out how to track the token
-                this->user_error_tracker->type_error("expected bool in for statement condition", Token());
+                this->user_error_tracker->type_error("expected bool in for statement condition", for_stmt->for_token);
             }
         }
 
@@ -527,14 +525,13 @@ public:
 
         if (true_expr != false_expr)
         {
-            this->user_error_tracker->type_mismatch("in ternary operation", Token());
+            this->user_error_tracker->type_mismatch("in ternary operation", ternary->ternary_token);
             true_expr = BirdType::ERROR;
         }
 
         if (condition != BirdType::BOOL)
         {
-            // TODO: figure out how to track the token
-            this->user_error_tracker->type_error("expected bool in ternary condition", Token());
+            this->user_error_tracker->type_error("expected bool in ternary condition", ternary->ternary_token);
             this->stack.push(BirdType::ERROR);
         }
         else
@@ -624,8 +621,7 @@ public:
 
         if (condition != BirdType::BOOL)
         {
-            // TODO: figure out how to track the token
-            this->user_error_tracker->type_error("expected bool in if statement condition", Token());
+            this->user_error_tracker->type_error("expected bool in if statement condition", if_stmt->if_token);
         }
 
         if_stmt->then_branch->accept(this);
@@ -663,16 +659,14 @@ public:
 
             if (result != this->return_type)
             {
-                // TODO: figure out how to track the token
-                this->user_error_tracker->type_mismatch("in return statement", Token());
+                this->user_error_tracker->type_mismatch("in return statement", return_stmt->return_token);
             }
         }
         else
         {
             if (this->return_type != BirdType::VOID)
             {
-                // TODO: figure out how to track the token
-                this->user_error_tracker->type_error("expected return value in non-void function", Token());
+                this->user_error_tracker->type_error("expected return value in non-void function", return_stmt->return_token);
             }
         }
     }

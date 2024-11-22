@@ -14,7 +14,12 @@
 class ContinueStmt : public Stmt
 {
 public:
-    ContinueStmt() {}
+    Token continue_token;
+
+    ContinueStmt(Token continue_token)
+    {
+        this->continue_token = continue_token;
+    }
 
     void accept(Visitor *visitor)
     {
