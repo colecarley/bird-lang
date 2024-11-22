@@ -28,6 +28,7 @@
 #include "../ast_node/stmt/func.h"
 #include "../ast_node/stmt/break_stmt.h"
 #include "../ast_node/stmt/continue_stmt.h"
+#include "../ast_node/stmt/type_stmt.h"
 
 #include "../sym_table.h"
 #include "../exceptions/bird_exception.h"
@@ -35,6 +36,7 @@
 #include "../exceptions/user_error_tracker.h"
 #include "../bird_type.h"
 #include "../stack.h"
+#include "../type.h"
 
 /*
  * Visitor that checks types of the AST
@@ -44,6 +46,7 @@ class TypeChecker : public Visitor
 public:
     Environment<BirdType> env;
     Environment<BirdFunction> call_table;
+    Environment<Type> type_table;
     Stack<BirdType> stack;
     std::optional<BirdType> return_type;
     UserErrorTracker *user_error_tracker;
@@ -52,6 +55,7 @@ public:
     {
         this->env.push_env();
         this->call_table.push_env();
+        this->type_table.push_env();
     }
 
     std::map<Token::Type, Token::Type> assign_to_binary_map = {
@@ -217,6 +221,12 @@ public:
                 continue_stmt->accept(this);
                 continue;
             }
+
+            if (auto type_stmt = dynamic_cast<TypeStmt *>(stmt.get()))
+            {
+                type_stmt->accept(this);
+                continue;
+            }
         }
 
         while (!this->stack.empty())
@@ -249,9 +259,17 @@ public:
             return;
         }
 
-        if (decl_stmt->type_identifier.has_value())
+        if (decl_stmt->type_token.has_value())
         {
-            auto type = this->get_type_from_token(decl_stmt->type_identifier.value());
+            BirdType type;
+            if (decl_stmt->type_is_literal)
+            {
+                type = this->get_type_from_token(decl_stmt->type_token.value());
+            }
+            else
+            {
+                type = this->get_type_from_token(this->type_table.get(decl_stmt->type_token.value().lexeme).type);
+            }
 
             if (type != result)
             {
@@ -265,7 +283,7 @@ public:
                     this->env.declare(decl_stmt->identifier.lexeme, BirdType::FLOAT);
                     return;
                 }
-                this->user_error_tracker->type_mismatch("in declaration", decl_stmt->type_identifier.value());
+                this->user_error_tracker->type_mismatch("in declaration", decl_stmt->type_token.value());
 
                 this->env.declare(decl_stmt->identifier.lexeme, BirdType::ERROR);
                 return;
@@ -352,13 +370,21 @@ public:
             return;
         }
 
-        if (const_stmt->type_identifier.has_value())
+        if (const_stmt->type_token.has_value())
         {
-            auto type = this->get_type_from_token(const_stmt->type_identifier.value());
+            BirdType type;
+            if (const_stmt->type_is_literal)
+            {
+                type = this->get_type_from_token(const_stmt->type_token.value());
+            }
+            else
+            {
+                type = this->get_type_from_token(this->type_table.get(const_stmt->type_token.value().lexeme).type);
+            }
 
             if (type != result)
             {
-                this->user_error_tracker->type_mismatch("in declaration", const_stmt->type_identifier.value());
+                this->user_error_tracker->type_mismatch("in declaration", const_stmt->type_token.value());
                 this->env.declare(const_stmt->identifier.lexeme, BirdType::ERROR);
                 return;
             }
@@ -542,9 +568,19 @@ public:
         }
         else
         {
+            if (this->type_table.contains(type))
+            {
+                return this->get_type_from_token(this->type_table.get(type).type);
+            }
+
             this->user_error_tracker->type_error("unknown type", token);
             return BirdType::ERROR;
         }
+    }
+
+    bool is_bird_type(Token token)
+    {
+        return token.lexeme == "int" || token.lexeme == "float" || token.lexeme == "bool" || token.lexeme == "str" || token.lexeme == "void";
     }
 
     void visit_func(Func *func)
@@ -563,6 +599,12 @@ public:
 
         for (auto &param : func->param_list)
         {
+            if (!this->is_bird_type(param.second))
+            {
+                this->env.declare(param.first.lexeme, this->get_type_from_token(this->type_table.get(param.second.lexeme).type));
+                continue;
+            }
+
             this->env.declare(param.first.lexeme, this->get_type_from_token(param.second));
         }
 
@@ -643,5 +685,17 @@ public:
     void visit_continue_stmt(ContinueStmt *continue_stmt)
     {
         // do nothing
+    }
+
+    void visit_type_stmt(TypeStmt *type_stmt)
+    {
+        if (type_stmt->type_is_literal)
+        {
+            this->type_table.declare(type_stmt->identifier.lexeme, Type(type_stmt->type_token));
+        }
+        else
+        {
+            this->type_table.declare(type_stmt->identifier.lexeme, Type(this->type_table.get(type_stmt->type_token.lexeme).type));
+        }
     }
 };

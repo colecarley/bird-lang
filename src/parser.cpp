@@ -19,6 +19,7 @@
 #include "../include/ast_node/stmt/func.h"
 #include "../include/ast_node/stmt/break_stmt.h"
 #include "../include/ast_node/stmt/continue_stmt.h"
+#include "../include/ast_node/stmt/type_stmt.h"
 
 #include "../include/exceptions/bird_exception.h"
 #include "../include/exceptions/user_exception.h"
@@ -75,6 +76,8 @@ std::unique_ptr<Stmt> Parser::stmt()
         return this->break_stmt();
     case Token::Type::CONTINUE:
         return this->continue_stmt();
+    case Token::Type::TYPE:
+        return this->type_stmt();
     default:
         break;
     }
@@ -109,21 +112,32 @@ std::unique_ptr<Stmt> Parser::const_decl()
         throw BirdException("Expected 'const' at the beginning of const decl");
     }
 
-    auto identifier = this->peek();
+    Token identifier;
+    if (this->peek().token_type == Token::Type::IDENTIFIER)
+    {
+        identifier = this->advance();
+    }
+    else
+    {
+        this->user_error_tracker->expected("identifier", "after const in declaration", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
 
-    this->consume(Token::Type::IDENTIFIER, "identifier", "after const", this->peek());
-
-    std::optional<Token> type_identifier = std::nullopt;
+    std::optional<Token> type_token = std::nullopt;
+    bool type_is_literal;
     if (this->peek().token_type == Token::Type::COLON)
     {
         this->advance();
-        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
+        type_is_literal = this->peek().token_type == Token::Type::TYPE_LITERAL ? true : false;
+
+        if (this->peek().token_type == Token::Type::TYPE_LITERAL || this->peek().token_type == Token::Type::IDENTIFIER)
         {
-            type_identifier = std::make_optional<Token>(this->advance());
+            type_token = std::make_optional<Token>(this->advance());
         }
         else
         {
-            this->user_error_tracker->expected("type identifier", "after : in assignment", this->peek());
+            this->user_error_tracker->expected("type literal or type identifer", "after : in assignment", this->peek());
             this->synchronize();
             throw UserException();
         }
@@ -137,7 +151,7 @@ std::unique_ptr<Stmt> Parser::const_decl()
 
     return std::make_unique<ConstStmt>(
         ConstStmt(
-            identifier, type_identifier, std::move(expr)));
+            identifier, type_token, type_is_literal, std::move(expr)));
 }
 
 std::unique_ptr<Stmt> Parser::block()
@@ -303,19 +317,32 @@ std::unique_ptr<Stmt> Parser::var_decl()
         throw BirdException("Expected 'var' keyword");
     }
 
-    auto identifier = this->advance(); // TODO: check that this is an identifier
+    Token identifier;
+    if (this->peek().token_type == Token::Type::IDENTIFIER)
+    {
+        identifier = this->advance();
+    }
+    else
+    {
+        this->user_error_tracker->expected("identifier", "after var in declaration", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
 
-    std::optional<Token> type_identifier = std::nullopt;
+    std::optional<Token> type_token = std::nullopt;
+    bool type_is_literal;
     if (this->peek().token_type == Token::Type::COLON)
     {
         this->advance();
-        if (this->peek().token_type == Token::Type::TYPE_IDENTIFIER)
+        type_is_literal = this->peek().token_type == Token::Type::TYPE_LITERAL ? true : false;
+
+        if (this->peek().token_type == Token::Type::TYPE_LITERAL || this->peek().token_type == Token::Type::IDENTIFIER)
         {
-            type_identifier = std::make_optional<Token>(this->advance());
+            type_token = std::make_optional<Token>(this->advance());
         }
         else
         {
-            this->user_error_tracker->expected("type identifier", "after : in assignment", this->peek());
+            this->user_error_tracker->expected("type literal or type identifer", "after : in assignment", this->peek());
             this->synchronize();
             throw UserException();
         }
@@ -326,7 +353,8 @@ std::unique_ptr<Stmt> Parser::var_decl()
     auto result = std::make_unique<DeclStmt>(
         DeclStmt(
             identifier,
-            type_identifier,
+            type_token,
+            type_is_literal,
             this->expr()));
 
     this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
@@ -394,6 +422,45 @@ std::unique_ptr<Stmt> Parser::continue_stmt()
     this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
 
     return std::make_unique<ContinueStmt>();
+}
+
+std::unique_ptr<Stmt> Parser::type_stmt()
+{
+    if (this->advance().token_type != Token::Type::TYPE)
+    {
+        throw BirdException("Expected 'type' at the beginning of type stmt");
+    }
+
+    Token type_identifier;
+    if (this->peek().token_type == Token::Type::IDENTIFIER)
+    {
+        type_identifier = this->advance();
+    }
+    else
+    {
+        this->user_error_tracker->expected("identifier", "after type in type statement", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    this->consume(Token::Type::EQUAL, "=", "in assignment", this->peek_previous());
+
+    Token type_token;
+    bool type_is_literal = this->peek().token_type == Token::Type::TYPE_LITERAL ? true : false;
+    if (this->peek().token_type == Token::Type::TYPE_LITERAL || this->peek().token_type == Token::Type::IDENTIFIER)
+    {
+        type_token = this->advance();
+    }
+    else
+    {
+        this->user_error_tracker->expected("type literal or type identifer", "after = in type statement", this->peek());
+        this->synchronize();
+        throw UserException();
+    }
+
+    this->consume(Token::Type::SEMICOLON, ";", "at the end of expression", this->peek_previous());
+
+    return std::make_unique<TypeStmt>(TypeStmt(type_identifier, type_token, type_is_literal));
 }
 
 std::unique_ptr<Expr> Parser::expr()
@@ -629,7 +696,12 @@ std::pair<Token, Token> Parser::param_decl()
 
     auto type_identifier = this->peek();
 
-    this->consume(Token::Type::TYPE_IDENTIFIER, "type", "after \':\' in parameter declaration", this->peek_previous());
+    if (type_identifier.token_type == Token::Type::IDENTIFIER)
+    {
+        this->consume(Token::Type::IDENTIFIER, "type", "after \':\' in parameter declaration", this->peek_previous());
+        return {identifier, type_identifier};
+    }
+    this->consume(Token::Type::TYPE_LITERAL, "type", "after \':\' in parameter declaration", this->peek_previous());
 
     return {identifier, type_identifier};
 }
@@ -645,7 +717,13 @@ std::optional<Token> Parser::fn_return_type()
 
     auto return_type = this->peek();
 
-    this->consume(Token::Type::TYPE_IDENTIFIER, "type", "after arrow", this->peek_previous());
+    if (return_type.token_type == Token::Type::IDENTIFIER)
+    {
+        this->consume(Token::Type::IDENTIFIER, "type", "after arrow", this->peek_previous());
+        return return_type;
+    }
+
+    this->consume(Token::Type::TYPE_LITERAL, "type", "after arrow", this->peek_previous());
 
     return return_type;
 }
