@@ -18,10 +18,21 @@ fn add(x: int, y: int) -> int {
 }
 
 fn print_add(x: int, y: int) { 
-    var z = x + y;
+    var z = y - x;
     print z;
 }
 
 print add(1,2);
 
 print_add(1,2);
+
+
+fn fib(n: int) -> int {
+	if n <= 1 {
+		return n;
+	}
+	return fib(n - 1) + fib(n - 2);
+}
+
+print fib(10);
+						

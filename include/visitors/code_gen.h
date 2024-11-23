@@ -930,30 +930,26 @@ public:
         auto index = 0;
         for (auto &param : func->param_list)
         {
-            this->environment.declare(param.first.lexeme, index);
-            current_function_body.push_back(
-                BinaryenLocalGet(
-                    this->mod,
-                    index++,
-                    from_bird_type(param.second)));
+            this->environment.declare(param.first.lexeme, index++);
+
+            /*
+             * this leaves values on the wasm stack if they arent used
+             * in the function body, causing compilation errors. visit
+             * primary will instead get the local variable and push to
+             * stack if it is used in the function body.
+             *
+             *      current_function_body.push_back(
+             *          BinaryenLocalGet(
+             *              this->mod,
+             *              index++,
+             *              from_bird_type(param.second)));
+             */
         }
 
-        auto found_return = false;
         for (auto &stmt : dynamic_cast<Block *>(func->block.get())->stmts)
         {
             stmt->accept(this);
             auto result = this->stack.pop();
-
-            /*
-             * drop unused result if the function does not return a value
-             * pushing to wasm stack causes:
-             *     "error: type mismatch at end of function, expected [] but got [i32]"
-             */
-            if (result_type == BinaryenTypeNone())
-            {
-                result = BinaryenDrop(this->mod, result);
-            }
-
             current_function_body.push_back(result);
         }
 
