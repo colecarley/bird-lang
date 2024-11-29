@@ -33,6 +33,8 @@ TYPE_IDENT      "int"|"float"|"bool"|"string"|"void"
     // code to run at the start of the lexer
 %}
 
+"//".*\n        { location->lines(); }
+
 "var"           { yylval.token_ptr = make_token(T::VAR);
                   return token::VAR; }
 
