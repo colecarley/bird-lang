@@ -73,7 +73,7 @@
 VAR "var"
 CONST "const"
 IDENTIFIER _("identifier")
-TYPE_IDENTIFIER _("type identifier")
+TYPE_LITERAL _("type literal")
 INT_LITERAL _("int literal")
 FLOAT_LITERAL _("float literal")
 BOOL_LITERAL _("bool literal")
@@ -197,13 +197,13 @@ stmt: decl_stmt
    | expr_stmt
 
 decl_stmt: VAR IDENTIFIER EQUAL expr SEMICOLON
-   | VAR IDENTIFIER COLON TYPE_IDENTIFIER EQUAL expr SEMICOLON
+   | VAR IDENTIFIER COLON TYPE_LITERAL EQUAL expr SEMICOLON
 
 if_stmt: IF expr stmt      %prec THEN
    |     IF expr stmt ELSE stmt
 
 const_stmt: CONST IDENTIFIER EQUAL expr SEMICOLON
-   | CONST IDENTIFIER COLON TYPE_IDENTIFIER PLUS expr SEMICOLON
+   | CONST IDENTIFIER COLON TYPE_LITERAL PLUS expr SEMICOLON
 
 print_stmt: PRINT arg_list SEMICOLON
 
@@ -232,10 +232,10 @@ param_list:
    | param
    | param COMMA param_list
 
-param: IDENTIFIER COLON TYPE_IDENTIFIER
+param: IDENTIFIER COLON TYPE_LITERAL
 
 return_type: 
-   | ARROW TYPE_IDENTIFIER
+   | ARROW TYPE_LITERAL
 
 maybe_stmt: SEMICOLON
    | stmt

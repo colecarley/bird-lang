@@ -72,8 +72,8 @@ TYPE_IDENT      "int"|"float"|"bool"|"string"|"void"
                   return token::CONTINUE; }
 
 
-{TYPE_IDENT}              { yylval.token_ptr = make_token(T::TYPE_IDENTIFIER);
-                           return token::TYPE_IDENTIFIER;} 
+{TYPE_IDENT}              { yylval.token_ptr = make_token(T::TYPE_LITERAL);
+                           return token::TYPE_LITERAL;} 
 
 [0-9]+"."[0-9]+{EXP}?     {yylval.token_ptr = make_token(T::FLOAT_LITERAL);
                             return token::FLOAT_LITERAL;} 
