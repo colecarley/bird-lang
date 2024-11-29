@@ -142,9 +142,9 @@ public:
         this->errors.push_back(std::make_tuple(this->format_message("type error: " + message, token.line_num, token.char_num), token));
     }
 
-    void semantic_error(std::string message)
+    void semantic_error(std::string message, Token token)
     {
-        this->errors.push_back(std::make_tuple("Semantic Error: " + message, Token()));
+        this->errors.push_back(std::make_tuple(this->format_message("semantic error: " + message, token.line_num, token.char_num), token));
     }
 
     const std::vector<std::tuple<std::string, Token>> get_errors() const

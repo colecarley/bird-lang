@@ -92,3 +92,15 @@ TEST(FunctionTest, ArityFail)
     analyze_semantics.analyze_semantics(&ast);
     ASSERT_TRUE(user_error_tracker.has_errors());
 }
+
+TEST(FunctionTest, FunctionRedeclaration)
+{
+    auto code = "fn x() -> int {return 3;}"
+                "fn x() -> int {return 1;}";
+    auto ast = parse_code(code);
+
+    auto user_error_tracker = UserErrorTracker(code);
+    SemanticAnalyzer analyze_semantics(&user_error_tracker);
+    analyze_semantics.analyze_semantics(&ast);
+    ASSERT_TRUE(user_error_tracker.has_errors());
+}
