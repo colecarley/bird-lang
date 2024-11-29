@@ -71,6 +71,9 @@ TYPE_IDENT      "int"|"float"|"bool"|"string"|"void"
 "continue"      { yylval.token_ptr = make_token(T::CONTINUE);
                   return token::CONTINUE; }
 
+"type"          { yylval.token_ptr = make_token(T::TYPE);
+                  return token::TYPE; }
+
 
 {TYPE_IDENT}              { yylval.token_ptr = make_token(T::TYPE_LITERAL);
                            return token::TYPE_LITERAL;} 

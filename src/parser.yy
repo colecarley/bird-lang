@@ -88,6 +88,7 @@ BREAK "break"
 CONTINUE "continue"
 FN "fn"
 PRINT "print"
+TYPE "type"
 
 EQUAL "="
 PLUS_EQUAL "+="
@@ -134,6 +135,7 @@ return_stmt
 break_stmt
 continue_stmt
 expr_stmt
+type_stmt
 
 %type <expr_ptr> 
 expr
@@ -195,6 +197,7 @@ stmt: decl_stmt
    | break_stmt
    | continue_stmt
    | expr_stmt
+   | type_stmt
 
 decl_stmt: VAR IDENTIFIER EQUAL expr SEMICOLON
    | VAR IDENTIFIER COLON TYPE_LITERAL EQUAL expr SEMICOLON
@@ -223,6 +226,9 @@ break_stmt: BREAK SEMICOLON
 continue_stmt: CONTINUE SEMICOLON
 
 expr_stmt: expr SEMICOLON
+
+type_stmt: TYPE IDENTIFIER EQUAL TYPE_LITERAL SEMICOLON
+   | TYPE IDENTIFIER EQUAL IDENTIFIER SEMICOLON
 
 arg_list: 
    | expr
