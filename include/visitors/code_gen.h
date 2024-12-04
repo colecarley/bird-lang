@@ -182,6 +182,13 @@ public:
                 main_function_body.push_back(result.expression);
             }
 
+            if (auto const_stmt = dynamic_cast<ConstStmt *>(stmt.get()))
+            {
+                const_stmt->accept(this);
+                auto result = this->stack.pop();
+                main_function_body.push_back(result);
+            }
+
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
             {
                 print_stmt->accept(this);
