@@ -1,7 +1,7 @@
 // including in the .cpp due to circular dependency
-#include "../include/lexer.h"
-#include "../include/exceptions/bird_exception.h"
-#include "../include/exceptions/user_error_tracker.h"
+#include "lexer.h"
+#include "exceptions/bird_exception.h"
+#include "exceptions/user_error_tracker.h"
 
 static const std::map<Token::Type, std::string> token_strings = {
     {Token::Type::INT_LITERAL, "INT_LITERAL"},

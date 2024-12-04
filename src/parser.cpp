@@ -1,29 +1,10 @@
 // including in the .cpp due to a ciruclar dependency
-#include "../include/parser.h"
-#include "../include/ast_node/expr/binary.h"
-#include "../include/ast_node/expr/unary.h"
-#include "../include/ast_node/expr/primary.h"
-#include "../include/ast_node/expr/ternary.h"
-#include "../include/ast_node/expr/call.h"
+#include "parser.h"
+#include "ast_node/index.h"
 
-#include "../include/ast_node/stmt/decl_stmt.h"
-#include "../include/ast_node/expr/assign_expr.h"
-#include "../include/ast_node/stmt/print_stmt.h"
-#include "../include/ast_node/stmt/if_stmt.h"
-#include "../include/ast_node/stmt/expr_stmt.h"
-#include "../include/ast_node/stmt/const_stmt.h"
-#include "../include/ast_node/stmt/while_stmt.h"
-#include "../include/ast_node/stmt/for_stmt.h"
-#include "../include/ast_node/stmt/return_stmt.h"
-#include "../include/ast_node/stmt/block.h"
-#include "../include/ast_node/stmt/func.h"
-#include "../include/ast_node/stmt/break_stmt.h"
-#include "../include/ast_node/stmt/continue_stmt.h"
-#include "../include/ast_node/stmt/type_stmt.h"
-
-#include "../include/exceptions/bird_exception.h"
-#include "../include/exceptions/user_exception.h"
-#include "../include/exceptions/user_error_tracker.h"
+#include "exceptions/bird_exception.h"
+#include "exceptions/user_exception.h"
+#include "exceptions/user_error_tracker.h"
 
 Parser::Parser(std::vector<Token> tokens, UserErrorTracker *user_error_tracker) : tokens(tokens)
 {
