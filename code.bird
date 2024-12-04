@@ -63,3 +63,9 @@ print "goodbyte, world!";
 
 print true;
 print false;
+
+const x: bool = true;
+const y: bool = false;
+
+print x;
+print y;
