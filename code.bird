@@ -1,38 +1,39 @@
+print 1 < 2 ? 1 : 0;
+
+print 1 < 1.2;
+
+print 3.4 * 1.2;
+
+var x: int = 4;
+
+x += 2;
+print x;
+x -= 2;
+print x;
+
+x *= 2;
+print x;
+
+x /= 2;
+print x;
+
+x %= 2;
+print x;
+
+fn add(x: int, y: int)-> int {
+    return y - x;
+}
+
+print add(1,2);
 
 fn ret_str(s: str) -> str {
     return s;
 }
 
-fn print_str(s: str) -> void {
-    print s;
-}
+print ret_str("hello, world!");
 
-var s: str = "hello, world!";
-
-print ret_str(s);
-
-print_str(s);
-
-fn add(x: int, y: int) -> int {
+fn addF(x: float, y: float) -> int {
     return x + y;
 }
 
-fn print_add(x: int, y: int) { 
-    var z = y - x;
-    print z;
-}
-
-print add(1,2);
-
-print_add(1,2);
-
-
-fn fib(n: int) -> int {
-	if n <= 1 {
-		return n;
-	}
-	return fib(n - 1) + fib(n - 2);
-}
-
-print fib(10);
-						
+print addF(1.0, 2.0);
