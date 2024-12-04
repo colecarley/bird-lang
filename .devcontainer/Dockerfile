@@ -11,6 +11,8 @@ RUN sudo apt-get install bison flex -y
 
 RUN sudo apt-get install binaryen
 
+RUN sudo apt-get install nodejs -y
+
 RUN if [ "${REINSTALL_CMAKE_VERSION_FROM_SOURCE}" != "none" ]; then \
         chmod +x /tmp/reinstall-cmake.sh && /tmp/reinstall-cmake.sh ${REINSTALL_CMAKE_VERSION_FROM_SOURCE}; \
     fi \

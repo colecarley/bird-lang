@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include "../../src/lexer.cpp"
 #include "../../include/exceptions/user_error_tracker.h"
