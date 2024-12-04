@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 // #include "../src/lexer.cpp"
-#include "../include/exceptions/user_error_tracker.h"
-#include "../helpers/lex_test_helper.hpp"
+#include "exceptions/user_error_tracker.h"
+#include "helpers/lex_test_helper.hpp"
 
 TEST(LexerTest, TokenizeBlockStmt)
 {
