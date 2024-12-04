@@ -133,7 +133,7 @@ public:
     {
         std::vector<const char *> segments;
         std::vector<BinaryenIndex> sizes;
-        std::vector<int8_t> passive;
+        std::vector<signed char> passive;
         std::vector<BinaryenExpressionRef> offsets;
 
         // add all memory segment information to
