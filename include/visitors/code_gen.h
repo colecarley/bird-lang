@@ -133,7 +133,7 @@ public:
     {
         std::vector<const char *> segments;
         std::vector<BinaryenIndex> sizes;
-        std::vector<signed char> passive;
+        bool *passive = new bool[memory_segments.size()];
         std::vector<BinaryenExpressionRef> offsets;
 
         // add all memory segment information to
@@ -142,7 +142,7 @@ public:
         {
             segments.push_back(segment.data);
             sizes.push_back(segment.size);
-            passive.push_back(0);
+            passive[segments.size() - 1] = false;
             offsets.push_back(segment.offset);
         }
         // since static memory is added at once we can
@@ -156,11 +156,13 @@ public:
             max_pages, // maximum pages
             "memory",
             segments.data(),
-            passive.data(),
+            passive,
             offsets.data(),
             sizes.data(),
             segments.size(),
             0);
+
+        delete[] passive;
     }
 
     void generate(std::vector<std::unique_ptr<Stmt>> *stmts)
