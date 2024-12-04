@@ -12,6 +12,25 @@ enum CodeGenType
     CodeGenPtr
 };
 
+static std::string code_gen_type_to_string(CodeGenType type)
+{
+    switch (type)
+    {
+    case CodeGenInt:
+        return "int";
+    case CodeGenFloat:
+        return "float";
+    case CodeGenBool:
+        return "bool";
+    case CodeGenVoid:
+        return "void";
+    case CodeGenPtr:
+        return "ptr";
+    default:
+        return "unknown";
+    }
+}
+
 struct TaggedExpression
 {
     BinaryenExpressionRef expression;
@@ -152,50 +171,6 @@ public:
             mod,
             1,         // initial pages
             max_pages, // maximum pages
-            "memory",
-            segments.data(),
-            passive.data(),
-            offsets.data(),
-            sizes.data(),
-            segments.size(),
-            0);
-    }
-
-    void add_memory_segment(BinaryenModuleRef mod, const std::string &str, uint32_t &str_offset)
-    {
-        str_offset = current_offset;
-        this->current_offset += str.size() + 1;
-
-        MemorySegment segment = {
-            str.c_str(),
-            static_cast<BinaryenIndex>(str.size() + 1), // + 1 for '\0'
-            BinaryenConst(mod, BinaryenLiteralInt32(str_offset))};
-
-        this->memory_segments.push_back(segment);
-    }
-
-    void init_static_memory(BinaryenModuleRef mod)
-    {
-        std::vector<const char *> segments;
-        std::vector<BinaryenIndex> sizes;
-        std::vector<int8_t> passive;
-        std::vector<BinaryenExpressionRef> offsets;
-
-        // add all memory segment information to
-        // vectors to set at once
-        for (const auto &segment : memory_segments)
-        {
-            segments.push_back(segment.data);
-            sizes.push_back(segment.size);
-            passive.push_back(0);
-            offsets.push_back(segment.offset);
-        }
-
-        // call to create memory with all segments
-        BinaryenSetMemory(
-            mod,
-            1, // initial pages
-            1, // maximum pages
             "memory",
             segments.data(),
             passive.data(),
@@ -654,6 +629,18 @@ public:
 
                 this->stack.push(consoleLogCall);
             }
+            else if (codegen_type == CodeGenBool)
+            {
+                BinaryenExpressionRef consoleLogCall =
+                    BinaryenCall(
+                        this->mod,
+                        "print_i32",
+                        &result.expression,
+                        1,
+                        BinaryenTypeNone());
+
+                this->stack.push(consoleLogCall);
+            }
             else if (codegen_type == CodeGenFloat)
             {
                 BinaryenExpressionRef consoleLogCall =
@@ -680,7 +667,7 @@ public:
             }
             else
             {
-                throw BirdException("Unsupported print datatype");
+                throw BirdException("Unsupported print datatype: " + code_gen_type_to_string(codegen_type));
             }
         }
     }
@@ -1172,6 +1159,7 @@ public:
             BinaryenExpressionRef str_literal = BinaryenConst(this->mod, BinaryenLiteralInt32(str_ptr));
 
             this->stack.push(TaggedExpression(str_literal, CodeGenPtr));
+            break;
         }
 
         case Token::Type::IDENTIFIER:
