@@ -11,6 +11,7 @@
    #include <string>
    #include <vector>
    #include <memory>
+   #include <utility>
    
    #include "../include/ast_node/expr/binary.h"
    #include "../include/ast_node/expr/unary.h"
@@ -31,6 +32,7 @@
    #include "../include/ast_node/stmt/func.h"
    #include "../include/ast_node/stmt/break_stmt.h"
    #include "../include/ast_node/stmt/continue_stmt.h"
+   #include "../include/ast_node/stmt/type_stmt.h"
 
    #include "../include/exceptions/bird_exception.h"
    #include "../include/exceptions/user_exception.h"
@@ -63,7 +65,11 @@
    Stmt* stmt_ptr;
    Expr* expr_ptr;
 
-   std::vector<Token> *token_vec;
+   std::optional<Token> *maybe_token_ptr;
+   std::vector<Stmt*> *stmt_vec;
+   std::vector<Expr*> *expr_vec;
+   std::pair<Token, Token> *param_pair;
+   std::vector<std::pair<Token, Token>> *param_list_vec;
 }
 
 %token END 0 _("end of file")
@@ -107,10 +113,10 @@ PERCENT "%"
 PLUS "+"
 SLASH "/"
 STAR "*"
+QUESTION "?"
 
 %token 
 SEMICOLON ";"
-QUESTION "?"
 COMMA ","
 RBRACE "]"
 LBRACE "["
@@ -136,6 +142,7 @@ break_stmt
 continue_stmt
 expr_stmt
 type_stmt
+maybe_stmt
 
 %type <expr_ptr> 
 expr
@@ -147,11 +154,11 @@ term_expr
 factor_expr
 unary_expr
 call_expr
+grouping
+maybe_expr
 
-%type <expr_ptr> grouping
-%type <token_ptr> primary
-
-%type <token_ptr>
+%type <token_ptr> 
+primary
 ASSIGN_OP
 COMPARISON_OP
 TERM_OP
@@ -159,7 +166,24 @@ FACTOR_OP
 UNARY_OP
 EQUALITY_OP
 
-%type <token_vec> arg_list
+
+%type <maybe_token_ptr>
+return_type
+
+%type <stmt_vec>
+maybe_stmts
+stmts
+
+%type <expr_vec> 
+maybe_arg_list
+arg_list
+
+%type <param_pair>
+param
+
+%type <param_list_vec> 
+maybe_param_list
+param_list
 
 %right ASSIGN
 %right TERNARY
@@ -180,10 +204,18 @@ EQUALITY_OP
 
 %%
 
-program: stmts
+program: maybe_stmts { 
+   for (Stmt* stmt : *$1)
+   {
+      stmts.push_back(std::unique_ptr<Stmt>(stmt));
+   }
+}
 
-stmts: 
-   | stmt stmts
+maybe_stmts: %empty { $$ = new std::vector<Stmt*>(); }
+   | stmts { $$ = $1; }
+
+stmts: stmt { $$ = new std::vector<Stmt*>{$1}; }
+   | stmt stmts { $2->push_back($1); $$ = $2; }
 
 stmt: decl_stmt
    | if_stmt
@@ -199,52 +231,69 @@ stmt: decl_stmt
    | expr_stmt
    | type_stmt
 
-decl_stmt: VAR IDENTIFIER EQUAL expr SEMICOLON
+decl_stmt: VAR IDENTIFIER EQUAL expr SEMICOLON 
+      { $$ = new DeclStmt(*$1, std::nullopt, false, $4); }
    | VAR IDENTIFIER COLON TYPE_LITERAL EQUAL expr SEMICOLON
+      { $$ = new DeclStmt(*$1, *$2, true, $6); }
+   | VAR IDENTIFIER COLON IDENTIFIER EQUAL expr SEMICOLON
+      { $$ = new DeclStmt(*$1, *$2, false, $6); }
 
-if_stmt: IF expr stmt      %prec THEN
-   |     IF expr stmt ELSE stmt
+if_stmt: IF expr stmt %prec THEN { $$ = new IfStmt(*$1, $2, $3, std::nullopt); }
+   | IF expr stmt ELSE stmt { $$ = new IfStmt(*$1, $2, $3, $5); }
 
-const_stmt: CONST IDENTIFIER EQUAL expr SEMICOLON
-   | CONST IDENTIFIER COLON TYPE_LITERAL PLUS expr SEMICOLON
+const_stmt: CONST IDENTIFIER EQUAL expr SEMICOLON 
+      { $$ = new ConstStmt(*$2, std::nullopt, false, $4); }
+   | CONST IDENTIFIER COLON TYPE_LITERAL PLUS expr SEMICOLON 
+      { $$ = new ConstStmt(*$2, *$4, true, $6); }
+   | CONST IDENTIFIER COLON IDENTIFIER PLUS expr SEMICOLON 
+      { $$ = new ConstStmt(*$2, *$4, false, $6); }
 
-print_stmt: PRINT arg_list SEMICOLON
+print_stmt: PRINT arg_list SEMICOLON { $$ = new PrintStmt(*$2); }
 
-block: LBRACE stmts RBRACE
+block: LBRACE stmts RBRACE { $$ = new Block(*$2); }
 
-func: FN IDENTIFIER LPAREN param_list RPAREN return_type block
+func: FN IDENTIFIER LPAREN maybe_param_list RPAREN return_type block 
+   { $$ = new Func(*$2, *$6, *$4, $7); }
 
-while_stmt: WHILE expr stmt
+while_stmt: WHILE expr stmt { $$ = new WhileStmt(*$1, $2, $3); }
 
-for_stmt: FOR maybe_stmt maybe_stmt expr DO stmt
+for_stmt: FOR maybe_stmt maybe_expr SEMICOLON maybe_expr DO stmt 
+   { $$ = new ForStmt(*$1, $2, $3, $5, $7); }
 
-return_stmt: RETURN SEMICOLON
-   | RETURN expr SEMICOLON
+return_stmt: RETURN SEMICOLON { $$ = new ReturnStmt(*$1); }
+   | RETURN expr SEMICOLON { $$ = new ReturnStmt(*$1, $2); }
 
-break_stmt: BREAK SEMICOLON
+break_stmt: BREAK SEMICOLON { $$ = new BreakStmt(*$1); }
 
-continue_stmt: CONTINUE SEMICOLON
+continue_stmt: CONTINUE SEMICOLON { $$ = new ContinueStmt(*$1); }
 
-expr_stmt: expr SEMICOLON
+expr_stmt: expr SEMICOLON { $$ = new ExprStmt($1); }
 
-type_stmt: TYPE IDENTIFIER EQUAL TYPE_LITERAL SEMICOLON
-   | TYPE IDENTIFIER EQUAL IDENTIFIER SEMICOLON
+type_stmt: TYPE IDENTIFIER EQUAL TYPE_LITERAL SEMICOLON { $$ =  new TypeStmt(*$2, *$4, true); }
+   | TYPE IDENTIFIER EQUAL IDENTIFIER SEMICOLON { $$ = new TypeStmt(*$2, *$4, false); }
 
-arg_list: 
-   | expr
-   | expr COMMA arg_list
+maybe_arg_list: %empty { $$ = new std::vector<Expr*>(); }
+   | arg_list
 
-param_list: 
-   | param
-   | param COMMA param_list
+arg_list: expr { $$ = new std::vector{$1}; }
+   | expr COMMA arg_list { $3->push_back($1); $$ = $3; }
 
-param: IDENTIFIER COLON TYPE_LITERAL
+maybe_param_list: %empty { $$ = new std::vector<std::pair<Token, Token>>{}; }
+   | param_list
 
-return_type: 
-   | ARROW TYPE_LITERAL
+param_list: param { $$ = new std::vector{*$1}; }
+   | param COMMA param_list { $3->push_back(*$1); $$ = $3; }
 
-maybe_stmt: SEMICOLON
-   | stmt
+param: IDENTIFIER COLON TYPE_LITERAL { $$ = new std::pair<Token, Token>(*$1, *$3); }
+
+return_type: %empty { $$ = new std::optional<Token>{}; }
+   | ARROW TYPE_LITERAL { $$ = new std::optional<Token>(*$2); }
+
+maybe_stmt: SEMICOLON { $$ = nullptr; }
+   | stmt { $$ = $1; }
+
+maybe_expr: %empty { $$ = nullptr; }
+   | expr { $$ = $1; }
 
 
 expr: assign_expr %prec ASSIGN
@@ -255,25 +304,43 @@ expr: assign_expr %prec ASSIGN
    | factor_expr %prec FACTOR
    | unary_expr %prec UNARY
    | call_expr %prec CALL
-   | primary %prec PRIMARY
+   | primary %prec PRIMARY { $$ = new Primary(*$1); }
    | grouping %prec GROUPING
 
 
-assign_expr: expr ASSIGN_OP expr
+assign_expr: expr ASSIGN_OP expr { 
+   if(auto *identifier = dynamic_cast<Primary *>($1))
+   {
+      if (identifier->value.token_type != Token::Type::IDENTIFIER)
+      {
+         // TODO: throw an error here
+      }
+      $$ = new AssignExpr(identifier->value, *$2, $3);
+   }
+}
 
-ternary_expr: expr QUESTION expr COLON expr
+ternary_expr: expr QUESTION expr COLON expr { $$ = new Ternary($1, *$2, $3, $5); }
 
-equality_expr: expr EQUALITY_OP expr
+equality_expr: expr EQUALITY_OP expr { $$ = new Binary($1, *$2, $3); }
 
-comparison_expr: expr COMPARISON_OP expr
+comparison_expr: expr COMPARISON_OP expr { $$ = new Binary($1, *$2, $3); }
 
-term_expr: expr TERM_OP expr
+term_expr: expr TERM_OP expr { $$ = new Binary($1, *$2, $3); }
 
-factor_expr: expr FACTOR_OP expr
+factor_expr: expr FACTOR_OP expr { $$ = new Binary($1, *$2, $3); }
 
-unary_expr: UNARY_OP expr
+unary_expr: UNARY_OP expr { $$ = new Unary(*$1, $2); }
 
-call_expr: expr LPAREN arg_list RPAREN
+call_expr: expr LPAREN maybe_arg_list RPAREN { 
+   if(auto *identifier = dynamic_cast<Primary *>($1))
+   {
+      if (identifier->value.token_type != Token::Type::IDENTIFIER)
+      {
+         // TODO: throw an error here
+      }
+      $$ = new Call(identifier->value, *$3);
+   }
+}
 
 primary: IDENTIFIER
    | INT_LITERAL
@@ -281,8 +348,7 @@ primary: IDENTIFIER
    | BOOL_LITERAL
    | STR_LITERAL
 
-grouping: LPAREN expr RPAREN
-
+grouping: LPAREN expr RPAREN { $$ = $2; }
 
 ASSIGN_OP: EQUAL
    | PLUS_EQUAL

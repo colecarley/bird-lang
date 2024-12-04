@@ -26,6 +26,9 @@ public:
         this->value = std::move(value);
     }
 
+    AssignExpr(Token identifier, Token assign_operator, Expr *value)
+        : identifier(identifier), assign_operator(assign_operator), value(value) {}
+
     void accept(Visitor *visitor)
     {
         visitor->visit_assign_expr(this);

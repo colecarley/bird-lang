@@ -27,6 +27,15 @@ public:
         this->stmts = std::move(stmts);
     }
 
+    Block(std::vector<Stmt *> stmts)
+    {
+        this->stmts.reserve(stmts.size());
+        for (Stmt *stmt : stmts)
+        {
+            this->stmts.push_back(std::unique_ptr<Stmt>(stmt));
+        }
+    }
+
     void accept(Visitor *visitor)
     {
         visitor->visit_block(this);

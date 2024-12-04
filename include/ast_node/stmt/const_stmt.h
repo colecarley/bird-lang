@@ -30,6 +30,9 @@ public:
         this->value = std::move(value);
     }
 
+    ConstStmt(Token identifier, std::optional<Token> type_token, bool type_is_literal, Expr *value)
+        : identifier(identifier), type_token(type_token), type_is_literal(type_is_literal), value(value) {}
+
     void accept(Visitor *visitor)
     {
         visitor->visit_const_stmt(this);

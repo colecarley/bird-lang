@@ -27,6 +27,15 @@ public:
           true_expr(std::move(true_expr)),
           false_expr(std::move(false_expr)) {}
 
+    Ternary(Expr *condition,
+            Token ternary_token,
+            Expr *true_expr,
+            Expr *false_expr)
+        : condition(std::move(condition)),
+          ternary_token(ternary_token),
+          true_expr(std::move(true_expr)),
+          false_expr(std::move(false_expr)) {}
+
     void accept(Visitor *visitor)
     {
         return visitor->visit_ternary(this);

@@ -31,10 +31,20 @@ public:
     Func(Token identifier,
          std::optional<Token> return_type,
          std::vector<std::pair<Token, Token>> param_list,
-         std::unique_ptr<Stmt> block) : identifier(identifier),
-                                        return_type(return_type),
-                                        param_list(param_list),
-                                        block(std::move(block)) {}
+         std::unique_ptr<Stmt> block)
+        : identifier(identifier),
+          return_type(return_type),
+          param_list(param_list),
+          block(std::move(block)) {}
+
+    Func(Token identifier,
+         std::optional<Token> return_type,
+         std::vector<std::pair<Token, Token>> param_list,
+         Stmt *block)
+        : identifier(identifier),
+          return_type(return_type),
+          param_list(param_list),
+          block(block) {}
 
     void accept(Visitor *visitor)
     {

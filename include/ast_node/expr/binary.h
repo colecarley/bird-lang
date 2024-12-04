@@ -27,6 +27,9 @@ public:
         this->right = std::move(right);
     }
 
+    Binary(Expr *left, Token op, Expr *right)
+        : left(left), op(op), right(right) {}
+
     void accept(Visitor *visitor)
     {
         return visitor->visit_binary(this);

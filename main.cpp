@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[])
 {
-    std::ifstream file("../code.bird");
+    std::ifstream file("../parse_testing.bird");
     if (!file.is_open())
     {
         std::cout << "failed to open file" << std::endl;

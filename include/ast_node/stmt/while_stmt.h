@@ -26,6 +26,9 @@ public:
         this->stmt = std::move(stmt);
     }
 
+    WhileStmt(Token while_token, Expr *condition, Stmt *stmt)
+        : while_token(while_token), condition(condition), stmt(stmt) {}
+
     void accept(Visitor *visitor)
     {
         visitor->visit_while_stmt(this);

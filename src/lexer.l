@@ -74,6 +74,9 @@ TYPE_IDENT      "int"|"float"|"bool"|"string"|"void"
 "type"          { yylval.token_ptr = make_token(T::TYPE);
                   return token::TYPE; }
 
+"?"             { yylval.token_ptr = make_token(T::QUESTION);
+                  return token::QUESTION; } 
+
 
 {TYPE_IDENT}              { yylval.token_ptr = make_token(T::TYPE_LITERAL);
                            return token::TYPE_LITERAL;} 
@@ -107,7 +110,6 @@ TYPE_IDENT      "int"|"float"|"bool"|"string"|"void"
 "/"                     {return token::SLASH;} 
 "*"                     {return token::STAR;} 
 ";"                     {return token::SEMICOLON;} 
-"?"                     {return token::QUESTION;} 
 "="                     {return token::EQUAL;} 
 ":"                     {return token::COLON;} 
 ">"                     {return token::GREATER;} 

@@ -23,6 +23,9 @@ public:
         this->expr = std::move(expr);
     }
 
+    Unary(Token op, Expr *expr)
+        : op(op), expr(expr) {}
+
     void accept(Visitor *visitor)
     {
         return visitor->visit_unary(this);
