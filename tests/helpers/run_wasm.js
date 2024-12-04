@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-const outputPath = "/workspaces/bird-lang/tests/helpers/output.txt";
+const outputPath = "./output.txt";
 fs.writeFileSync(outputPath, "");
 
 const moduleOptions = {
