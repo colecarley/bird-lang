@@ -87,5 +87,6 @@
                 "typeindex": "cpp",
                 "__config": "cpp",
                 "*.inc": "cpp"
-        }
+        },
+        "C_Cpp.errorSquiggles": "enabled"
 }

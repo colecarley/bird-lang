@@ -108,10 +108,11 @@ namespace BirdTest
             CodeGen code_gen;
             code_gen.generate(&ast);
 
-            std::ifstream file(std::string(std::filesystem::current_path()) + "/output.wasm");
+            std::ifstream file(std::string("./output.wasm"));
             file.close();
 
-            char *args[] = {"node", "/workspaces/bird-lang/tests/helpers/run_wasm.js", NULL};
+#ifdef RUN_WASM_FILE_LOCATION
+            char *args[] = {"node", RUN_WASM_FILE_LOCATION, NULL};
 
             pid_t pid = fork();
             if (pid == 0) // child process
@@ -128,7 +129,7 @@ namespace BirdTest
             {
                 wait(NULL);
 
-                std::ifstream output("/workspaces/bird-lang/tests/helpers/output.txt");
+                std::ifstream output("./output.txt");
                 std::string code;
                 if (output.is_open())
                 {
@@ -147,6 +148,7 @@ namespace BirdTest
 
                 output.close();
             }
+#endif
         }
     }
 };

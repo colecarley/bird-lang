@@ -24,6 +24,10 @@ include_directories(${PROJECT_SOURCE_DIR}/tests)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
+set(RUN_WASM_FILE_LOCATION "/workspaces/bird-lang/tests/helpers/run_wasm.js")
+add_compile_definitions(FILE_LOCATION="${FILE_LOCATION}")
+
+
 add_executable(compiler main.cpp ${SOURCES} ${BISON_Parser_OUTPUTS} ${FLEX_Lexer_OUTPUTS})
 
 
