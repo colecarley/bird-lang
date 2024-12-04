@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "../node.h"
-#include "../../lexer.h"
-#include "../../visitors/visitor.h"
+#include "ast_node/node.h"
+#include "lexer.h"
+#include "visitors/visitor.h"
 
 // forward declaration
 class Visitor;

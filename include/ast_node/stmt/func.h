@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 #include "stmt.h"
-#include "../../lexer.h"
-#include "../../visitors/visitor.h"
+#include "lexer.h"
+#include "visitors/visitor.h"
 
 // forward declaration
 class Visitor;

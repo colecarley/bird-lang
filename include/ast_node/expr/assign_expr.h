@@ -3,8 +3,8 @@
 #include <string>
 #include <memory>
 #include "expr.h"
-#include "../../lexer.h"
-#include "../../visitors/visitor.h"
+#include "lexer.h"
+#include "visitors/visitor.h"
 
 /*
  * Assignment statement AST Node that represents variable assignments
