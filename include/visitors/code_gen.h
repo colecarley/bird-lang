@@ -437,6 +437,23 @@ public:
             {
                 type = to_code_gen_type(decl_stmt->type_token.value());
             }
+
+            if (type == BinaryenTypeInt32() && BinaryenExpressionGetType(initializer_value) == BinaryenTypeFloat64())
+            {
+                initializer_value =
+                    BinaryenUnary(
+                        mod,
+                        BinaryenTruncSatSFloat64ToInt32(),
+                        initializer_value);
+            }
+            else if (type == BinaryenTypeFloat64() && BinaryenExpressionGetType(initializer_value) == BinaryenTypeInt32())
+            {
+                initializer_value =
+                    BinaryenUnary(
+                        mod,
+                        BinaryenConvertSInt32ToFloat64(),
+                        initializer_value);
+            }
         }
         else
         {
