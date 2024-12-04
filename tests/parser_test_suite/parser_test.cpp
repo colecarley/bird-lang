@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
-// #include "../src/lexer.cpp"
-// #include "../src/parser.cpp"
-#include "../include/exceptions/user_error_tracker.h"
-#include "../helpers/parse_test_helper.hpp"
+#include "exceptions/user_error_tracker.h"
+#include "helpers/parse_test_helper.hpp"
 
 TEST(ParserTest, ParseBlockStmt)
 {

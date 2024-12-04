@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../helpers/compile_helper.hpp"
+#include "helpers/compile_helper.hpp"
 
 // FLOATS
 TEST(ConstTest, ConstWithoutTypeFloat)

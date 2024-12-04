@@ -1,16 +1,16 @@
 #pragma once
 
-#include "../../include/exceptions/user_error_tracker.h"
-#include "../../include/visitors/interpreter.h"
-#include "../../include/visitors/semantic_analyzer.h"
-#include "../../include/visitors/type_checker.h"
-#include "../../src/parser.cpp"
-#include "../../src/lexer.cpp"
-#include "../../src/callable.cpp"
-#include "../../include/sym_table.h"
+#include "exceptions/user_error_tracker.h"
+#include "visitors/interpreter.h"
+#include "visitors/semantic_analyzer.h"
+#include "visitors/type_checker.h"
+#include "../src/parser.cpp"
+#include "../src/lexer.cpp"
+#include "../src/callable.cpp"
+#include "sym_table.h"
 
 #include "binaryen-c.h"
-#include "../../include/visitors/code_gen.h"
+#include "visitors/code_gen.h"
 
 #include <gtest/gtest.h>
 #include <vector>
