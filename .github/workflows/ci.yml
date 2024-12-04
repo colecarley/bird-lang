@@ -31,4 +31,4 @@ jobs:
       run: |
         cmake -Bbuild -DTESTS=ON -DRUN_WASM_FILE_LOCATION="/home/runner/work/bird-lang/bird-lang/tests/helpers/run_wasm.js"
         make -C build
-        ctest --test-dir build
+        ctest --test-dir build --verbose
