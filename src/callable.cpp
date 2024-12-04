@@ -1,8 +1,8 @@
-#include "../include/callable.h"
-#include "../include/visitors/interpreter.h"
-#include "../include/sym_table.h"
-#include "../include/value.h"
-#include "../include/exceptions/bird_exception.h"
+#include "callable.h"
+#include "visitors/interpreter.h"
+#include "sym_table.h"
+#include "value.h"
+#include "exceptions/bird_exception.h"
 
 void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>> args)
 {

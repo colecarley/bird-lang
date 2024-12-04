@@ -3,18 +3,18 @@
 #include <memory>
 #include <cstring>
 
-#include "include/lexer.h"
-#include "include/parser.h"
-#include "include/visitors/ast_printer.h"
-#include "include/visitors/interpreter.h"
-#include "include/visitors/semantic_analyzer.h"
-#include "include/visitors/type_checker.h"
+#include "lexer.h"
+#include "parser.h"
+#include "visitors/ast_printer.h"
+#include "visitors/interpreter.h"
+#include "visitors/semantic_analyzer.h"
+#include "visitors/type_checker.h"
 
-#include "include/ast_node/expr/expr.h"
-#include "include/exceptions/user_error_tracker.h"
+#include "ast_node/expr/expr.h"
+#include "exceptions/user_error_tracker.h"
 
-#include "include/visitors/code_gen.h"
-#include "include/parser2.hpp" // TODO: change this name
+#include "visitors/code_gen.h"
+#include "parser2.hpp" // TODO: change this name
 
 extern int bird_parse(const char *input);
 

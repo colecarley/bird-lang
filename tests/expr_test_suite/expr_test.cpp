@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <memory>
-#include "../helpers/compile_helper.hpp"
+#include "helpers/compile_helper.hpp"
 
 // Add modulus operator test when it has been implemented.
 TEST(ExprTest, BinaryExpr)

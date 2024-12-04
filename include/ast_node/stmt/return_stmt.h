@@ -2,7 +2,7 @@
 
 #include <memory>
 #include "stmt.h"
-#include "../../visitors/visitor.h"
+#include "visitors/visitor.h"
 
 // forward declaration
 class Expr;
@@ -21,7 +21,8 @@ public:
     Token return_token;
     std::optional<std::unique_ptr<Expr>> expr;
 
-    ReturnStmt(Token return_token, std::optional<std::unique_ptr<Expr>> expr) {
+    ReturnStmt(Token return_token, std::optional<std::unique_ptr<Expr>> expr)
+    {
         this->return_token = return_token;
         this->expr = std::move(expr);
     }
