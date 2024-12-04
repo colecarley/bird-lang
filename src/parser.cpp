@@ -127,7 +127,7 @@ std::unique_ptr<Stmt> Parser::const_decl()
     }
 
     std::optional<Token> type_token = std::nullopt;
-    bool type_is_literal;
+    bool type_is_literal = false;
     if (this->peek().token_type == Token::Type::COLON)
     {
         this->advance();
@@ -196,7 +196,7 @@ std::unique_ptr<Stmt> Parser::if_stmt()
             if_token,
             std::move(condition),
             std::move(statement),
-            std::make_optional<std::unique_ptr<Stmt>>(std::move(this->stmt())));
+            std::make_optional<std::unique_ptr<Stmt>>(this->stmt()));
     }
 
     return std::make_unique<IfStmt>(
@@ -341,7 +341,7 @@ std::unique_ptr<Stmt> Parser::var_decl()
     }
 
     std::optional<Token> type_token = std::nullopt;
-    bool type_is_literal;
+    bool type_is_literal = false;
     if (this->peek().token_type == Token::Type::COLON)
     {
         this->advance();

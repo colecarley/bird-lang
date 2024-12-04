@@ -283,15 +283,14 @@ public:
                 main_function_body.size(),
                 BinaryenTypeNone());
 
-        BinaryenFunctionRef mainFunction =
-            BinaryenAddFunction(
-                this->mod,
-                "main",
-                params,
-                results,
-                this->function_locals["main"].data(),
-                this->function_locals["main"].size(),
-                body);
+        BinaryenAddFunction(
+            this->mod,
+            "main",
+            params,
+            results,
+            this->function_locals["main"].data(),
+            this->function_locals["main"].size(),
+            body);
 
         BinaryenAddFunctionExport(
             this->mod,
@@ -1311,7 +1310,7 @@ public:
             this->function_locals[func_name].begin() + param_types.size(),
             this->function_locals[func_name].end());
 
-        BinaryenFunctionRef func_type = BinaryenAddFunction(
+        BinaryenAddFunction(
             this->mod,
             func_name.c_str(),
             params,
@@ -1388,7 +1387,6 @@ public:
     void visit_return_stmt(ReturnStmt *return_stmt)
     {
         TaggedType func_return_type = this->function_return_types[this->current_function_name];
-        BinaryenExpressionRef return_expr;
 
         if (return_stmt->expr.has_value())
         {
