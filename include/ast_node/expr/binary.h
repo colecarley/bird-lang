@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "../../lexer.h"
+#include "../../token.h"
 #include "../../visitors/visitor.h"
 #include "expr.h"
 
@@ -26,6 +26,9 @@ public:
         this->op = op;
         this->right = std::move(right);
     }
+
+    Binary(Expr *left, Token op, Expr *right)
+        : left(left), op(op), right(right) {}
 
     void accept(Visitor *visitor)
     {

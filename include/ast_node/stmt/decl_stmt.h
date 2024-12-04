@@ -5,7 +5,7 @@
 #include <optional>
 
 #include "stmt.h"
-#include "../../lexer.h"
+#include "../../token.h"
 #include "../../visitors/visitor.h"
 
 // forward declaration
@@ -31,6 +31,9 @@ public:
         this->type_is_literal = type_is_literal;
         this->value = std::move(value);
     }
+
+    DeclStmt(Token identifier, std::optional<Token> type_token, bool type_is_literal, Expr *value)
+        : identifier(identifier), type_token(type_token), type_is_literal(type_is_literal), value(value) {}
 
     void accept(Visitor *visitor)
     {

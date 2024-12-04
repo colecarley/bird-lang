@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include "expr.h"
-#include "../../lexer.h"
+#include "../../token.h"
 #include "../../visitors/visitor.h"
 
 /*
@@ -25,6 +25,9 @@ public:
         this->assign_operator = assign_operator;
         this->value = std::move(value);
     }
+
+    AssignExpr(Token identifier, Token assign_operator, Expr *value)
+        : identifier(identifier), assign_operator(assign_operator), value(value) {}
 
     void accept(Visitor *visitor)
     {

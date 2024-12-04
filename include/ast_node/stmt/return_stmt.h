@@ -21,12 +21,16 @@ public:
     Token return_token;
     std::optional<std::unique_ptr<Expr>> expr;
 
-    ReturnStmt(Token return_token, std::optional<std::unique_ptr<Expr>> expr) {
+    ReturnStmt(Token return_token, std::optional<std::unique_ptr<Expr>> expr)
+    {
         this->return_token = return_token;
         this->expr = std::move(expr);
     }
 
-    ReturnStmt() : expr(std::nullopt) {}
+    ReturnStmt(Token return_token, std::optional<Expr *> expr)
+        : return_token(return_token), expr(expr) {}
+
+    ReturnStmt(Token return_token) : return_token(return_token), expr(std::nullopt) {}
 
     void accept(Visitor *visitor)
     {

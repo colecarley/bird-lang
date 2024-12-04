@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include "../node.h"
-#include "../../lexer.h"
+#include "../../token.h"
 #include "../../visitors/visitor.h"
 
 // forward declaration
@@ -23,10 +23,18 @@ public:
     Token identifier;
     std::vector<std::unique_ptr<Expr>> args;
 
-    Call(Token identifier,
-         std::vector<std::unique_ptr<Expr>> args)
-        : identifier(identifier),
-          args(std::move(args)) {};
+    Call(Token identifier, std::vector<std::unique_ptr<Expr>> args)
+        : identifier(identifier), args(std::move(args)) {};
+
+    Call(Token identifier, std::vector<Expr *> args)
+        : identifier(identifier)
+    {
+        this->args.reserve(args.size());
+        for (Expr *arg : args)
+        {
+            this->args.push_back(std::unique_ptr<Expr>(arg));
+        }
+    }
 
     void accept(Visitor *visitor)
     {

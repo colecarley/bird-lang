@@ -23,6 +23,9 @@ public:
         this->expr = std::move(expr);
     }
 
+    ExprStmt(Expr *expr)
+        : expr(expr) {}
+
     void accept(Visitor *visitor)
     {
         visitor->visit_expr_stmt(this);
