@@ -157,7 +157,6 @@ namespace BirdTest
 
                 output.close();
             }
-#endif
         }
 
         return true;
