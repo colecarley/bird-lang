@@ -41,7 +41,7 @@ namespace BirdTest
         TestOptions() = default;
     };
 
-    void compile(const TestOptions options)
+    bool compile(const TestOptions options)
     {
         UserErrorTracker error_tracker(options.code);
         std::vector<Token> tokens;
@@ -59,7 +59,6 @@ namespace BirdTest
         std::vector<std::unique_ptr<Stmt>> ast;
         if (options.parse)
         {
-
             Parser parser(tokens, &error_tracker);
             ast = parser.parse();
 
@@ -78,6 +77,12 @@ namespace BirdTest
             {
                 options.after_semantic_analyze.value()(error_tracker, analyze_semantics);
             }
+
+            if (error_tracker.get_errors().size() > 0)
+            {
+                error_tracker.print_errors();
+                return false;
+            }
         }
 
         if (options.type_check)
@@ -88,6 +93,12 @@ namespace BirdTest
             if (options.after_type_check.has_value())
             {
                 options.after_type_check.value()(error_tracker, type_checker);
+            }
+
+            if (error_tracker.get_errors().size() > 0)
+            {
+                error_tracker.print_errors();
+                return false;
             }
         }
 
@@ -104,28 +115,26 @@ namespace BirdTest
 
         if (options.compile)
         {
-            std::cout << "COMPILING" << std::endl;
             CodeGen code_gen;
             code_gen.generate(&ast);
 
             std::ifstream file(std::string("./output.wasm"));
             file.close();
 
-#ifdef RUN_WASM_FILE_LOCATION
-            char *args[] = {"node", RUN_WASM_FILE_LOCATION, NULL};
+            char *args[] = {(char *)"node", (char *)RUN_WASM_FILE_LOCATION, NULL};
 
             pid_t pid = fork();
+            if (pid < 0)
+            {
+                std::cerr << "Fork failed" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
             if (pid == 0) // child process
             {
                 execvp("node", args);
             }
-            else if (pid < 0)
-            {
-                // Fork failed
-                std::cerr << "Fork failed" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            else
+            else // parent process
             {
                 wait(NULL);
 
@@ -148,7 +157,8 @@ namespace BirdTest
 
                 output.close();
             }
-#endif
         }
+
+        return true;
     }
 };

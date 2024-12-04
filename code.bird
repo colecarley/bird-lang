@@ -1,6 +1,6 @@
-fn add(x: float, y: int) -> int {
-    return x + y;
-}
 
+const x: bool = true;
+const y: bool = false;
 
-print add(4.5, 3.4);
+print x;
+print y;
