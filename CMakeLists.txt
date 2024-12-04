@@ -24,8 +24,6 @@ include_directories(${PROJECT_SOURCE_DIR}/tests)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-add_compile_definitions(RUN_WASM_FILE_LOCATION="/workspaces/bird-lang/tests/helpers/run_wasm.js")
-
 add_executable(compiler main.cpp ${SOURCES} ${BISON_Parser_OUTPUTS} ${FLEX_Lexer_OUTPUTS})
 
 option(DEBUG "Build with debug flags" OFF)
@@ -34,6 +32,7 @@ if (DEBUG)
   target_compile_definitions(compiler PRIVATE DEBUG)
 endif()
 
+target_compile_definitions(compiler PRIVATE RUN_WASM_FILE_LOCATION)
 
 target_link_libraries(compiler binaryen)
 
@@ -54,6 +53,8 @@ if (TESTS)
       target_link_libraries(${test_name} GTest::gtest GTest::gtest_main)
       target_link_libraries(${test_name} binaryen)
       add_test(NAME ${test_name} COMMAND ${test_name})
+
+    target_compile_definitions(${test_name} PRIVATE RUN_WASM_FILE_LOCATION="${RUN_WASM_FILE_LOCATION}")
   endforeach()
 
 endif()
