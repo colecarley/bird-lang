@@ -1,20 +1,40 @@
 #include <gtest/gtest.h>
-#include <vector>
-#include <memory>
-#include "../../include/visitors/interpreter.h"
-#include "../../src/callable.cpp"
-#include "../helpers/parse_test_helper.hpp"
-#include "../../include/visitors/semantic_analyzer.h"
-#include "../../include/visitors/type_checker.h"
 
-TEST(VarTest, VarRedeclaration)
+#include "../helpers/compile_helper.hpp"
+
+TEST(ConstTest, ConstRedeclaration)
 {
-    auto code = "const x = 0;"
-                "const x = 1;";
-    auto ast = parse_code(code);
+    BirdTest::TestOptions options;
+    options.code = "var x = 0;"
+                   "var x = 1;";
+    options.type_check = false;
+    options.interpret = false;
+    options.compile = false;
 
-    auto user_error_tracker = UserErrorTracker(code);
-    SemanticAnalyzer analyze_semantics(&user_error_tracker);
-    analyze_semantics.analyze_semantics(&ast);
-    ASSERT_TRUE(user_error_tracker.has_errors());
+    options.after_semantic_analyze = [&](UserErrorTracker &error_tracker, SemanticAnalyzer &analyze_semantics)
+    {
+        ASSERT_TRUE(error_tracker.has_errors());
+    };
+
+    BirdTest::compile(options);
+}
+
+TEST(ConstTest, Foobar)
+{
+    BirdTest::TestOptions options;
+    options.code = "var x = 0; print x; print x + 1;";
+
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("x"));
+        ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+        ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 0);
+    };
+
+    options.after_compile = [&](std::string &output)
+    {
+        ASSERT_EQ(output, "0\n1\n\n");
+    };
+
+    BirdTest::compile(options);
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include "binaryen-c.h"
+#include <fstream>
+#include <ios>
 
 class CodeGen : public Visitor
 {
