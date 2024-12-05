@@ -213,7 +213,7 @@ public:
             {
                 const_stmt->accept(this);
                 auto result = this->stack.pop();
-                main_function_body.push_back(result);
+                main_function_body.push_back(result.value);
             }
 
             if (auto print_stmt = dynamic_cast<PrintStmt *>(stmt.get()))
@@ -483,23 +483,6 @@ public:
                             BinaryenConvertSInt32ToFloat64(),
                             initializer_value.value),
                         CodeGenFloat);
-            }
-
-            if (type == BinaryenTypeInt32() && BinaryenExpressionGetType(initializer_value) == BinaryenTypeFloat64())
-            {
-                initializer_value =
-                    BinaryenUnary(
-                        mod,
-                        BinaryenTruncSatSFloat64ToInt32(),
-                        initializer_value);
-            }
-            else if (type == BinaryenTypeFloat64() && BinaryenExpressionGetType(initializer_value) == BinaryenTypeInt32())
-            {
-                initializer_value =
-                    BinaryenUnary(
-                        mod,
-                        BinaryenConvertSInt32ToFloat64(),
-                        initializer_value);
             }
         }
         else
