@@ -1,1 +1,1 @@
-fn function() {} function(;
+fn function(i: int, j: int) -> int{return "string";}
