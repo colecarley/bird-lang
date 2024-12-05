@@ -21,11 +21,13 @@ const moduleOptions = {
             }
             console.log(str);
             fs.appendFileSync(outputPath, str + "\n");
+
         }
     }
 };
 
 const result = fs.readFileSync("output.wasm");
+
 
 let instance;
 WebAssembly.instantiate(result, moduleOptions).then((wasmInstatiatedSource) => {

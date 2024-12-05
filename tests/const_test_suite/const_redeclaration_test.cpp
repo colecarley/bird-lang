@@ -21,6 +21,7 @@ TEST(ConstTest, ConstRedeclaration)
 
     ASSERT_FALSE(BirdTest::compile(options));
 
+
     options.after_semantic_analyze = [&](UserErrorTracker &error_tracker, SemanticAnalyzer &analyzer)
     {
         ASSERT_TRUE(error_tracker.has_errors());
