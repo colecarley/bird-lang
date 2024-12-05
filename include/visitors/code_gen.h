@@ -60,6 +60,7 @@ struct MemorySegment
 
 class CodeGen : public Visitor
 {
+public:
     Environment<TaggedIndex> environment; // tracks the index of local variables
     Environment<Type> type_table;
     Stack<TaggedExpression> stack; // for returning values
@@ -77,7 +78,6 @@ class CodeGen : public Visitor
                                     // offset, will fix tomorrow
     BinaryenModuleRef mod;
 
-public:
     ~CodeGen()
     {
         BinaryenModuleDispose(this->mod);
@@ -325,7 +325,7 @@ public:
 
         free(result.binary);
 
-        this->environment.pop_env();
+        // this->environment.pop_env();
     }
 
     bool is_bird_type(Token token)

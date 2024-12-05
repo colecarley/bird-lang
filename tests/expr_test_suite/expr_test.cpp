@@ -17,7 +17,7 @@ TEST(ExprTest, BinaryExpr)
         ASSERT_EQ(as_type<int>(interpreter.env.get("x")), -8);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "-8\n\n");
     };
@@ -101,7 +101,7 @@ TEST(ExprTest, CondExpr)
         ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "1\n\n");
     };
@@ -122,7 +122,7 @@ TEST(ExprTest, CondExprIntInt)
         ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "1\n\n");
     };
@@ -142,7 +142,7 @@ TEST(ExprTest, CondExprFloatIntOverflow)
         ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "1\n\n");
     };
@@ -162,7 +162,7 @@ TEST(ExprTest, CondExprIntFloatOverflow)
         ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "1\n\n");
     };
@@ -182,7 +182,7 @@ TEST(ExprTest, CondExprIntFloat)
         ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "1\n\n");
     };
@@ -232,7 +232,7 @@ TEST(ExprTest, IdentifierInExpr)
         ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 56);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "56\n\n");
     };
@@ -248,7 +248,7 @@ TEST(ExprTest, BinaryDivideByZero)
     ASSERT_THROW(BirdTest::compile(options), BirdException);
 
     options.interpret = false;
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "\n");
     };
@@ -268,7 +268,7 @@ TEST(ExprTest, BinaryModulus)
         ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 4);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "4\n\n");
     };
@@ -295,7 +295,7 @@ TEST(ExprTest, AssignModulus)
         ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 1);
     };
 
-    options.after_compile = [](std::string output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "1\n\n");
     };

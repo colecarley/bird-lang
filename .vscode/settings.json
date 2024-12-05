@@ -86,7 +86,9 @@
                 "unordered_set": "cpp",
                 "typeindex": "cpp",
                 "__config": "cpp",
-                "*.inc": "cpp"
+                "*.inc": "cpp",
+                "codecvt": "cpp",
+                "numbers": "cpp"
         },
         "C_Cpp.errorSquiggles": "enabled"
 }
