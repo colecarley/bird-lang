@@ -1,1 +1,1 @@
-type x = int;var y: x = true;
+var x = 0;var x = 1;

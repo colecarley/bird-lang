@@ -1,32 +1,17 @@
 #include <gtest/gtest.h>
-#include <vector>
-#include <memory>
-#include "exceptions/user_error_tracker.h"
-#include "value.h"
-#include "visitors/interpreter.h"
-#include "../src/callable.cpp"
-#include "helpers/parse_test_helper.hpp"
-#include "visitors/semantic_analyzer.h"
-#include "visitors/type_checker.h"
+#include "helpers/compile_helper.hpp"
 
 TEST(VarTest, VarMutability)
 {
-    auto code = "var x: int = 4; x = 5;";
-    auto ast = parse_code(code);
+    BirdTest::TestOptions options;
+    options.code = "var x: int = 4; x = 5;";
 
-    auto user_error_tracker = UserErrorTracker(code);
-    SemanticAnalyzer analyze_semantics(&user_error_tracker);
-    analyze_semantics.analyze_semantics(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("x"));
+        ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+        ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 5);
+    };
 
-    TypeChecker type_checker(&user_error_tracker);
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-    interpreter.evaluate(&ast);
-
-    ASSERT_TRUE(interpreter.env.contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 5);
+    ASSERT_TRUE(BirdTest::compile(options));
 }

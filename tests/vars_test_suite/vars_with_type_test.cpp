@@ -1,132 +1,95 @@
 #include <gtest/gtest.h>
-#include <vector>
-#include <memory>
-#include "exceptions/user_error_tracker.h"
-#include "value.h"
-#include "visitors/interpreter.h"
-#include "../src/callable.cpp"
-#include "helpers/parse_test_helper.hpp"
-#include "visitors/semantic_analyzer.h"
-#include "visitors/type_checker.h"
+#include "helpers/compile_helper.hpp"
 
 // INT
 TEST(VarTest, VarWithTypeInt)
 {
-    auto code = "var x: int = 4;";
-    auto ast = parse_code(code);
+    BirdTest::TestOptions options;
+    options.code = "var x: int = 4;";
 
-    auto user_error_tracker = UserErrorTracker(code);
-    SemanticAnalyzer analyze_semantics(&user_error_tracker);
-    analyze_semantics.analyze_semantics(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("x"));
+        ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+        ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 4);
+    };
 
-    TypeChecker type_checker(&user_error_tracker);
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-    interpreter.evaluate(&ast);
-
-    ASSERT_TRUE(interpreter.env.contains("x"));
-    ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
-    ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 4);
+    ASSERT_TRUE(BirdTest::compile(options));
 }
 
-// FLOAT
-TEST(VarTest, VarWithTypeFloat)
+TEST(VarTest, VarWithTypeFloatExplicit)
 {
-    auto code = "var x: float = 4.0;";
-    auto ast = parse_code(code);
+    BirdTest::TestOptions options;
+    options.code = "var x: float = 4.0;";
 
-    auto user_error_tracker = UserErrorTracker(code);
-    SemanticAnalyzer analyze_semantics(&user_error_tracker);
-    analyze_semantics.analyze_semantics(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("x"));
+        ASSERT_TRUE(is_type<double>(interpreter.env.get("x")));
+        ASSERT_EQ(as_type<double>(interpreter.env.get("x")), 4.0);
+    };
 
-    TypeChecker type_checker(&user_error_tracker);
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
+    ASSERT_TRUE(BirdTest::compile(options));
+}
 
-    Interpreter interpreter;
-    interpreter.evaluate(&ast);
+TEST(VarTest, VarWithTypeFloatImplicit)
+{
+    BirdTest::TestOptions options;
+    options.code = "var y: float = 4;";
 
-    ASSERT_TRUE(interpreter.env.contains("x"));
-    ASSERT_TRUE(is_type<double>(interpreter.env.get("x")));
-    ASSERT_EQ(as_type<double>(interpreter.env.get("x")), 4.0);
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("y"));
+        ASSERT_TRUE(is_type<double>(interpreter.env.get("y")));
+        ASSERT_EQ(as_type<double>(interpreter.env.get("y")), 4.0);
+    };
 
-    code = "var y: float = 4;";
-    ast = parse_code(code);
-
-    analyze_semantics.analyze_semantics(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    interpreter.evaluate(&ast);
-
-    ASSERT_TRUE(interpreter.env.contains("y"));
-    ASSERT_TRUE(is_type<double>(interpreter.env.get("y")));
-    ASSERT_EQ(as_type<double>(interpreter.env.get("y")), 4.0);
+    ASSERT_TRUE(BirdTest::compile(options));
 }
 
 // STRINGS
 TEST(VarTest, VarWithTypeString)
 {
-    auto code = "var x: str = \"hello\";";
-    auto ast = parse_code(code);
+    BirdTest::TestOptions options;
+    options.code = "var x: str = \"hello\";";
 
-    auto user_error_tracker = UserErrorTracker(code);
-    SemanticAnalyzer analyze_semantics(&user_error_tracker);
-    analyze_semantics.analyze_semantics(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("x"));
+        ASSERT_TRUE(is_type<std::string>(interpreter.env.get("x")));
+        ASSERT_EQ(as_type<std::string>(interpreter.env.get("x")), "hello");
+    };
 
-    TypeChecker type_checker(&user_error_tracker);
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    Interpreter interpreter;
-    interpreter.evaluate(&ast);
-
-    ASSERT_TRUE(interpreter.env.contains("x"));
-    ASSERT_TRUE(is_type<std::string>(interpreter.env.get("x")));
-    ASSERT_EQ(as_type<std::string>(interpreter.env.get("x")), "hello");
+    ASSERT_TRUE(BirdTest::compile(options));
 }
 
 // BOOL
-TEST(VarTest, VarWithTypeBool)
+TEST(VarTest, VarWithTypeBoolTrue)
 {
-    auto code = "var x: bool = true;";
-    auto ast = parse_code(code);
+    BirdTest::TestOptions options;
+    options.code = "var x: bool = true;";
 
-    auto user_error_tracker = UserErrorTracker(code);
-    SemanticAnalyzer analyze_semantics(&user_error_tracker);
-    analyze_semantics.analyze_semantics(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("x"));
+        ASSERT_TRUE(is_type<bool>(interpreter.env.get("x")));
+        ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
+    };
 
-    TypeChecker type_checker(&user_error_tracker);
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
+    ASSERT_TRUE(BirdTest::compile(options));
+}
 
-    Interpreter interpreter;
-    interpreter.evaluate(&ast);
+TEST(VarTest, VarWithTypeBoolFalse)
+{
+    BirdTest::TestOptions options;
+    options.code = "var y: bool = false;";
 
-    ASSERT_TRUE(interpreter.env.contains("x"));
-    ASSERT_TRUE(is_type<bool>(interpreter.env.get("x")));
-    ASSERT_EQ(as_type<bool>(interpreter.env.get("x")), true);
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("y"));
+        ASSERT_TRUE(is_type<bool>(interpreter.env.get("y")));
+        ASSERT_EQ(as_type<bool>(interpreter.env.get("y")), false);
+    };
 
-    code = "var y: bool = false;";
-    ast = parse_code(code);
-
-    analyze_semantics.analyze_semantics(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    type_checker.check_types(&ast);
-    ASSERT_FALSE(user_error_tracker.has_errors());
-
-    interpreter.evaluate(&ast);
-
-    ASSERT_TRUE(interpreter.env.contains("y"));
-    ASSERT_TRUE(is_type<bool>(interpreter.env.get("y")));
-    ASSERT_EQ(as_type<bool>(interpreter.env.get("y")), false);
+    ASSERT_TRUE(BirdTest::compile(options));
 }
