@@ -21,7 +21,6 @@ void Callable::call(Interpreter *interpreter, std::vector<std::unique_ptr<Expr>>
     }
 
     interpreter->env.push_env();
-    auto num_envs = interpreter->env.envs.size();
 
     for (int i = 0; i < this->param_list.size(); i++)
     {

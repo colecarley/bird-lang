@@ -12,12 +12,25 @@ const moduleOptions = {
         print_f64: (value) => {
             console.log(value);
             fs.appendFileSync(outputPath, value.toString() + "\n");
+        },
+        print_str: (ptr) => {
+            const buffer = new Uint8Array(instance.exports.memory.buffer);
+            let str = "";
+            for (let i = ptr; buffer[i] !== 0; i++) {
+                str += String.fromCharCode(buffer[i]);
+            }
+            console.log(str);
+            fs.appendFileSync(outputPath, str + "\n");
+
         }
     }
 };
 
 const result = fs.readFileSync("output.wasm");
 
-WebAssembly.instantiate(result, moduleOptions).then((instance) => {
-    instance.instance.exports.main();
+
+let instance;
+WebAssembly.instantiate(result, moduleOptions).then((wasmInstatiatedSource) => {
+    instance = wasmInstatiatedSource.instance;
+    instance.exports.main();
 });

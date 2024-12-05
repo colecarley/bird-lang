@@ -1,5 +1,2 @@
 
-var z: int = 7;
-const y: float = -9.2;
-var x: float = (z * y);
-print x;
+const x: int = 4;

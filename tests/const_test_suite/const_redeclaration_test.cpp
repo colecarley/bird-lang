@@ -20,4 +20,16 @@ TEST(ConstTest, ConstRedeclaration)
     };
 
     ASSERT_FALSE(BirdTest::compile(options));
+
+
+    options.after_semantic_analyze = [&](UserErrorTracker &error_tracker, SemanticAnalyzer &analyzer)
+    {
+        ASSERT_TRUE(error_tracker.has_errors());
+        auto tup = error_tracker.get_errors()[0];
+
+        ASSERT_EQ(std::get<1>(tup).lexeme, "x");
+        ASSERT_EQ(std::get<0>(tup), ">>[ERROR] semantic error: Identifier 'x' is already declared. (line 0, character 19)");
+    };
+
+    ASSERT_FALSE(BirdTest::compile(options));
 }
