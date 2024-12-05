@@ -1,3 +1,1 @@
-type x = int;
-const y: x = 2;
-print y;
+type x = int;var y: x = true;

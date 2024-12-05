@@ -110,42 +110,56 @@ TEST(TypeStmtTest, ConstStmtWithTypeIdentifer)
     ASSERT_TRUE(BirdTest::compile(options));
 }
 
-// TEST(TypeStmtTest, TypeDeclIdentiferRedeclaration)
-// {
-//     BirdTest::TestOptions options;
-//     options.code = "type x = int;"
-//                 "var x = 2;";
+TEST(TypeStmtTest, TypeDeclIdentiferRedeclaration)
+{
+    BirdTest::TestOptions options;
+    options.code = "type x = int;"
+                   "var x = 2;";
 
-//     auto user_error_tracker = UserErrorTracker(code);
-//     SemanticAnalyzer analyze_semantics(&user_error_tracker);
-//     analyze_semantics.analyze_semantics(&ast);
-//     ASSERT_TRUE(user_error_tracker.has_errors());
-// }
+    options.after_semantic_analyze = [&](UserErrorTracker &error_tracker, SemanticAnalyzer &analyzer)
+    {
+        ASSERT_TRUE(error_tracker.has_errors());
+        auto tup = error_tracker.get_errors()[0];
 
-// TEST(TypeStmtTest, FuncTypeIdentiferRedeclaration)
-// {
-//     BirdTest::TestOptions options;
-//     options.code = "type x = int;"
-//                 "fn x() -> int {return 3;};";
+        ASSERT_EQ(std::get<1>(tup).lexeme, "x");
+        ASSERT_EQ(std::get<0>(tup), ">>[ERROR] semantic error: Identifier 'x' is already declared. (line 0, character 18)");
+    };
 
-//     auto user_error_tracker = UserErrorTracker(code);
-//     SemanticAnalyzer analyze_semantics(&user_error_tracker);
-//     analyze_semantics.analyze_semantics(&ast);
-//     ASSERT_TRUE(user_error_tracker.has_errors());
-// }
+    ASSERT_FALSE(BirdTest::compile(options));
+}
 
-// TEST(TypeStmtTest, DeclTypeMismatch)
-// {
-//     BirdTest::TestOptions options;
-//     options.code = "type x = int;"
-//                 "var y: x = true;";
+TEST(TypeStmtTest, FuncTypeIdentiferRedeclaration)
+{
+    BirdTest::TestOptions options;
+    options.code = "type x = int;"
+                   "fn x() -> int {return 3;}";
 
-//     auto user_error_tracker = UserErrorTracker(code);
-//     SemanticAnalyzer analyze_semantics(&user_error_tracker);
-//     analyze_semantics.analyze_semantics(&ast);
-//     ASSERT_FALSE(user_error_tracker.has_errors());
+    options.after_semantic_analyze = [&](UserErrorTracker &error_tracker, SemanticAnalyzer &analyzer)
+    {
+        ASSERT_TRUE(error_tracker.has_errors());
+        auto tup = error_tracker.get_errors()[0];
 
-//     TypeChecker type_checker(&user_error_tracker);
-//     type_checker.check_types(&ast);
-//     ASSERT_TRUE(user_error_tracker.has_errors());
-// }
+        ASSERT_EQ(std::get<1>(tup).lexeme, "x");
+        ASSERT_EQ(std::get<0>(tup), ">>[ERROR] semantic error: Identifier 'x' is already declared. (line 0, character 17)");
+    };
+
+    ASSERT_FALSE(BirdTest::compile(options));
+}
+
+TEST(TypeStmtTest, DeclTypeMismatch)
+{
+    BirdTest::TestOptions options;
+    options.code = "type x = int;"
+                   "var y: x = true;";
+
+    options.after_type_check = [&](UserErrorTracker &error_tracker, TypeChecker &type_checker)
+    {
+        ASSERT_TRUE(error_tracker.has_errors());
+        auto tup = error_tracker.get_errors()[0];
+
+        ASSERT_EQ(std::get<1>(tup).lexeme, "x");
+        ASSERT_EQ(std::get<0>(tup), ">>[ERROR] type mismatch: in declaration (line 0, character 21)");
+    };
+
+    ASSERT_FALSE(BirdTest::compile(options));
+}
