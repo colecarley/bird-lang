@@ -28,7 +28,7 @@ TEST(FunctionTest, MalformedCall)
     options.code = "fn function() {} "
                    "function(;";
 
-    options.after_parse = [&](UserErrorTracker &error_tracker, Parser &parser)
+    options.after_parse = [&](UserErrorTracker &error_tracker, Parser &parser, const std::vector<std::unique_ptr<Stmt>> &ast)
     {
         ASSERT_TRUE(error_tracker.has_errors());
         auto tup = error_tracker.get_errors()[0];

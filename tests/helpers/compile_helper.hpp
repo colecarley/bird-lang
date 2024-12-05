@@ -32,7 +32,7 @@ namespace BirdTest
         bool compile = true;
 
         std::optional<std::function<void(UserErrorTracker &, Lexer &)>> after_lex;
-        std::optional<std::function<void(UserErrorTracker &, Parser &)>> after_parse;
+        std::optional<std::function<void(UserErrorTracker &, Parser &, const std::vector<std::unique_ptr<Stmt>> &)>> after_parse;
         std::optional<std::function<void(UserErrorTracker &, SemanticAnalyzer &)>> after_semantic_analyze;
         std::optional<std::function<void(UserErrorTracker &, TypeChecker &)>> after_type_check;
         std::optional<std::function<void(Interpreter &)>> after_interpret;
@@ -64,7 +64,7 @@ namespace BirdTest
 
             if (options.after_parse.has_value())
             {
-                options.after_parse.value()(error_tracker, parser);
+                options.after_parse.value()(error_tracker, parser, ast);
             }
         }
 
