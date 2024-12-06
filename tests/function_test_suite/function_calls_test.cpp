@@ -141,3 +141,25 @@ TEST(FunctionTest, FunctionIdentityCall)
         ASSERT_EQ(output, "2\n\n");
     };
 }
+
+TEST(FunctionTest, FunctionReturnBool)
+{
+    BirdTest::TestOptions options;
+    options.code = "fn function(i: int) -> bool {return i < 0;}"
+                   "var result: bool = function(4);"
+                   "print result;";
+
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.call_table.contains("function"));
+        ASSERT_TRUE(interpreter.env.contains("result"));
+        auto result = interpreter.env.get("result");
+        ASSERT_TRUE(is_type<bool>(result));
+        EXPECT_EQ(as_type<bool>(result), false);
+    };
+
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        ASSERT_EQ(output, "0\n\n");
+    };
+}
