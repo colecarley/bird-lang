@@ -806,13 +806,20 @@ public:
 
         initializer_and_loop.push_back(for_loop);
 
+        auto block = BinaryenBlock(
+            this->mod,
+            "EXIT",
+            initializer_and_loop.data(),
+            initializer_and_loop.size(),
+            BinaryenTypeNone());
+
         this->stack.push(
-            BinaryenBlock(
-                this->mod,
-                "EXIT",
-                initializer_and_loop.data(),
-                initializer_and_loop.size(),
-                BinaryenTypeNone()));
+            condition.value ? BinaryenIf(
+                                  this->mod,
+                                  condition.value,
+                                  block,
+                                  nullptr)
+                            : block);
 
         this->environment.pop_env();
     }
