@@ -757,13 +757,32 @@ public:
 
         std::vector<BinaryenExpressionRef> body_and_increment_children;
         body_and_increment_children.push_back(body_and_condition);
-        body_and_increment_children.push_back(increment.value);
-        body_and_increment_children.push_back(
-            BinaryenBreak(
-                this->mod,
-                "LOOP",
-                condition.value,
-                nullptr));
+
+        if (increment.value)
+        {
+            body_and_increment_children.push_back(increment.value);
+        }
+
+        if (condition.value)
+        {
+            std::cout << "condition has value " << std::endl;
+            body_and_increment_children.push_back(
+                BinaryenBreak(
+                    this->mod,
+                    "LOOP",
+                    condition.value,
+                    nullptr));
+        }
+        else
+        {
+            std::cout << "condition has value " << std::endl;
+            body_and_increment_children.push_back(
+                BinaryenBreak(
+                    this->mod,
+                    "LOOP",
+                    nullptr,
+                    nullptr));
+        }
 
         auto body_and_increment = BinaryenBlock(
             this->mod,

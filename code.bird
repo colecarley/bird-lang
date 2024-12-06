@@ -1,5 +1,5 @@
-fn function(i: int) -> int { return i; } 
-var result: int = function(4);
-print result;
-
-
+var x = 0;
+for ; ; do {
+    print "1";
+    break;
+}
