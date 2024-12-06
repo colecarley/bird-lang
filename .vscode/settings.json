@@ -88,7 +88,8 @@
                 "__config": "cpp",
                 "*.inc": "cpp",
                 "codecvt": "cpp",
-                "numbers": "cpp"
+                "numbers": "cpp",
+                "format": "cpp"
         },
         "C_Cpp.errorSquiggles": "enabled"
 }

@@ -495,11 +495,10 @@ public:
     void visit_func(Func *func)
     {
         Callable callable = Callable(func->param_list,
-                                     std::shared_ptr<Stmt>(
-                                         std::move(func->block)),
+                                     func->block,
                                      func->return_type);
 
-        this->call_table.declare(func->identifier.lexeme, std::move(callable));
+        this->call_table.declare(func->identifier.lexeme, callable);
     }
 
     void visit_if_stmt(IfStmt *if_stmt)
@@ -517,7 +516,7 @@ public:
     void visit_call(Call *call)
     {
         auto callable = this->call_table.get(call->identifier.lexeme);
-        callable.call(this, std::move(call->args));
+        callable.call(this, call->args);
     }
 
     void visit_return_stmt(ReturnStmt *return_stmt)

@@ -26,12 +26,12 @@ public:
     std::optional<Token> return_type;
     // the first item in the pair is an identifier, the second is a type
     std::vector<std::pair<Token, Token>> param_list; // TODO: make this an actual type
-    std::unique_ptr<Stmt> block;
+    std::shared_ptr<Stmt> block;
 
     Func(Token identifier,
          std::optional<Token> return_type,
          std::vector<std::pair<Token, Token>> param_list,
-         std::unique_ptr<Stmt> block) : identifier(identifier),
+         std::shared_ptr<Stmt> block) : identifier(identifier),
                                         return_type(return_type),
                                         param_list(param_list),
                                         block(std::move(block)) {}

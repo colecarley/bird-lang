@@ -579,10 +579,10 @@ std::unique_ptr<Expr> Parser::call()
         return identifier;
 }
 
-std::vector<std::unique_ptr<Expr>> Parser::args()
+std::vector<std::shared_ptr<Expr>> Parser::args()
 {
     this->advance(); // advance past '('
-    std::vector<std::unique_ptr<Expr>> args;
+    std::vector<std::shared_ptr<Expr>> args;
 
     while (this->peek().token_type != Token::Type::RPAREN)
     {

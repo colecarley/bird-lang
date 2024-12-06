@@ -5,10 +5,8 @@ TEST(FunctionTest, GoodFunctionCall)
 {
     BirdTest::TestOptions options;
     options.code = "fn function(i: int) -> int {return i;} "
-                   "var result: int = function(4);";
-
-    // fails if this isnt set, so ill keep that in mind
-    options.compile = false;
+                   "var result: int = function(4);"
+                   "print(result);";
 
     options.after_interpret = [&](Interpreter &interpreter)
     {
@@ -19,13 +17,18 @@ TEST(FunctionTest, GoodFunctionCall)
         EXPECT_EQ(as_type<int>(result), 4);
     };
 
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        std::cout << "AFTER COMPILe" << std::endl;
+    };
+
     ASSERT_TRUE(BirdTest::compile(options));
 }
 
 TEST(FunctionTest, MalformedCall)
 {
     BirdTest::TestOptions options;
-    options.code = "fn function() {} "
+    options.code = "fn function() {}"
                    "function(;";
 
     options.after_parse = [&](UserErrorTracker &error_tracker, Parser &parser, const std::vector<std::unique_ptr<Stmt>> &ast)
@@ -34,7 +37,7 @@ TEST(FunctionTest, MalformedCall)
         auto tup = error_tracker.get_errors()[0];
 
         ASSERT_EQ(std::get<1>(tup).lexeme, ";");
-        ASSERT_EQ(std::get<0>(tup), ">>[ERROR] expected identifier or i32  (line 0, character 26)");
+        ASSERT_EQ(std::get<0>(tup), ">>[ERROR] expected identifier or i32  (line 0, character 25)");
     };
 
     ASSERT_FALSE(BirdTest::compile(options));
