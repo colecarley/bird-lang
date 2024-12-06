@@ -19,7 +19,7 @@ TEST(FunctionTest, GoodFunctionCall)
 
     options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
-        std::cout << "AFTER COMPILe" << std::endl;
+        ASSERT_EQ(output, "4\n\n");
     };
 
     ASSERT_TRUE(BirdTest::compile(options));
@@ -115,4 +115,28 @@ TEST(FunctionTest, FunctionRedeclaration)
     };
 
     ASSERT_FALSE(BirdTest::compile(options));
+}
+
+TEST(FunctionTest, FunctionReturnBool)
+{
+    BirdTest::TestOptions options;
+    options.code = "fn function(i: int) -> bool {return i < 0;}"
+                   "var result: bool = function(4);"
+                   "print(result);";
+
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.call_table.contains("function"));
+        ASSERT_TRUE(interpreter.env.contains("result"));
+        auto result = interpreter.env.get("result");
+        ASSERT_TRUE(is_type<bool>(result));
+        EXPECT_EQ(as_type<bool>(result), false);
+    };
+
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        ASSERT_EQ(output, "0\n\n");
+    };
+
+    ASSERT_TRUE(BirdTest::compile(options));
 }
