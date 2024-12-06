@@ -953,7 +953,7 @@ public:
                               BinaryenGtFloat64(),
                               left.value,
                               right.value),
-                          CodeGenInt))
+                          CodeGenBool))
                 : this->stack.push(
                       TaggedExpression(
                           BinaryenBinary(
@@ -961,7 +961,7 @@ public:
                               BinaryenGtSInt32(),
                               left.value,
                               right.value),
-                          CodeGenInt));
+                          CodeGenBool));
 
             break;
         }
@@ -990,7 +990,7 @@ public:
                               BinaryenGeFloat64(),
                               left.value,
                               right.value),
-                          CodeGenInt))
+                          CodeGenBool))
                 : this->stack.push(
                       TaggedExpression(
                           BinaryenBinary(
@@ -998,7 +998,7 @@ public:
                               BinaryenGeSInt32(),
                               left.value,
                               right.value),
-                          CodeGenInt));
+                          CodeGenBool));
 
             break;
         }
@@ -1011,7 +1011,7 @@ public:
                               this->mod, BinaryenLtFloat64(),
                               left.value,
                               right.value),
-                          CodeGenInt))
+                          CodeGenBool))
                 : this->stack.push(
                       TaggedExpression(
                           BinaryenBinary(
@@ -1019,7 +1019,7 @@ public:
                               BinaryenLtSInt32(),
                               left.value,
                               right.value),
-                          CodeGenInt));
+                          CodeGenBool));
 
             break;
         }
@@ -1033,7 +1033,7 @@ public:
                               BinaryenLeFloat64(),
                               left.value,
                               right.value),
-                          CodeGenInt))
+                          CodeGenBool))
                 : this->stack.push(
                       TaggedExpression(
                           BinaryenBinary(
@@ -1041,7 +1041,7 @@ public:
                               BinaryenLeSInt32(),
                               left.value,
                               right.value),
-                          CodeGenInt));
+                          CodeGenBool));
 
             break;
         }
@@ -1055,7 +1055,7 @@ public:
                               BinaryenEqFloat64(),
                               left.value,
                               right.value),
-                          CodeGenInt))
+                          CodeGenBool))
                 : this->stack.push(
                       TaggedExpression(
                           BinaryenBinary(
@@ -1063,7 +1063,7 @@ public:
                               BinaryenEqInt32(),
                               left.value,
                               right.value),
-                          CodeGenInt));
+                          CodeGenBool));
 
             break;
         }
@@ -1077,7 +1077,7 @@ public:
                               BinaryenNeFloat64(),
                               left.value,
                               right.value),
-                          CodeGenInt))
+                          CodeGenBool))
                 : this->stack.push(
                       TaggedExpression(
                           BinaryenBinary(
@@ -1085,7 +1085,7 @@ public:
                               BinaryenNeInt32(),
                               left.value,
                               right.value),
-                          CodeGenInt));
+                          CodeGenBool));
 
             break;
         }
@@ -1447,10 +1447,6 @@ public:
                             BinaryenTruncSatSFloat64ToInt32(),
                             result.value),
                         CodeGenInt);
-                }
-                else
-                {
-                    throw BirdException("Type mismatch in return statement");
                 }
             }
 
