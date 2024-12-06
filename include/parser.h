@@ -83,7 +83,7 @@ public:
 
     std::unique_ptr<Expr> call();
 
-    std::vector<std::unique_ptr<Expr>> args();
+    std::vector<std::shared_ptr<Expr>> args();
 
     std::unique_ptr<Expr> primary();
 

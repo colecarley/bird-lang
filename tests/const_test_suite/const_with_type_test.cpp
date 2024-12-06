@@ -15,7 +15,7 @@ TEST(ConstTest, ConstWithTypeInt)
         ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 4);
     };
 
-    options.after_compile = [&](std::string &output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "4\n\n");
     };
@@ -37,7 +37,7 @@ TEST(ConstTest, ConstWithTypeFloat)
         ASSERT_EQ(as_type<double>(interpreter.env.get("x")), 4.0);
     };
 
-    options.after_compile = [&](std::string &output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "4\n\n");
     };
@@ -82,7 +82,7 @@ TEST(ConstTest, ConstWithTypeBool)
         ASSERT_EQ(as_type<bool>(interpreter.env.get("y")), false);
     };
 
-    options.after_compile = [&](std::string &output)
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
         ASSERT_EQ(output, "1\n0\n\n");
     };

@@ -60,6 +60,7 @@ struct MemorySegment
 
 class CodeGen : public Visitor
 {
+public:
     Environment<TaggedIndex> environment; // tracks the index of local variables
     Environment<Type> type_table;
     Stack<TaggedExpression> stack; // for returning values
@@ -77,7 +78,6 @@ class CodeGen : public Visitor
                                     // offset, will fix tomorrow
     BinaryenModuleRef mod;
 
-public:
     ~CodeGen()
     {
         BinaryenModuleDispose(this->mod);
@@ -325,7 +325,7 @@ public:
 
         free(result.binary);
 
-        this->environment.pop_env();
+        // this->environment.pop_env();
     }
 
     bool is_bird_type(Token token)
@@ -702,17 +702,21 @@ public:
                 while_body_children.size(),
                 BinaryenTypeNone());
 
-        auto loop =
-            BinaryenLoop(
+        auto if_cond =
+            BinaryenIf(
                 this->mod,
-                "LOOP",
-                while_body);
+                condition.value,
+                BinaryenLoop(
+                    this->mod,
+                    "LOOP",
+                    while_body),
+                nullptr);
 
         this->stack.push(
             BinaryenBlock(
                 this->mod,
                 "EXIT",
-                &loop,
+                &if_cond,
                 1,
                 BinaryenTypeNone()));
     }
@@ -757,13 +761,30 @@ public:
 
         std::vector<BinaryenExpressionRef> body_and_increment_children;
         body_and_increment_children.push_back(body_and_condition);
-        body_and_increment_children.push_back(increment.value);
-        body_and_increment_children.push_back(
-            BinaryenBreak(
-                this->mod,
-                "LOOP",
-                condition.value,
-                nullptr));
+
+        if (increment.value)
+        {
+            body_and_increment_children.push_back(increment.value);
+        }
+
+        if (condition.value)
+        {
+            body_and_increment_children.push_back(
+                BinaryenBreak(
+                    this->mod,
+                    "LOOP",
+                    condition.value,
+                    nullptr));
+        }
+        else
+        {
+            body_and_increment_children.push_back(
+                BinaryenBreak(
+                    this->mod,
+                    "LOOP",
+                    nullptr,
+                    nullptr));
+        }
 
         auto body_and_increment = BinaryenBlock(
             this->mod,
@@ -785,13 +806,20 @@ public:
 
         initializer_and_loop.push_back(for_loop);
 
+        auto block = BinaryenBlock(
+            this->mod,
+            "EXIT",
+            initializer_and_loop.data(),
+            initializer_and_loop.size(),
+            BinaryenTypeNone());
+
         this->stack.push(
-            BinaryenBlock(
-                this->mod,
-                "EXIT",
-                initializer_and_loop.data(),
-                initializer_and_loop.size(),
-                BinaryenTypeNone()));
+            condition.value ? BinaryenIf(
+                                  this->mod,
+                                  condition.value,
+                                  block,
+                                  nullptr)
+                            : block);
 
         this->environment.pop_env();
     }
