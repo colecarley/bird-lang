@@ -110,6 +110,34 @@ TEST(TypeStmtTest, ConstStmtWithTypeIdentifer)
     ASSERT_TRUE(BirdTest::compile(options));
 }
 
+TEST(TypeStmtTest, FuncWithTypeIdentifier)
+{
+    BirdTest::TestOptions options;
+    options.code = "type x = int;"
+                   "fn foo(y: x) -> x"
+                   "{"
+                   "return y;"
+                   "}"
+                   "var z: int = foo(2);"
+                   "print foo(z);";
+
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("z"));
+        ASSERT_TRUE(is_type<int>(interpreter.env.get("z")));
+        ASSERT_EQ(as_type<int>(interpreter.env.get("z")), 2);
+    };
+
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        ASSERT_TRUE(codegen.environment.contains("z"));
+        ASSERT_EQ(codegen.environment.get("z").type, CodeGenInt);
+        ASSERT_EQ(output, "2\n\n");
+    };
+
+    ASSERT_TRUE(BirdTest::compile(options));
+}
+
 TEST(TypeStmtTest, TypeDeclIdentiferRedeclaration)
 {
     BirdTest::TestOptions options;

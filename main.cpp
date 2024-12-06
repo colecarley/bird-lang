@@ -14,7 +14,7 @@
 #include "exceptions/user_error_tracker.h"
 
 #include "visitors/code_gen.h"
-#include "parser2.hpp" // TODO: change this name
+// #include "parser2.hpp" // TODO: change this name
 
 extern int bird_parse(const char *input);
 

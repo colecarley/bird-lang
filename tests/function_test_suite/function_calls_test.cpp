@@ -116,3 +116,28 @@ TEST(FunctionTest, FunctionRedeclaration)
 
     ASSERT_FALSE(BirdTest::compile(options));
 }
+
+TEST(FunctionTest, FunctionIdentityCall)
+{
+    BirdTest::TestOptions options;
+    options.code = "fn function(y: int) -> int"
+                   "{"
+                   "return y;"
+                   "}"
+                   "var x: int = foo(2);"
+                   "print foo(x);";
+
+    options.after_interpret = [&](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("x"));
+        ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+        ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 2);
+    };
+
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        ASSERT_TRUE(codegen.environment.contains("x"));
+        ASSERT_EQ(codegen.environment.get("x").type, CodeGenInt);
+        ASSERT_EQ(output, "2\n\n");
+    };
+}
