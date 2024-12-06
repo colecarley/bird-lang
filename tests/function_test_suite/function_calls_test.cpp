@@ -19,7 +19,7 @@ TEST(FunctionTest, GoodFunctionCall)
 
     options.after_compile = [&](std::string &output, CodeGen &codegen)
     {
-        std::cout << "AFTER COMPILe" << std::endl;
+        ASSERT_EQ(output, "4\n\n");
     };
 
     ASSERT_TRUE(BirdTest::compile(options));

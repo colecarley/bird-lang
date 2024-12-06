@@ -49,15 +49,18 @@ TEST(ConstTest, ConstWithoutTypeInt)
 TEST(ConstTest, ConstWithoutTypeString)
 {
     BirdTest::TestOptions options;
-    options.code = "var x = \"hello\";";
-    // TODO: turn this on when we have strings
-    options.compile = false;
+    options.code = "var x = \"hello\"; print x;";
 
     options.after_interpret = [&](Interpreter &interpreter)
     {
         ASSERT_TRUE(interpreter.env.contains("x"));
         ASSERT_TRUE(is_type<std::string>(interpreter.env.get("x")));
         ASSERT_EQ(as_type<std::string>(interpreter.env.get("x")), "hello");
+    };
+
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        ASSERT_EQ(output, "hello\n\n");
     };
 
     ASSERT_TRUE(BirdTest::compile(options));
