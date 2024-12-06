@@ -256,6 +256,22 @@ TEST(ExprTest, BinaryDivideByZero)
     BirdTest::compile(options);
 }
 
+TEST(ExprTest, DivideByZeroHidden)
+{
+    BirdTest::TestOptions options;
+    options.code = "var x: int = 10 / (10 - 10);";
+
+    ASSERT_THROW(BirdTest::compile(options), BirdException);
+    options.interpret = false;
+
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        ASSERT_EQ(output, "\n");
+    };
+
+    BirdTest::compile(options);
+}
+
 TEST(ExprTest, BinaryModulus)
 {
     BirdTest::TestOptions options;
@@ -301,4 +317,59 @@ TEST(ExprTest, AssignModulus)
     };
 
     ASSERT_TRUE(BirdTest::compile(options));
+}
+
+TEST(ExprTest, Grouping)
+{
+    BirdTest::TestOptions options;
+    options.code = "var x: int = (1 + 1) * 2;"
+                   "print x;";
+
+    options.after_interpret = [](Interpreter &interpreter)
+    {
+        ASSERT_TRUE(interpreter.env.contains("x"));
+        ASSERT_TRUE(is_type<int>(interpreter.env.get("x")));
+        ASSERT_EQ(as_type<int>(interpreter.env.get("x")), 4);
+    };
+
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        ASSERT_EQ(output, "4\n\n");
+    };
+
+    ASSERT_TRUE(BirdTest::compile(options));
+}
+
+TEST(ExprTest, UnclosedGrouping)
+{
+    BirdTest::TestOptions options;
+    options.code = "var x: int = (1 + 1 * 2;"
+                   "print x;";
+
+    options.after_parse = [&](UserErrorTracker &error_tracker, Parser &parser, const std::vector<std::unique_ptr<Stmt>> &ast)
+    {
+        ASSERT_TRUE(error_tracker.has_errors());
+        auto errors = error_tracker.get_errors();
+        ASSERT_EQ(errors.size(), 1);
+        EXPECT_EQ(std::get<0>(errors[0]), ">>[ERROR] expected ) after grouping (line 0, character 23)");
+    };
+
+    ASSERT_FALSE(BirdTest::compile(options));
+}
+
+TEST(ExprTest, MalformedTernaryGrouping)
+{
+    BirdTest::TestOptions options;
+    options.code = "var x: int = true (? 1 : 2)"
+                   "print x;";
+
+    options.after_parse = [&](UserErrorTracker &error_tracker, Parser &parser, const std::vector<std::unique_ptr<Stmt>> &ast)
+    {
+        ASSERT_TRUE(error_tracker.has_errors());
+        auto errors = error_tracker.get_errors();
+        ASSERT_EQ(errors.size(), 1);
+        EXPECT_EQ(std::get<0>(errors[0]), ">>[ERROR] expected identifier or i32  (line 0, character 19)");
+    };
+
+    ASSERT_FALSE(BirdTest::compile(options));
 }

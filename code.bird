@@ -1,3 +1,6 @@
+type t = int;
+fn foo(y: t) -> t {}
+
 var x = 0; 
 while true { 
     x = 1; 
