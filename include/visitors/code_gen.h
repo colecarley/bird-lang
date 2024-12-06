@@ -702,17 +702,21 @@ public:
                 while_body_children.size(),
                 BinaryenTypeNone());
 
-        auto loop =
-            BinaryenLoop(
+        auto if_cond =
+            BinaryenIf(
                 this->mod,
-                "LOOP",
-                while_body);
+                condition.value,
+                BinaryenLoop(
+                    this->mod,
+                    "LOOP",
+                    while_body),
+                nullptr);
 
         this->stack.push(
             BinaryenBlock(
                 this->mod,
                 "EXIT",
-                &loop,
+                &if_cond,
                 1,
                 BinaryenTypeNone()));
     }
@@ -765,7 +769,6 @@ public:
 
         if (condition.value)
         {
-            std::cout << "condition has value " << std::endl;
             body_and_increment_children.push_back(
                 BinaryenBreak(
                     this->mod,
@@ -775,7 +778,6 @@ public:
         }
         else
         {
-            std::cout << "condition has value " << std::endl;
             body_and_increment_children.push_back(
                 BinaryenBreak(
                     this->mod,

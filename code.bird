@@ -1,10 +1,5 @@
-var x = 0;
-for ; ; do {
-    print "1";
-    break;
+var x = 0; 
+while true { 
+    x = 1; 
+    print x; 
 }
-
-
-
-fn function(i: int) -> int {return i;} 
-var result: int = function(4);
