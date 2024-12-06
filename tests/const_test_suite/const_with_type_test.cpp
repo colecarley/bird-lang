@@ -49,8 +49,7 @@ TEST(ConstTest, ConstWithTypeFloat)
 TEST(ConstTest, ConstWithTypeString)
 {
     BirdTest::TestOptions options;
-    options.code = "const x: str = \"hello\";";
-    // TODO: turn this on when we have strings implemented
+    options.code = "const x: str = \"hello\"; print x;";
     options.compile = false;
 
     options.after_interpret = [&](Interpreter &interpreter)
@@ -58,6 +57,11 @@ TEST(ConstTest, ConstWithTypeString)
         ASSERT_TRUE(interpreter.env.contains("x"));
         ASSERT_TRUE(is_type<std::string>(interpreter.env.get("x")));
         ASSERT_EQ(as_type<std::string>(interpreter.env.get("x")), "hello");
+    };
+
+    options.after_compile = [&](std::string &output, CodeGen &codegen)
+    {
+        ASSERT_EQ(output, "hello\n\n");
     };
 
     ASSERT_TRUE(BirdTest::compile(options));
